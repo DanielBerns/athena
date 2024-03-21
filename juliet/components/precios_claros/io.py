@@ -23,7 +23,6 @@ from components.precios_claros.models import (
 )
 from components.precios_claros import WebScraper
 
-import pdb
 
 class PreciosClarosError(Exception):
     def __init__(self, remark: str) -> None:

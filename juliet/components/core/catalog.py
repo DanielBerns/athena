@@ -35,7 +35,7 @@ class Catalog(Generic[T]):
 
     def delete(self, key: str) -> None:
         """Deletes an entry from the catalog."""
-        if key not in self.table:
+        if key not in self._table:
             raise CatalogException(f"Entry with key '{key:s}' not found.")
         del self._table[key]
 

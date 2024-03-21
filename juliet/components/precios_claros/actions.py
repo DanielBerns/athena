@@ -23,7 +23,8 @@ class ActionsException(Exception):
 class Actions:
     @staticmethod
     def create_sample(
-        application: Application, select: Callable[[Dict[str, str]], bool]
+        application: Application, 
+        select: Callable[[Dict[str, str]], bool]
     ) -> str:
         precios_claros = get_container(
             application.file_system.storage, "precios_claros"
@@ -57,9 +58,9 @@ class Actions:
             target.write(content)
     
     @staticmethod
-    def open_precios_claros(
+    def open_report_sample(
         application: Application,
-        sample_key
+        sample_key: str
     ) -> Tuple[Path, Path, Path]:
         storage: Path = get_container(
             application.file_system.storage, "precios_claros"
@@ -78,13 +79,37 @@ class Actions:
         return storage, results, reports
 
     @staticmethod
+    def open_report_sample_delta(
+        application: Application,
+        reference_key: str,
+        current_key: str
+    ) -> Tuple[Path, str, Path, Path]:
+        storage: Path = get_container(
+            application.file_system.storage, "precios_claros"
+        )
+        delta_key = f"{reference_key[:8]:s}-{current_key[:8]:s}"
+        results: Path = get_container(
+            Path(application.file_system.results, "precios_claros"), 
+            delta_key
+        )
+        reports: Path = get_container(
+            Path(application.file_system.reports, "precios_claros"), 
+            delta_key
+        )         
+        show(f"    {str(storage):s}")
+        show(f"    {delta_key:s}")        
+        show(f"    {str(results):s}")
+        show(f"    {str(reports):s}")                
+        return storage, delta_key, results, reports
+    
+    @staticmethod
     def report_sample(
         application: Application,
         sample_key: str
     ) -> None:
         show(f"Actions.report_sample({sample_key:s}) 1")
         storage_precios_claros, results_precios_claros, reports_precios_claros = \
-            Actions.open_precios_claros(application, sample_key)
+            Actions.open_report_sample(application, sample_key)
         store = FlatStore(storage_precios_claros, "flatstore")
         store.start()
         show(f"Actions.report_sample({sample_key:s}) 2")                
@@ -151,8 +176,79 @@ class Actions:
     @staticmethod
     def report_sample_delta(
         application: Application, 
-        reference: Sample, 
-        current: Sample, 
+        reference_key: Sample, 
+        current_key: Sample, 
         report_key: str
     ) -> None:
-        pass
+        show(f"Actions.report_sample_delta({reference_key:s}, {current_key:s}) 1")
+        storage_precios_claros, delta_key, results_precios_claros, reports_precios_claros = \
+            Actions.open_report_sample_delta(application, reference_key, current_key)
+        store = FlatStore(storage_precios_claros, "flatstore")
+        store.start()
+        show(f"Actions.report_sample_delta({reference_key:s}, {current_key:s}) 2")
+        reference_home = store.sample_home(reference_key)
+        current_home = store.sample_home(current_key)        
+        reference_sample = IO.build(reference_key, reference_home)
+        current_sample = IO.build(current_key, current_home)        
+        show(f"Actions.report_sample_delta({reference_key:s}, {current_key:s}) 3")
+        reference_points_of_sale_table, reference_articles_reader = IO.read(reference_sample)
+        current_points_of_sale_table, current_articles_reader = IO.read(current_sample)        
+        show(f"    reference_points_of_sale.per_place     : {len(reference_points_of_sale_table.per_place):d}")        
+        show(f"    reference_points_of_sale.per_identifier: {len(reference_points_of_sale_table.per_identifier):d}")        
+        show(f"    reference_articles                     : {len(reference_articles_reader.articles_counter):d}")
+        show(f"    current_points_of_sale.per_place     : {len(current_points_of_sale_table.per_place):d}")        
+        show(f"    current_points_of_sale.per_identifier: {len(current_points_of_sale_table.per_identifier):d}")        
+        show(f"    current_articles                     : {len(current_articles_reader.articles_counter):d}")
+        show(f"Actions.report_sample_delta({reference_key:s}, {current_key:s}) 4")
+        for reference_place, reference_article_with_prices_table, reference_points_of_sale in IO.iterate(
+            reference_sample, 
+            reference_points_of_sale_table, 
+            reference_articles_reader
+        ):
+            reference_place_key = get_place_key(reference_place)
+            results_precios_claros_with_place_key = get_container(
+                results_precios_claros, 
+                reference_place_key
+            )
+            reports_precios_claros_with_place_key = get_container(
+                reports_precios_claros, 
+                reference_place_key
+            )
+            origin = Actions.write_origin(
+                reference_article_with_prices_table,
+                results_precios_claros_with_place_key
+            )
+            parts = reference_place.split(':')
+            if len(parts) != 2:
+                remark = f"Actions.report_sample_delta: bad place {reference_place:s}"
+                show(remark)
+                raise ActionsException(remark)
+            index: Index = Index(
+                f"/precios_claros/category/{reference_key:s}/{reference_place_key:s}",
+                reference_key,
+                province=parts[0],
+                city=parts[1]
+            )
+            show(f"    {str(reports_precios_claros_with_place_key):s}")
+            for pattern in get_patterns(origin, max_length=ONE_WORD):
+                if len(pattern) < TWO_CHARACTERS:
+                    show(f"Actions.report_sample: pattern too short {pattern:s}")
+                    continue
+                child = index.add(pattern)
+                child.add(
+                    reference_article_with_prices_table, 
+                    reference_points_of_sale
+                )
+                # HERE
+                store_key = child.store_key
+                directory = get_directory(
+                    Path(reports_precios_claros_with_place_key, store_key)
+                )
+                content = child.write(HTML_CHILD)
+                resource = get_resource(directory, child.name, ".html")
+                Actions.write_target(resource, content)                
+            content = index.write(HTML_INDEX)
+            resource = get_resource(reports_precios_claros_with_place_key, "index", ".html")
+            Actions.write_target(resource, content)
+        store.stop()
+        show(f"Actions.report_sample({sample_key:s}) 5")                
