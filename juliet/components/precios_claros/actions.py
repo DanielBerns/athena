@@ -7,7 +7,7 @@ from components.helpers import (get_container,
                                 get_directory, 
                                 get_resource)
 from components.nlp.sequences import get_patterns
-from components.precios_claros.adapters import Child, Index
+from components.precios_claros.adapters import Child, Index, IndexDelta
 from components.precios_claros.io import IO, Sample
 from components.precios_claros.models import ArticleWithPricesTable, get_place_key
 from components.precios_claros.html import HTML_CHILD, HTML_INDEX
@@ -205,6 +205,12 @@ class Actions:
             reference_points_of_sale_table, 
             reference_articles_reader
         ):
+            current_place, current_article_with_prices_table, current_points_of_sale = IO.retrieve(
+                reference_place,
+                current_sample,
+                current_points_of_sale_table,
+                current_articles_reader
+            )
             reference_place_key = get_place_key(reference_place)
             results_precios_claros_with_place_key = get_container(
                 results_precios_claros, 
@@ -223,7 +229,7 @@ class Actions:
                 remark = f"Actions.report_sample_delta: bad place {reference_place:s}"
                 show(remark)
                 raise ActionsException(remark)
-            index: Index = Index(
+            index: Index = IndexDelta(
                 f"/precios_claros/category/{reference_key:s}/{reference_place_key:s}",
                 reference_key,
                 province=parts[0],
@@ -235,11 +241,14 @@ class Actions:
                     show(f"Actions.report_sample: pattern too short {pattern:s}")
                     continue
                 child = index.add(pattern)
-                child.add(
+                child.add_reference_content(
                     reference_article_with_prices_table, 
                     reference_points_of_sale
                 )
-                # HERE
+                child.add_current_content(
+                    current_article_with_prices_table, 
+                    current_points_of_sale
+                )                    
                 store_key = child.store_key
                 directory = get_directory(
                     Path(reports_precios_claros_with_place_key, store_key)

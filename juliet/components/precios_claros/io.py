@@ -312,12 +312,12 @@ class IO:
         article_with_prices_table = ArticleWithPricesTable()
         for article_code, prices_per_point_of_sale in articles_reader.prices.items():
             try:
-                selected = [(a_point_of_sale, price) 
+                points_of_sale_with_prices = [(a_point_of_sale, price) 
                             for a_point_of_sale, price in prices_per_point_of_sale 
                             if a_point_of_sale in points_of_sale]
-                if selected:
+                if points_of_sale_with_prices:
                     article = articles_reader.articles[article_code]
-                    article_with_prices_table.add(article, selected)
+                    article_with_prices_table.add(article, points_of_sale_with_prices)
             except KeyError:
                 remark = (
                     f"get_article_with_prices_table: bad article_code {article_code:s}"

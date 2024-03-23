@@ -129,14 +129,18 @@ def get_price_descriptors(prices: List[PointOfSaleAndPrice]) -> Tuple[int, int, 
             prices_geomean = 10**log_prices_geomean
         return prices_min, f2i(prices_geomean), prices_max
 
+
+    
 @dataclass
-class Entry:
+class LabelAndValue:
     label: str
     value: str
+
 
 def format_price(price: int) -> str:
     formatted: str = f"${i2f(price):,.2f}"
     return f"{formatted:>14s}"
+
         
 class ArticleWithPrices:
     def __init__(
@@ -161,13 +165,13 @@ class ArticleWithPrices:
     def prices_per_point_of_sale(self) -> List[PointOfSaleAndPrice]:
         return self._prices_per_point_of_sale
 
-    def entries(self) -> Generator[Entry, None, None]:
+    def entries(self) -> Generator[LabelAndValue, None, None]:
         for (point_of_sale, price) in self.prices_per_point_of_sale:
             label = (f"{point_of_sale.identifier:<15s} - {point_of_sale.name:>40s}"
                      f"{point_of_sale.address:>30s}"
                     )
             value = format_price(price)
-            yield Entry(label, value)
+            yield LabelAndValue(label, value)
 
     @property
     def name_and_brand(self) -> str:
@@ -189,7 +193,11 @@ def match(value: str, pattern: str) -> bool:
         return False
     return all(a == b for a, b in zip(value, pattern))
 
-        
+
+class Delta:
+    def __init__(self, reference_awp: ArticleWithPrices, current_awp: ArticleWithPrices) -> None:
+        pass
+
 class ArticleWithPricesTable:
     def __init__(self) -> None:
         self._article_with_prices: Dict[str, ArticleWithPrices] = dict()
