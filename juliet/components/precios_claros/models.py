@@ -131,10 +131,10 @@ def get_price_descriptors(prices: List[PointOfSaleAndPrice]) -> Tuple[int, int, 
 
 
     
-@dataclass
-class LabelAndValue:
-    label: str
-    value: str
+# @dataclass
+# class LabelAndValue:
+#     label: str
+#     value: str
 
 
 def format_price(price: int) -> str:
@@ -154,7 +154,7 @@ class ArticleWithPrices:
              self.prices_per_point_of_sale
         )
         self._prices_min: str = format_price(prices_min)
-        self._reference_price: str = format_price(prices_geomean)
+        self._prices_geomean: str = format_price(prices_geomean)
         self._prices_max: str = format_price(prices_max)
         
     @property
@@ -165,13 +165,20 @@ class ArticleWithPrices:
     def prices_per_point_of_sale(self) -> List[PointOfSaleAndPrice]:
         return self._prices_per_point_of_sale
 
-    def entries(self) -> Generator[LabelAndValue, None, None]:
-        for (point_of_sale, price) in self.prices_per_point_of_sale:
+    @property
+    def formatted_prices_per_point_of_sale(self) -> Dict[str, str]:
+        sorted_pps = sorted(
+            self.prices_per_point_of_sale,
+            key=lambda x: x[1]
+        )
+        result = Dict[str, str] = {}
+        for (point_of_sale, price) in sorted_pps:
             label = (f"{point_of_sale.identifier:<15s} - {point_of_sale.name:>40s}"
                      f"{point_of_sale.address:>30s}"
                     )
             value = format_price(price)
-            yield LabelAndValue(label, value)
+            result[label] = value
+        return result
 
     @property
     def name_and_brand(self) -> str:
@@ -180,10 +187,18 @@ class ArticleWithPrices:
     @property
     def code(self) -> str:
         return f"{self.article.code:<15s}"
+
+    @property
+    def prices_min(self) -> str:
+        return self._prices_min
     
     @property
-    def reference_price(self) -> str:
-        return self._reference_price
+    def prices_geomean(self) -> str:
+        return self._prices_geomean
+
+    @property
+    def prices_max(self) -> str:
+        return self._prices_max
 
         
 def match(value: str, pattern: str) -> bool:
@@ -194,9 +209,53 @@ def match(value: str, pattern: str) -> bool:
     return all(a == b for a, b in zip(value, pattern))
 
 
-class Delta:
-    def __init__(self, reference_awp: ArticleWithPrices, current_awp: ArticleWithPrices) -> None:
-        pass
+class DeltaArticleWithPrices:
+    def __init__(
+        self, 
+        reference_awp: Optional[ArticleWithPrices], 
+        current_awp: Optional[ArticleWithPrices]
+    ) -> None:
+        if reference_awp:
+            code = reference_awp.code
+            name_and_brand = reference_awp.name_and_brand
+            reference_prices = (
+                reference_awp.prices_min,
+                reference_awp.prices_geomean,
+                reference_awp.prices_max
+            )
+            reference_prices_per_pos = reference_awp.formatted_prices_per_point_of_sale
+            if current_awp:
+                current_prices = (
+                    current_awp.prices_min,
+                    current_awp.prices_geomean,
+                    current_awp.prices_max
+                )
+                current_prices_per_pos = current_awp.formatted_prices_per_point_of_sale
+            else:
+                current_prices = ("", "", "")
+                current_prices_per_pos = {}
+        elif current_awp:
+            code = current_awp.code
+            name_and_brand = current|_awp.name_and_brand
+            reference_prices = ("", "", "")
+            reference_prices_per_pos = {}
+            current_prices = (
+                current_awp.prices_min,
+                current_awp.prices_geomean,
+                current_awp.prices_max
+            )
+            current_prices_per_pos = current_awp.formatted_prices_per_point_of_sale
+        else:
+            code = ""
+            name_and_brand = ""
+            reference_prices = ("", "", "")
+            reference_prices_per_pos = {}
+            current_prices = ("", "", "")
+            current_prices_per_pos = {}
+                                
+                                
+
+            
 
 class ArticleWithPricesTable:
     def __init__(self) -> None:
