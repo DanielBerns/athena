@@ -280,6 +280,10 @@ class PointsOfSaleSelector:
         pass
 
 
+class IOException(Exception):
+    pass
+
+
 class IO:
     @staticmethod
     def build(timestamp: str, sample_home: Path) -> Sample:
@@ -317,10 +321,10 @@ class IO:
                             if a_point_of_sale in points_of_sale]
                 if points_of_sale_with_prices:
                     article = articles_reader.articles[article_code]
-                    article_with_prices_table.add(article, points_of_sale_with_prices)
+                    article_with_prices_table.create(article, points_of_sale_with_prices)
             except KeyError:
                 remark = (
-                    f"get_article_with_prices_table: bad article_code {article_code:s}"
+                    f"IO.get_article_with_prices_table: bad article_code {article_code:s}"
                 )
                 raise PreciosClarosError(remark)
         return article_with_prices_table
@@ -351,3 +355,23 @@ class IO:
                 sample, place, points_of_sale, articles_reader
             )
             yield place, article_with_prices_table, points_of_sale
+
+    @staticmethod
+    def retrieve(
+        reference_place: str,
+        current_sample: Sample,
+        current_points_of_sale_table: PointsOfSaleTable,
+        current_articles_reader: ArticlesReader
+     ) -> Tuple[str, ArticleWithPricesTable, PointOfSale]:
+        try:
+            points_of_sale = current_points_of_sale_table.per_place[reference_place]            
+            article_with_prices_table = IO.get_article_with_prices_table(
+                current_sample, reference_place, points_of_sale, current_articles_reader
+            )            
+        except KeyError:
+            remark = (
+               f"IO.retrieve: bad reference_place {reference_place:s}"
+            )            
+            raise PreciosClarosError(remark)
+        # If we reach this point, reference_place == current_place
+        return reference_place, article_with_prices_table, points_of_sale

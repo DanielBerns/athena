@@ -27,27 +27,32 @@ def get_arguments() -> Dict[str, str]:
         help="how to run? dev, test or live",
     )
     cli.add_arguments(
-        "-s",
-        "--samplelist",
+        "-r",
+        "--reports_list",
         type=str,
         required=True,
-        help="text file with a list of sample_key",
+        help="text file with a list of samples",
     )
     return cli.arguments
 
+def clean_string(string: str) -> str:
+    return string.strip()
+    
 def main() -> None:
     application_name: str = "run_precios_claros_report_sample"
     arguments = get_arguments()
 
     with create_application(application_name, arguments) as application:
         show(f"{application_name:s} 1")
-        samplelist = Path(arguments["samplelist"]).expanduser()
-        show(f"{application_name:s} 2: samplelist {str(samplelist):s}")
-        if samplelist.exists():
-            with open(samplelist, 'r') as source:
-                for sample_key in source:
+        reports_list = Path(arguments["reports_list"]).expanduser()
+        show(f"{application_name:s} 2: reports_list {str(reports_list):s}")
+        if reports_list.exists():
+            with open(reports_list, 'r') as source:
+                for line in source:
+                    parts = line.split(',')
                     try:
-                        Actions.report_sample(application, sample_key[:-1])
+                        a_month_ago_key, a_week_ago_key, now_key = clean_string(parts[0]), clean_string(parts[1]), clean_string(parts[2])
+                        Actions.report_delta(application, a_month_ago_key, a_week_ago_key, now_key)
                         time.sleep(10)
                     except Exception as panic:
                         show(f"{application_name:s} 3: {str(panic):s}")

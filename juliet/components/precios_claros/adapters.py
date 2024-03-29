@@ -6,9 +6,10 @@ from components.core.application import show
 from components.precios_claros.models import (
     ArticleWithPricesTable, 
     ArticleWithPrices, 
-    PointsOfSaleTable)
+    PointsOfSaleTable,
+    DeltaArticleWithPrices)
 
-
+import pdb
 
 class Child:
 
@@ -151,7 +152,8 @@ class DeltaChild:
         self._pattern: str = pattern        
         self._header: str = header
         self._reference_table: ArticleWithPricesTable = ArticleWithPricesTable()
-        self._current_table: ArticleWithPricesTable = ArticleWithPricesTable()
+        self._a_month_ago_table: ArticleWithPricesTable = ArticleWithPricesTable()
+        self._a_week_ago_table: ArticleWithPricesTable = ArticleWithPricesTable()        
         if len(pattern) == 0 or number < 0:
             self._url: str = "/error/empty_child.html"
             self._store_key: str = 'xxx'
@@ -191,8 +193,12 @@ class DeltaChild:
         return self._reference_table
 
     @property
-    def current_table(self) -> ArticleWithPricesTable:
-        return self._current_table
+    def a_month_ago_table(self) -> ArticleWithPricesTable:
+        return self._a_month_ago_table
+
+    @property
+    def a_week_ago_table(self) -> ArticleWithPricesTable:
+        return self._a_week_ago_table
     
     def fill_reference_table(
         self, 
@@ -200,42 +206,38 @@ class DeltaChild:
         points_of_sale_table: PointsOfSaleTable
     ) -> None:
         for awp in article_with_prices_table.get(self.pattern):
-            self.reference_table[awp.article.code] = awp
+            self.reference_table.insert(awp)
         
-    def fill_current_table(
+    def fill_a_month_ago_table(
         self, 
         article_with_prices_table: ArticleWithPricesTable,
         points_of_sale_table: PointsOfSaleTable
     ) -> None:
         for awp in article_with_prices_table.get(self.pattern):
-            self.current_table[awp.article.code] = awp
+            self.a_month_ago_table.insert(awp)
             
+    def fill_a_week_ago_table(
+        self, 
+        article_with_prices_table: ArticleWithPricesTable,
+        points_of_sale_table: PointsOfSaleTable
+    ) -> None:
+        for awp in article_with_prices_table.get(self.pattern):
+            self.a_week_ago_table.insert(awp)
             
-    # {% for awp in content %}
-    # <br>
-    # <article class="w3-row w3-pale-green">
-    # <div class="w3-col w3-left-align"><h2>{{ awp.name_and_brand }}</h2></div>
-    # <div class="w3-col w3-left-align"><h3>{{ awp.code }}</h3></div>
-    # <ul class="w3-ul">
-    # <li class="w3-row w3-pale-blue"> 
-    # <div class="w3-col m5 l6 w3-left-align">precio indicativo</div> 
-    # <div class="w3-col m4 l5 w3-right-align">{{ awp.reference_price }}</div>
-    # </li>
-    # {% for entry in awp.entries() %}
-    # <li class="w3-row w3-pale-blue"> 
-    # <div class="w3-col m5 l6 w3-left-align">{{ entry.label }}</div> 
-    # <div class="w3-col m4 l5 w3-right-align">{{ entry.value }}</div>
-    # </li>
-    # {% endfor %}
-    # </ul>
+    def get_content(self) -> List[DeltaArticleWithPrices]:
+        def get_delta(key: str) -> DeltaArticleWithPrices:
+            # pdb.set_trace()
+            a_month_ago_awp = self.a_month_ago_table.article_with_prices.get(key, None)
+            a_week_ago_awp = self.a_month_ago_table.article_with_prices.get(key, None)            
+            now_awp = self.reference_table.article_with_prices.get(key, None)            
+            return DeltaArticleWithPrices(a_month_ago_awp, a_week_ago_awp, now_awp)            
 
-    def get_content(self) -> str:
-        all_the_keys = self.reference_table.article_with_prices.keys() | self.current_table.article_with_prices.keys()
-        for key in all_the_keys:
-            reference_awp = self.reference_table.article_with_prices.get(key, None)
-            current_awp = self.current_table.article_with_prices.get(key, None)
-            # HERE
-            
+        all_the_keys = \
+            self.reference_table.article_with_prices.keys() \
+            | self.a_month_ago_table.article_with_prices.keys() \
+            | self.a_week_ago_table.article_with_prices.keys()
+
+        return [get_delta(key) for key in all_the_keys]
             
     def write(self, template_text: str) -> str:
         template = Template(template_text)

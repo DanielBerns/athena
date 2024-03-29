@@ -2,12 +2,13 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 import logging
-from typing import Tuple, List, Protocol, Dict, Generator, DefaultDict, Optional
+from typing import Tuple, List, Set, Protocol, Dict, Generator, DefaultDict, Optional
 from math import log
 
 from components.helpers import classname, get_container, get_resource
+from components.core import show
 
-# import pdb
+import pdb
 
 @dataclass
 class PointOfSale:
@@ -167,17 +168,20 @@ class ArticleWithPrices:
 
     @property
     def formatted_prices_per_point_of_sale(self) -> Dict[str, str]:
+        def get_label_and_value(point_of_sale: PointOfSale, price: int) -> Tuple[str, str]:
+            # label = (f"{point_of_sale.identifier:<15s} - {point_of_sale.name:>40s}"
+            #          f"{point_of_sale.address:>30s}"
+            #         )
+            label = f"{point_of_sale.name:>40s} - {point_of_sale.address:>30s}"
+            value = format_price(price)
+            return label, value
+        
         sorted_pps = sorted(
             self.prices_per_point_of_sale,
             key=lambda x: x[1]
         )
-        result = Dict[str, str] = {}
-        for (point_of_sale, price) in sorted_pps:
-            label = (f"{point_of_sale.identifier:<15s} - {point_of_sale.name:>40s}"
-                     f"{point_of_sale.address:>30s}"
-                    )
-            value = format_price(price)
-            result[label] = value
+        entries = (get_label_and_value(point_of_sale, price) for (point_of_sale, price) in sorted_pps)
+        result: Dict[str, str] = dict(entries)
         return result
 
     @property
@@ -208,53 +212,132 @@ def match(value: str, pattern: str) -> bool:
         return False
     return all(a == b for a, b in zip(value, pattern))
 
+class ModelsError(Exception):
+    pass
 
 class DeltaArticleWithPrices:
     def __init__(
         self, 
-        reference_awp: Optional[ArticleWithPrices], 
-        current_awp: Optional[ArticleWithPrices]
+        month_awp: Optional[ArticleWithPrices], 
+        week_awp: Optional[ArticleWithPrices],
+        now_awp: Optional[ArticleWithPrices]        
     ) -> None:
-        if reference_awp:
-            code = reference_awp.code
-            name_and_brand = reference_awp.name_and_brand
-            reference_prices = (
-                reference_awp.prices_min,
-                reference_awp.prices_geomean,
-                reference_awp.prices_max
+        now_bit: int = 0
+        month_bit: int = 0
+        week_bit: int = 0
+        if now_awp:
+            now_bit = 1
+            code: str = now_awp.code
+            name_and_brand: str = now_awp.name_and_brand
+            now_stats: Tuple[str, str, str] = (
+                now_awp.prices_min,
+                now_awp.prices_geomean,
+                now_awp.prices_max
             )
-            reference_prices_per_pos = reference_awp.formatted_prices_per_point_of_sale
-            if current_awp:
-                current_prices = (
-                    current_awp.prices_min,
-                    current_awp.prices_geomean,
-                    current_awp.prices_max
-                )
-                current_prices_per_pos = current_awp.formatted_prices_per_point_of_sale
-            else:
-                current_prices = ("", "", "")
-                current_prices_per_pos = {}
-        elif current_awp:
-            code = current_awp.code
-            name_and_brand = current|_awp.name_and_brand
-            reference_prices = ("", "", "")
-            reference_prices_per_pos = {}
-            current_prices = (
-                current_awp.prices_min,
-                current_awp.prices_geomean,
-                current_awp.prices_max
-            )
-            current_prices_per_pos = current_awp.formatted_prices_per_point_of_sale
+            now_prices_per_pos: Dict[str, str] = now_awp.formatted_prices_per_point_of_sale
         else:
-            code = ""
-            name_and_brand = ""
-            reference_prices = ("", "", "")
-            reference_prices_per_pos = {}
-            current_prices = ("", "", "")
-            current_prices_per_pos = {}
-                                
-                                
+            code: str = "&nbsp;"
+            name_and_brand: str = "&nbsp;"
+            now_stats: Tuple[str, str, str] = ("&nbsp;", "&nbsp;", "&nbsp;")
+            now_prices_per_pos: Dict[str, str] = {}
 
+        if month_awp:
+            month_bit = 1
+            code: str = month_awp.code
+            name_and_brand: str = month_awp.name_and_brand
+            month_stats: Tuple[str, str, str] = (
+                month_awp.prices_min,
+                month_awp.prices_geomean,
+                month_awp.prices_max
+            )
+            month_prices_per_pos: Dict[str, str] = month_awp.formatted_prices_per_point_of_sale
+        else:
+            month_stats: Tuple[str, str, str] = ("&nbsp;", "&nbsp;", "&nbsp;")
+            month_prices_per_pos: Dict[str, str] = {}
+
+        if week_awp:
+            week_bit = 1
+            code: str = week_awp.code
+            name_and_brand: str = week_awp.name_and_brand
+            week_stats: Tuple[str, str, str] = (
+                week_awp.prices_min,
+                week_awp.prices_geomean,
+                week_awp.prices_max
+            )
+            week_prices_per_pos: Dict[str, str] = week_awp.formatted_prices_per_point_of_sale
+        else:
+            week_stats: Tuple[str, str, str] = ("&nbsp;", "&nbsp;", "&nbsp;")
+            week_prices_per_pos: Dict[str, str] = {}
+
+        check = (now_bit * 2 + month_bit) * 2 + week_bit
+        if check == 0:
+            remark = f"{classname(self):s}.__init__: {check:d} - {now_bit:d} {month_bit:d} {week_bit:d}"
+            # raise ModelsError(remark)
+            show(remark)
+        self._month_awp: ArticleWithPrices = month_awp
+        self._week_awp: ArticleWithPrices = week_awp
+        self._now_awp: ArticleWithPrices = now_awp        
+        self._code: str = code
+        self._name_and_brand: str = name_and_brand
+        self._month_stats: Tuple[str, str, str] = month_stats        
+        self._week_stats: Tuple[str, str, str] = week_stats        
+        self._now_stats: Tuple[str, str, str] = now_stats
+        self._month_prices_per_pos: Dict[str, str] = month_prices_per_pos
+        self._week_prices_per_pos: Dict[str, str] = week_prices_per_pos
+        self._now_prices_per_pos: Dict[str, str] = now_prices_per_pos
+        self._list_of_pos: Set[str] = (
+            month_prices_per_pos.keys() | week_prices_per_pos.keys() | now_prices_per_pos.keys()
+        )
+      
+
+    @property
+    def now_awp(self) -> ArticleWithPrices:
+        return self._now_awp
+
+    @property
+    def month_awp(self) -> ArticleWithPrices:
+        return self._month_awp
+
+    @property
+    def week_awp(self) -> ArticleWithPrices:
+        return self._week_awp
+
+    @property
+    def code(self) -> str:
+        return self._code
+    
+    @property
+    def name_and_brand(self) -> str:
+        return self._name_and_brand
+    
+    @property
+    def now_stats(self) -> Tuple[str, str, str]:
+        return self._now_stats
+    
+    @property
+    def month_stats(self) -> Tuple[str, str, str]:
+        return self._month_stats
+
+    @property
+    def week_stats(self) -> Tuple[str, str, str]:
+        return self._week_stats
+    
+    @property
+    def now_prices_per_pos(self) -> Dict[str, str]:
+        return self._now_prices_per_pos
+    
+    @property
+    def month_prices_per_pos(self) -> Dict[str, str]:
+        return self._month_prices_per_pos
+
+    @property
+    def week_prices_per_pos(self) -> Dict[str, str]:
+        return self._week_prices_per_pos
+    
+    @property
+    def list_of_pos(self) -> Set[str]:
+        return self._list_of_pos
+    
             
 
 class ArticleWithPricesTable:
@@ -265,7 +348,7 @@ class ArticleWithPricesTable:
     def article_with_prices(self) -> Dict[str, ArticleWithPrices]:
         return self._article_with_prices
 
-    def add(
+    def create(
         self, 
         article: Article, 
         prices_per_point_of_sale: List[PointOfSaleAndPrice]
@@ -273,7 +356,14 @@ class ArticleWithPricesTable:
         self.article_with_prices[article.code] = ArticleWithPrices(
             article, prices_per_point_of_sale
         )
-
+    
+    def insert(
+        self, 
+        article_with_prices: ArticleWithPrices
+    ) -> None:
+        self.article_with_prices[article_with_prices.article.code] = article_with_prices
+        
+    
     def select_values_by_article_code(
         self, 
         article_codes: List[str]
