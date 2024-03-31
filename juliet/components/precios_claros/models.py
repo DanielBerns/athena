@@ -218,13 +218,13 @@ class ModelsError(Exception):
 class DeltaArticleWithPrices:
     def __init__(
         self, 
-        month_awp: Optional[ArticleWithPrices], 
-        week_awp: Optional[ArticleWithPrices],
+        bravo_awp: Optional[ArticleWithPrices], 
+        alpha_awp: Optional[ArticleWithPrices],
         now_awp: Optional[ArticleWithPrices]        
     ) -> None:
         now_bit: int = 0
-        month_bit: int = 0
-        week_bit: int = 0
+        bravo_bit: int = 0
+        alpha_bit: int = 0
         if now_awp:
             now_bit = 1
             code: str = now_awp.code
@@ -241,66 +241,65 @@ class DeltaArticleWithPrices:
             now_stats: Tuple[str, str, str] = ("&nbsp;", "&nbsp;", "&nbsp;")
             now_prices_per_pos: Dict[str, str] = {}
 
-        if month_awp:
-            month_bit = 1
-            code: str = month_awp.code
-            name_and_brand: str = month_awp.name_and_brand
-            month_stats: Tuple[str, str, str] = (
-                month_awp.prices_min,
-                month_awp.prices_geomean,
-                month_awp.prices_max
+        if bravo_awp:
+            bravo_bit = 1
+            code: str = bravo_awp.code
+            name_and_brand: str = bravo_awp.name_and_brand
+            bravo_stats: Tuple[str, str, str] = (
+                bravo_awp.prices_min,
+                bravo_awp.prices_geomean,
+                bravo_awp.prices_max
             )
-            month_prices_per_pos: Dict[str, str] = month_awp.formatted_prices_per_point_of_sale
+            bravo_prices_per_pos: Dict[str, str] = bravo_awp.formatted_prices_per_point_of_sale
         else:
-            month_stats: Tuple[str, str, str] = ("&nbsp;", "&nbsp;", "&nbsp;")
-            month_prices_per_pos: Dict[str, str] = {}
+            bravo_stats: Tuple[str, str, str] = ("&nbsp;", "&nbsp;", "&nbsp;")
+            bravo_prices_per_pos: Dict[str, str] = {}
 
-        if week_awp:
-            week_bit = 1
-            code: str = week_awp.code
-            name_and_brand: str = week_awp.name_and_brand
-            week_stats: Tuple[str, str, str] = (
-                week_awp.prices_min,
-                week_awp.prices_geomean,
-                week_awp.prices_max
+        if alpha_awp:
+            alpha_bit = 1
+            code: str = alpha_awp.code
+            name_and_brand: str = alpha_awp.name_and_brand
+            alpha_stats: Tuple[str, str, str] = (
+                alpha_awp.prices_min,
+                alpha_awp.prices_geomean,
+                alpha_awp.prices_max
             )
-            week_prices_per_pos: Dict[str, str] = week_awp.formatted_prices_per_point_of_sale
+            alpha_prices_per_pos: Dict[str, str] = alpha_awp.formatted_prices_per_point_of_sale
         else:
-            week_stats: Tuple[str, str, str] = ("&nbsp;", "&nbsp;", "&nbsp;")
-            week_prices_per_pos: Dict[str, str] = {}
+            alpha_stats: Tuple[str, str, str] = ("&nbsp;", "&nbsp;", "&nbsp;")
+            alpha_prices_per_pos: Dict[str, str] = {}
 
-        check = (now_bit * 2 + month_bit) * 2 + week_bit
+        check = (now_bit * 2 + bravo_bit) * 2 + alpha_bit
         if check == 0:
-            remark = f"{classname(self):s}.__init__: {check:d} - {now_bit:d} {month_bit:d} {week_bit:d}"
+            remark = f"{classname(self):s}.__init__: {check:d} - {now_bit:d} {bravo_bit:d} {alpha_bit:d}"
             # raise ModelsError(remark)
             show(remark)
-        self._month_awp: ArticleWithPrices = month_awp
-        self._week_awp: ArticleWithPrices = week_awp
+        self._bravo_awp: ArticleWithPrices = bravo_awp
+        self._alpha_awp: ArticleWithPrices = alpha_awp
         self._now_awp: ArticleWithPrices = now_awp        
         self._code: str = code
         self._name_and_brand: str = name_and_brand
-        self._month_stats: Tuple[str, str, str] = month_stats        
-        self._week_stats: Tuple[str, str, str] = week_stats        
+        self._bravo_stats: Tuple[str, str, str] = bravo_stats        
+        self._alpha_stats: Tuple[str, str, str] = alpha_stats        
         self._now_stats: Tuple[str, str, str] = now_stats
-        self._month_prices_per_pos: Dict[str, str] = month_prices_per_pos
-        self._week_prices_per_pos: Dict[str, str] = week_prices_per_pos
+        self._bravo_prices_per_pos: Dict[str, str] = bravo_prices_per_pos
+        self._alpha_prices_per_pos: Dict[str, str] = alpha_prices_per_pos
         self._now_prices_per_pos: Dict[str, str] = now_prices_per_pos
         self._list_of_pos: Set[str] = (
-            month_prices_per_pos.keys() | week_prices_per_pos.keys() | now_prices_per_pos.keys()
+            bravo_prices_per_pos.keys() | alpha_prices_per_pos.keys() | now_prices_per_pos.keys()
         )
       
-
     @property
     def now_awp(self) -> ArticleWithPrices:
         return self._now_awp
 
     @property
-    def month_awp(self) -> ArticleWithPrices:
-        return self._month_awp
+    def bravo_awp(self) -> ArticleWithPrices:
+        return self._bravo_awp
 
     @property
-    def week_awp(self) -> ArticleWithPrices:
-        return self._week_awp
+    def alpha_awp(self) -> ArticleWithPrices:
+        return self._alpha_awp
 
     @property
     def code(self) -> str:
@@ -315,24 +314,24 @@ class DeltaArticleWithPrices:
         return self._now_stats
     
     @property
-    def month_stats(self) -> Tuple[str, str, str]:
-        return self._month_stats
+    def bravo_stats(self) -> Tuple[str, str, str]:
+        return self._bravo_stats
 
     @property
-    def week_stats(self) -> Tuple[str, str, str]:
-        return self._week_stats
+    def alpha_stats(self) -> Tuple[str, str, str]:
+        return self._alpha_stats
     
     @property
     def now_prices_per_pos(self) -> Dict[str, str]:
         return self._now_prices_per_pos
     
     @property
-    def month_prices_per_pos(self) -> Dict[str, str]:
-        return self._month_prices_per_pos
+    def bravo_prices_per_pos(self) -> Dict[str, str]:
+        return self._bravo_prices_per_pos
 
     @property
-    def week_prices_per_pos(self) -> Dict[str, str]:
-        return self._week_prices_per_pos
+    def alpha_prices_per_pos(self) -> Dict[str, str]:
+        return self._alpha_prices_per_pos
     
     @property
     def list_of_pos(self) -> Set[str]:

@@ -11,149 +11,27 @@ from components.precios_claros.models import (
 
 import pdb
 
-class Child:
-
-    def __init__(self, 
-                 pattern: str, 
-                 number: int,
-                 header: str
-    ) -> None:
-        self._pattern: str = pattern        
-        self._header: str = header
-        self._content: List[ArticleWithPrices] = []        
-        if len(pattern) == 0 or number < 0:
-            self._url: str = "/error/empty_child.html"
-            self._store_key: str = 'xxx'
-            self._name: str = 'xxxxxx'
-            show(f"{classname(self):s}.__init__: bad parameters - "
-                 f"{pattern:s} - {number:d}"
-            )
-        else:
-            store_key: str = f"{number // 256:03d}"
-            name = f"{number:06d}"            
-            self._store_key: str = store_key
-            self._url: str = f"/{store_key:s}/{name:s}"
-            self._name: str = name
-
-    @property
-    def pattern(self) -> str:
-        return self._pattern
-
-    @property
-    def store_key(self) -> str:
-        return self._store_key
-
-    @property
-    def url(self) -> str:
-        return self._url
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    @property
-    def header(self) -> str:
-        return self._header
-    
-    @property
-    def content(self) -> List[ArticleWithPrices]:
-        return self._content
-    
-    def add(
-        self, 
-        article_with_prices_table: ArticleWithPricesTable,
-        points_of_sale_table: PointsOfSaleTable
-    ) -> None:
-        for article_with_prices in article_with_prices_table.get(self.pattern):
-            self.content.append(article_with_prices)
-
-    def write(self, template_text: str) -> str:
-        template = Template(template_text)
-        return template.render(
-            title=self.pattern,
-            local_style="",             
-            content=self.content,
-            header=self.header
-        )
-
-        
-class Index:
-    def __init__(
-        self, 
-        root: str,        
-        sample_key: str,
-        province: str = "",
-        city: str = ""
-    ) -> None:
-        self._content: List[Child] = []
-        self._root: str = root
-        selectors = {}
-        if province:
-            selectors['province'] = province
-        if city:
-            selectors['city'] = city
-        label = ' _ '.join(selectors.values())
-        year, month, day = sample_key[0:4], sample_key[4:6], sample_key[6:8]
-        header = str = f"{year:s}/{month:s}/{day:s} en {label:s}"
-        self._index_header: str = header
-        self._child_header: str = header
-        self._selectors = selectors
-    
-    @property
-    def content(self) -> List[Child]:
-        return self._content
-
-    @property
-    def root(self) -> str:
-        return self._root
-    
-    @property
-    def sample_key(self) -> str:
-        return self._sample_key
-
-    @property
-    def index_header(self) -> str:
-        return self._index_header
-
-    @property
-    def child_header(self) -> str:
-        return self._child_header
-    
-    @property
-    def selectors(self) -> str:
-        return self._selectors
-
-    def add(self, pattern: str) -> Child:
-        child = Child(
-            pattern, 
-            len(self.content), 
-            self.child_header
-        )
-        self.content.append(child)
-        return child
-
-    def write(self, template_text: str) -> str:
-        template = Template(template_text)
-        return template.render(
-            title=self.index_header,
-            local_style="", 
-            content=self.content,
-            root=self.root
-        )
-
-
 class DeltaChild:
 
     def __init__(self, 
                  pattern: str, 
                  number: int,
-                 header: str
+                 header: str,
+                 pos_label: str,
+                 now_label: str,
+                 alpha_label: str,
+                 bravo_label: str
     ) -> None:
         self._pattern: str = pattern        
         self._header: str = header
-        self._reference_table: ArticleWithPricesTable = ArticleWithPricesTable()
-        self._a_month_ago_table: ArticleWithPricesTable = ArticleWithPricesTable()
-        self._a_week_ago_table: ArticleWithPricesTable = ArticleWithPricesTable()        
+        self._pos_label: str = pos_label
+        self._now_label: str = now_label
+        self._alpha_label: str = alpha_label
+        self._bravo_label: str = bravo_label
+        self._now_table: ArticleWithPricesTable = ArticleWithPricesTable()        
+        self._alpha_table: ArticleWithPricesTable = ArticleWithPricesTable()        
+        self._bravo_table: ArticleWithPricesTable = ArticleWithPricesTable()
+
         if len(pattern) == 0 or number < 0:
             self._url: str = "/error/empty_child.html"
             self._store_key: str = 'xxx'
@@ -177,6 +55,38 @@ class DeltaChild:
         return self._store_key
 
     @property
+    def pos_label(self) -> str:
+        return self._pos_label
+    
+    @pos_label.setter
+    def pos_label(self, value: str) -> None:
+        self._pos_label = value
+
+    @property
+    def now_label(self) -> str:
+        return self._now_label
+    
+    @now_label.setter
+    def now_label(self, value: str) -> None:
+        self._now_label = value
+
+    @property
+    def alpha_label(self) -> str:
+        return self._alpha_label
+    
+    @alpha_label.setter
+    def alpha_label(self, value: str) -> None:
+        self._alpha_label = value
+
+    @property
+    def bravo_label(self) -> str:
+        return self._bravo_label
+    
+    @bravo_label.setter
+    def bravo_label(self, value: str) -> None:
+        self._bravo_label = value
+        
+    @property
     def url(self) -> str:
         return self._url
 
@@ -189,53 +99,53 @@ class DeltaChild:
         return self._header
     
     @property
-    def reference_table(self) -> ArticleWithPricesTable:
-        return self._reference_table
+    def now_table(self) -> ArticleWithPricesTable:
+        return self._now_table
 
     @property
-    def a_month_ago_table(self) -> ArticleWithPricesTable:
-        return self._a_month_ago_table
+    def bravo_table(self) -> ArticleWithPricesTable:
+        return self._bravo_table
 
     @property
-    def a_week_ago_table(self) -> ArticleWithPricesTable:
-        return self._a_week_ago_table
+    def alpha_table(self) -> ArticleWithPricesTable:
+        return self._alpha_table
     
-    def fill_reference_table(
+    def fill_now_table(
         self, 
         article_with_prices_table: ArticleWithPricesTable,
         points_of_sale_table: PointsOfSaleTable
     ) -> None:
         for awp in article_with_prices_table.get(self.pattern):
-            self.reference_table.insert(awp)
+            self.now_table.insert(awp)
+
+    def fill_alpha_table(
+        self, 
+        article_with_prices_table: ArticleWithPricesTable,
+        points_of_sale_table: PointsOfSaleTable
+    ) -> None:
+        for awp in article_with_prices_table.get(self.pattern):
+            self.alpha_table.insert(awp)
         
-    def fill_a_month_ago_table(
+    def fill_bravo_table(
         self, 
         article_with_prices_table: ArticleWithPricesTable,
         points_of_sale_table: PointsOfSaleTable
     ) -> None:
         for awp in article_with_prices_table.get(self.pattern):
-            self.a_month_ago_table.insert(awp)
-            
-    def fill_a_week_ago_table(
-        self, 
-        article_with_prices_table: ArticleWithPricesTable,
-        points_of_sale_table: PointsOfSaleTable
-    ) -> None:
-        for awp in article_with_prices_table.get(self.pattern):
-            self.a_week_ago_table.insert(awp)
+            self.bravo_table.insert(awp)
             
     def get_content(self) -> List[DeltaArticleWithPrices]:
         def get_delta(key: str) -> DeltaArticleWithPrices:
             # pdb.set_trace()
-            a_month_ago_awp = self.a_month_ago_table.article_with_prices.get(key, None)
-            a_week_ago_awp = self.a_month_ago_table.article_with_prices.get(key, None)            
-            now_awp = self.reference_table.article_with_prices.get(key, None)            
-            return DeltaArticleWithPrices(a_month_ago_awp, a_week_ago_awp, now_awp)            
+            bravo_awp = self.bravo_table.article_with_prices.get(key, None)
+            alpha_awp = self.bravo_table.article_with_prices.get(key, None)            
+            now_awp = self.now_table.article_with_prices.get(key, None)            
+            return DeltaArticleWithPrices(bravo_awp, alpha_awp, now_awp)            
 
         all_the_keys = \
-            self.reference_table.article_with_prices.keys() \
-            | self.a_month_ago_table.article_with_prices.keys() \
-            | self.a_week_ago_table.article_with_prices.keys()
+            self.now_table.article_with_prices.keys() \
+            | self.bravo_table.article_with_prices.keys() \
+            | self.alpha_table.article_with_prices.keys()
 
         return [get_delta(key) for key in all_the_keys]
             
@@ -245,17 +155,35 @@ class DeltaChild:
             title=self.pattern,
             local_style="",             
             content=self.get_content(),
-            header=self.header
+            header=self.header,
+            pos_label=self.pos_label,
+            now_label=self.now_label,
+            alpha_label=self.alpha_label,
+            bravo_label=self.bravo_label
         )
+
     
+def get_year_month_day(label: str) -> Tuple[str, str, str]:
+    year, month, day = label[0:4], label[4:6], label[6:8]
+    return year, month, day
+
+
+def get_header(label: str, province: str, city: str) -> str:
+    year, month, day = get_year_month_day(label)
+    header = str = f"{year:s}/{month:s}/{day:s} en {city:s}, {province:s}"
+    return header
+
 
 class DeltaIndex:
     def __init__(
         self, 
         root: str,        
-        sample_key: str,
+        pos_label: str,
+        now_label: str,
+        alpha_label: str,
+        bravo_label: str,
         province: str = "",
-        city: str = ""
+        city: str = "",
     ) -> None:
         self._content: List[DeltaChild] = []
         self._root: str = root
@@ -264,11 +192,13 @@ class DeltaIndex:
             selectors['province'] = province
         if city:
             selectors['city'] = city
-        label = ' _ '.join(selectors.values())
-        year, month, day = sample_key[0:4], sample_key[4:6], sample_key[6:8]
-        header = str = f"{year:s}/{month:s}/{day:s} en {label:s}"
+        header: str = get_header(now_label, province, city)
         self._index_header: str = header
         self._child_header: str = header
+        self._pos_label: str = pos_label        
+        self._now_label: str = now_label
+        self._alpha_label: str = alpha_label
+        self._bravo_label: str = bravo_label
         self._selectors = selectors
     
     @property
@@ -280,26 +210,42 @@ class DeltaIndex:
         return self._root
     
     @property
-    def sample_key(self) -> str:
-        return self._sample_key
-
-    @property
     def index_header(self) -> str:
         return self._index_header
 
     @property
     def child_header(self) -> str:
         return self._child_header
+
+    @property
+    def pos_label(self) -> str:
+        return self._pos_label
+    
+    @property
+    def now_label(self) -> str:
+        return self._now_label
+
+    @property
+    def alpha_label(self) -> str:
+        return self._alpha_label
+
+    @property
+    def bravo_label(self) -> str:
+        return self._bravo_label
     
     @property
     def selectors(self) -> str:
         return self._selectors
 
-    def add(self, pattern: str) -> Child:
+    def add(self, pattern: str) -> DeltaChild:
         child = DeltaChild(
             pattern, 
             len(self.content), 
-            self.child_header
+            self.child_header,
+            self.pos_label,
+            self.now_label,
+            self.alpha_label,
+            self.bravo_label
         )
         self.content.append(child)
         return child

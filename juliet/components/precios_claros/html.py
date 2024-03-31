@@ -62,40 +62,47 @@ HTML_CHILD = """
         <div class="w3-col w3-left-align"><h2>{{ dawp.name_and_brand }}</h2></div>
         <div class="w3-col w3-left-align"><h3>{{ dawp.code }}</h3></div>
         <ul class="w3-ul">
-            <li class="w3-row w3-pale-blue"> 
-                <div class="w3-col m12 l12 w3-left-align">Rango de precios</div> 
+            <li class="w3-container w3-row w3-pale-blue">
+              <div class="w3-card-4">
+                <div class="w3-col m12 l12 w3-left-align w3-pale-green">Rango de precios</div> 
                 {% if dawp.now_stats %}
                     <div class="w3-col m3 l3 w3-right-align">Hoy</div>
                     {% for stat in dawp.now_stats %}
                         <div class="w3-col m3 l3 w3-right-align">{{ stat }}</div>
                     {% endfor %}
                 {% endif %}
-                {% if dawp.week_stats %}
-                    <div class="w3-col m3 l3 w3-right-align">La semana pasada</div>                
-                    {% for stat in dawp.week_stats %}
+                {% if dawp.alpha_stats %}
+                    <div class="w3-col m3 l3 w3-right-align">{{ alpha_label }}</div>                
+                    {% for stat in dawp.alpha_stats %}
                         <div class="w3-col m3 l3 w3-right-align">{{ stat }}</div>
                     {% endfor %}
                 {% endif %}
-                {% if dawp.month_stats %}
-                    <div class="w3-col m3 l3 w3-right-align">El mes pasado</div>                                
-                    {% for stat in dawp.month_stats %}
+                {% if dawp.bravo_stats %}
+                    <div class="w3-col m3 l3 w3-right-align">{{ bravo_label }}</div>                                
+                    {% for stat in dawp.bravo_stats %}
                         <div class="w3-col m3 l3 w3-right-align">{{ stat }}</div>
                     {% endfor %}
                 {% endif %}
+              </div>
+              <br>
             </li>
-            <li class="w3-row w3-pale-blue"> 
-            <div class="w3-col m3 l3 w3-left-align">Punto de venta</div> 
-            <div class="w3-col m3 l3 w3-right-align">Hoy</div>
-            <div class="w3-col m3 l3 w3-right-align">La semana pasada</div> 
-            <div class="w3-col m3 l3 w3-right-align">El mes pasado</div>                 
+            <li class="w3-container w3-row w3-pale-green"> 
+              <div class="w3-card-4">
+                <div class="w3-col m3 l3 w3-left-align">{{ pos_label }}</div> 
+                <div class="w3-col m3 l3 w3-right-align">{{ now_label }}</div>
+                <div class="w3-col m3 l3 w3-right-align">{{ alpha_label }}</div> 
+                <div class="w3-col m3 l3 w3-right-align">{{ bravo_label }}</div>                 
+              </div>
             </li>
             {% for pos in dawp.list_of_pos %}
-                <li class="w3-row w3-pale-blue"> 
+            <li class="w3-row w3-pale-blue"> 
+              <div class="w3-card-4">
                 <div class="w3-col m3 l3 w3-left-align">{{pos}}</div> 
                 <div class="w3-col m3 l3 w3-right-align">{{dawp.now_prices_per_pos.get(pos, "&nbsp;")}}</div>
-                <div class="w3-col m3 l3 w3-right-align">{{dawp.week_prices_per_pos.get(pos, "&nbsp;")}}</div> 
-                <div class="w3-col m3 l3 w3-right-align">{{dawp.week_prices_per_pos.get(pos, "&nbsp;")}}</div>                 
-                </li>
+                <div class="w3-col m3 l3 w3-right-align">{{dawp.alpha_prices_per_pos.get(pos, "&nbsp;")}}</div> 
+                <div class="w3-col m3 l3 w3-right-align">{{dawp.bravo_prices_per_pos.get(pos, "&nbsp;")}}</div>                 
+              </div>
+            </li>
             {% endfor %}
         </ul>        
         
@@ -116,7 +123,7 @@ HTML_CHILD = """
 #         <ul class="w3-ul">
 #             <li class="w3-row w3-pale-blue"> 
 #                 <div class="w3-col m12 l12 s12 w3-left-align">Rango de precios</div> 
-#                 {% for now, week, month in zip(dawp.now_stats, dawp.week_stats, dwap.month_stats) %}
+#                 {% for now, week, month in zip(dawp.now_stats, dawp.alpha_stats, dwap.bravo_stats) %}
 #                     <div class="w3-col m4 l5 s6 w3-right-align">{{ now }}</div>
 #                     <div class="w3-col m4 l5 s6 w3-right-align">{{ week }}</div>
 #                     <div class="w3-col m4 l5 s6 w3-right-align">{{ month }}</div>
