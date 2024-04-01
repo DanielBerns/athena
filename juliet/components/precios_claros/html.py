@@ -58,15 +58,18 @@ HTML_CHILD = """
 <div id="articles">
 {% for dawp in content %}
     <br>
-    <article class="w3-row w3-pale-green">
+    <article class="w3-row w3-pale-green w3-topbar w3-border-teal">
         <div class="w3-col w3-left-align"><h2>{{ dawp.name_and_brand }}</h2></div>
         <div class="w3-col w3-left-align"><h3>{{ dawp.code }}</h3></div>
         <ul class="w3-ul">
             <li class="w3-container w3-row w3-pale-blue">
-              <div class="w3-card-4">
-                <div class="w3-col m12 l12 w3-left-align w3-pale-green">Rango de precios</div> 
+              <div class="w3-card-4 w3-topbar w3-border-teal">
+                <div class="w3-col m3 l3 w3-left-align w3-sand">Rango de precios</div>
+                <div class="w3-col m3 l3 w3-right-align w3-sand">Mínimo</div> 
+                <div class="w3-col m3 l3 w3-right-align w3-sand">Indicativo</div> 
+                <div class="w3-col m3 l3 w3-right-align w3-sand">Máximo</div>                 
                 {% if dawp.now_stats %}
-                    <div class="w3-col m3 l3 w3-right-align">Hoy</div>
+                    <div class="w3-col m3 l3 w3-right-align">{{ now_label }}</div>
                     {% for stat in dawp.now_stats %}
                         <div class="w3-col m3 l3 w3-right-align">{{ stat }}</div>
                     {% endfor %}
@@ -87,11 +90,11 @@ HTML_CHILD = """
               <br>
             </li>
             <li class="w3-container w3-row w3-pale-green"> 
-              <div class="w3-card-4">
-                <div class="w3-col m3 l3 w3-left-align">{{ pos_label }}</div> 
-                <div class="w3-col m3 l3 w3-right-align">{{ now_label }}</div>
-                <div class="w3-col m3 l3 w3-right-align">{{ alpha_label }}</div> 
-                <div class="w3-col m3 l3 w3-right-align">{{ bravo_label }}</div>                 
+              <div class="w3-card-4 w3-topbar w3-border-teal">
+                <div class="w3-col m3 l3 w3-left-align  w3-sand">{{ pos_label }}</div> 
+                <div class="w3-col m3 l3 w3-right-align w3-sand">{{ now_label }}</div>
+                <div class="w3-col m3 l3 w3-right-align w3-sand">{{ alpha_label }}</div> 
+                <div class="w3-col m3 l3 w3-right-align w3-sand">{{ bravo_label }}</div>                 
               </div>
             </li>
             {% for pos in dawp.list_of_pos %}

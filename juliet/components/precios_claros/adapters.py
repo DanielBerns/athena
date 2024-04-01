@@ -167,6 +167,9 @@ def get_year_month_day(label: str) -> Tuple[str, str, str]:
     year, month, day = label[0:4], label[4:6], label[6:8]
     return year, month, day
 
+def process_label(label: str) -> str:
+    year, month, day = get_year_month_day(label)
+    return f"{year:s}/{month:s}/{day:s}"
 
 def get_header(label: str, province: str, city: str) -> str:
     year, month, day = get_year_month_day(label)
@@ -187,19 +190,19 @@ class DeltaIndex:
     ) -> None:
         self._content: List[DeltaChild] = []
         self._root: str = root
-        selectors = {}
-        if province:
-            selectors['province'] = province
-        if city:
-            selectors['city'] = city
         header: str = get_header(now_label, province, city)
         self._index_header: str = header
         self._child_header: str = header
         self._pos_label: str = pos_label        
-        self._now_label: str = now_label
-        self._alpha_label: str = alpha_label
-        self._bravo_label: str = bravo_label
-        self._selectors = selectors
+        self._now_label: str = process_label(now_label)
+        self._alpha_label: str = process_label(alpha_label)
+        self._bravo_label: str = process_label(bravo_label)
+        # selectors = {}
+        # if province:
+        #     selectors['province'] = province
+        # if city:
+        #     selectors['city'] = city
+        # self._selectors = selectors
     
     @property
     def content(self) -> List[DeltaChild]:
@@ -233,9 +236,9 @@ class DeltaIndex:
     def bravo_label(self) -> str:
         return self._bravo_label
     
-    @property
-    def selectors(self) -> str:
-        return self._selectors
+    # @property
+    # def selectors(self) -> str:
+    #     return self._selectors
 
     def add(self, pattern: str) -> DeltaChild:
         child = DeltaChild(
