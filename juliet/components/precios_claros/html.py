@@ -124,8 +124,8 @@ HTML_CHILD = """
 #         <div class="w3-col w3-left-align"><h2>{{ dawp.name_and_brand }}</h2></div>
 #         <div class="w3-col w3-left-align"><h3>{{ dawp.code }}</h3></div>
 #         <ul class="w3-ul">
-#             <li class="w3-row w3-pale-blue"> 
-#                 <div class="w3-col m12 l12 s12 w3-left-align">Rango de precios</div> 
+#             <li class="w3-row w3-pale-blue">
+#                 <div class="w3-col m12 l12 s12 w3-left-align">Rango de precios</div>
 #                 {% for now, week, month in zip(dawp.now_stats, dawp.alpha_stats, dwap.bravo_stats) %}
 #                     <div class="w3-col m4 l5 s6 w3-right-align">{{ now }}</div>
 #                     <div class="w3-col m4 l5 s6 w3-right-align">{{ week }}</div>
@@ -133,8 +133,8 @@ HTML_CHILD = """
 #                 {% endfor %}
 #             </li>
 #             {% for pos in dawp.list_of_pos %}
-#                 <li class="w3-row w3-pale-blue"> 
-#                 <div class="w3-col m5 l6 w3-left-align">Now {{pos}}</div> 
+#                 <li class="w3-row w3-pale-blue">
+#                 <div class="w3-col m5 l6 w3-left-align">Now {{pos}}</div>
 #                 <div class="w3-col m4 l5 w3-right-align">Week {{pos}}</div>
 #                 <div class="w3-col m4 l5 w3-right-align">Month {{pos}}</div>
 #                 </li>

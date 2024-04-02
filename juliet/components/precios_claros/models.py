@@ -8,7 +8,6 @@ from math import log
 from components.helpers import classname, get_container, get_resource
 from components.core import show
 
-import pdb
 
 @dataclass
 class PointOfSale:
@@ -26,11 +25,11 @@ class SelectPointOfSale(Protocol):
     def select(self, point_of_sale: PointOfSale) -> bool:
         ...
 
-    
+
 class SelectPointOfSaleProvince:
     def __init__(self, province: str) -> None:
         self._province: str = province
-        
+
     def select(self, point_of_sale: PointOfSale) -> bool:
         return point_of_sale.province == self._province
 
@@ -39,20 +38,21 @@ class SelectPointOfSaleProvinceAndCity:
     def __init__(self, province: str, city: str) -> None:
         self._province: str = province
         self._city: str = city
-        
-    def select(self, point_of_sale: PointOfSale) -> bool:
-        return (point_of_sale.city == self._city and 
-                point_of_sale.province == self._province
-                )
-        
 
-def get_place_keys(place: str) -> str:
-    parts = place.split(':')
-    province = parts[0]
-    city_key = parts[1].replace(' ', '_')
+    def select(self, point_of_sale: PointOfSale) -> bool:
+        return (
+            point_of_sale.city == self._city
+            and point_of_sale.province == self._province
+        )
+
+
+def get_place_keys(place: str) -> Tuple[str, str]:
+    parts = place.split(":")
+    province_key = parts[0]
+    city_key = parts[1].replace(" ", "_")
     return province_key, city_key
 
-    
+
 @dataclass
 class Article:
     code: str
@@ -106,8 +106,8 @@ def i2f(i: int) -> float:
     return i / 100
 
 
-def get_place_key(place: str) -> None:
-    return place.replace('-', '_').replace(':', '_').replace(' ', '_')
+def get_place_key(place: str) -> str:
+    return place.replace("-", "_").replace(":", "_").replace(" ", "_")
 
 
 def get_price_descriptors(prices: List[PointOfSaleAndPrice]) -> Tuple[int, int, int]:
@@ -131,7 +131,6 @@ def get_price_descriptors(prices: List[PointOfSaleAndPrice]) -> Tuple[int, int, 
         return prices_min, f2i(prices_geomean), prices_max
 
 
-    
 # @dataclass
 # class LabelAndValue:
 #     label: str
@@ -142,22 +141,22 @@ def format_price(price: int) -> str:
     formatted: str = f"${i2f(price):,.2f}"
     return f"{formatted:>14s}"
 
-        
+
 class ArticleWithPrices:
     def __init__(
-        self, 
-        article: Article, 
-        prices_per_point_of_sale: List[PointOfSaleAndPrice]
+        self, article: Article, prices_per_point_of_sale: List[PointOfSaleAndPrice]
     ) -> None:
-        self._article: Article = article        
-        self._prices_per_point_of_sale: List[PointOfSaleAndPrice] = prices_per_point_of_sale
+        self._article: Article = article
+        self._prices_per_point_of_sale: List[
+            PointOfSaleAndPrice
+        ] = prices_per_point_of_sale
         prices_min, prices_geomean, prices_max = get_price_descriptors(
-             self.prices_per_point_of_sale
+            self.prices_per_point_of_sale
         )
         self._prices_min: str = format_price(prices_min)
         self._prices_geomean: str = format_price(prices_geomean)
         self._prices_max: str = format_price(prices_max)
-        
+
     @property
     def article(self) -> Article:
         return self._article
@@ -168,19 +167,21 @@ class ArticleWithPrices:
 
     @property
     def formatted_prices_per_point_of_sale(self) -> Dict[str, str]:
-        def get_label_and_value(point_of_sale: PointOfSale, price: int) -> Tuple[str, str]:
+        def get_label_and_value(
+            point_of_sale: PointOfSale, price: int
+        ) -> Tuple[str, str]:
             # label = (f"{point_of_sale.identifier:<15s} - {point_of_sale.name:>40s}"
             #          f"{point_of_sale.address:>30s}"
             #         )
             label = f"{point_of_sale.name:>40s} - {point_of_sale.address:>30s}"
             value = format_price(price)
             return label, value
-        
-        sorted_pps = sorted(
-            self.prices_per_point_of_sale,
-            key=lambda x: x[1]
+
+        sorted_pps = sorted(self.prices_per_point_of_sale, key=lambda x: x[1])
+        entries = (
+            get_label_and_value(point_of_sale, price)
+            for (point_of_sale, price) in sorted_pps
         )
-        entries = (get_label_and_value(point_of_sale, price) for (point_of_sale, price) in sorted_pps)
         result: Dict[str, str] = dict(entries)
         return result
 
@@ -195,7 +196,7 @@ class ArticleWithPrices:
     @property
     def prices_min(self) -> str:
         return self._prices_min
-    
+
     @property
     def prices_geomean(self) -> str:
         return self._prices_geomean
@@ -204,7 +205,7 @@ class ArticleWithPrices:
     def prices_max(self) -> str:
         return self._prices_max
 
-        
+
 def match(value: str, pattern: str) -> bool:
     if len(pattern) == 0:
         return False
@@ -212,107 +213,121 @@ def match(value: str, pattern: str) -> bool:
         return False
     return all(a == b for a, b in zip(value, pattern))
 
+
 class ModelsError(Exception):
     pass
 
+
 class DeltaArticleWithPrices:
     def __init__(
-        self, 
-        bravo_awp: Optional[ArticleWithPrices], 
+        self,
+        bravo_awp: Optional[ArticleWithPrices],
         alpha_awp: Optional[ArticleWithPrices],
-        now_awp: Optional[ArticleWithPrices]        
+        now_awp: Optional[ArticleWithPrices],
     ) -> None:
+        code: str
+        name_and_brand: str
+        now_stats: Tuple[str, str, str]
+        now_prices_per_pos: Dict[str, str]
+        bravo_stats: Tuple[str, str, str]
+        bravo_prices_per_pos: Dict[str, str]
+        alpha_stats: Tuple[str, str, str]
+
         now_bit: int = 0
         bravo_bit: int = 0
         alpha_bit: int = 0
+
         if now_awp:
             now_bit = 1
-            code: str = now_awp.code
-            name_and_brand: str = now_awp.name_and_brand
-            now_stats: Tuple[str, str, str] = (
-                now_awp.prices_min,
-                now_awp.prices_geomean,
-                now_awp.prices_max
-            )
-            now_prices_per_pos: Dict[str, str] = now_awp.formatted_prices_per_point_of_sale
+            code = now_awp.code
+            name_and_brand = now_awp.name_and_brand
+            now_stats = (now_awp.prices_min, now_awp.prices_geomean, now_awp.prices_max)
+            now_prices_per_pos = now_awp.formatted_prices_per_point_of_sale
         else:
-            code: str = "&nbsp;"
-            name_and_brand: str = "&nbsp;"
-            now_stats: Tuple[str, str, str] = ("&nbsp;", "&nbsp;", "&nbsp;")
-            now_prices_per_pos: Dict[str, str] = {}
-
-        if bravo_awp:
-            bravo_bit = 1
-            code: str = bravo_awp.code
-            name_and_brand: str = bravo_awp.name_and_brand
-            bravo_stats: Tuple[str, str, str] = (
-                bravo_awp.prices_min,
-                bravo_awp.prices_geomean,
-                bravo_awp.prices_max
-            )
-            bravo_prices_per_pos: Dict[str, str] = bravo_awp.formatted_prices_per_point_of_sale
-        else:
-            bravo_stats: Tuple[str, str, str] = ("&nbsp;", "&nbsp;", "&nbsp;")
-            bravo_prices_per_pos: Dict[str, str] = {}
+            code = "&nbsp;"
+            name_and_brand = "&nbsp;"
+            now_stats = ("&nbsp;", "&nbsp;", "&nbsp;")
+            now_prices_per_pos = {}
 
         if alpha_awp:
             alpha_bit = 1
-            code: str = alpha_awp.code
-            name_and_brand: str = alpha_awp.name_and_brand
-            alpha_stats: Tuple[str, str, str] = (
+            code = alpha_awp.code
+            name_and_brand = alpha_awp.name_and_brand
+            alpha_stats = (
                 alpha_awp.prices_min,
                 alpha_awp.prices_geomean,
-                alpha_awp.prices_max
+                alpha_awp.prices_max,
             )
-            alpha_prices_per_pos: Dict[str, str] = alpha_awp.formatted_prices_per_point_of_sale
+            alpha_prices_per_pos = alpha_awp.formatted_prices_per_point_of_sale
         else:
-            alpha_stats: Tuple[str, str, str] = ("&nbsp;", "&nbsp;", "&nbsp;")
-            alpha_prices_per_pos: Dict[str, str] = {}
+            alpha_stats = ("&nbsp;", "&nbsp;", "&nbsp;")
+            alpha_prices_per_pos = {}
 
-        check = (now_bit * 2 + bravo_bit) * 2 + alpha_bit
+        if bravo_awp:
+            bravo_bit = 1
+            code = bravo_awp.code
+            name_and_brand = bravo_awp.name_and_brand
+            bravo_stats = (
+                bravo_awp.prices_min,
+                bravo_awp.prices_geomean,
+                bravo_awp.prices_max,
+            )
+            bravo_prices_per_pos = bravo_awp.formatted_prices_per_point_of_sale
+        else:
+            bravo_stats = ("&nbsp;", "&nbsp;", "&nbsp;")
+            bravo_prices_per_pos = {}
+
+        check: bool = ((now_bit * 2 + bravo_bit) * 2 + alpha_bit) != 0
         if check == 0:
-            remark = f"{classname(self):s}.__init__: {check:d} - {now_bit:d} {bravo_bit:d} {alpha_bit:d}"
-            # raise ModelsError(remark)
+            remark = f"{classname(self):s}.__init__: {check} - {now_bit:d} {bravo_bit:d} {alpha_bit:d}"
             show(remark)
-        self._bravo_awp: ArticleWithPrices = bravo_awp
-        self._alpha_awp: ArticleWithPrices = alpha_awp
-        self._now_awp: ArticleWithPrices = now_awp        
+            # raise ModelsError(remark)
+        self._check: bool = check
+        self._bravo_awp: Optional[ArticleWithPrices] = bravo_awp
+        self._alpha_awp: Optional[ArticleWithPrices] = alpha_awp
+        self._now_awp: Optional[ArticleWithPrices] = now_awp
         self._code: str = code
         self._name_and_brand: str = name_and_brand
-        self._bravo_stats: Tuple[str, str, str] = bravo_stats        
-        self._alpha_stats: Tuple[str, str, str] = alpha_stats        
+        self._bravo_stats: Tuple[str, str, str] = bravo_stats
+        self._alpha_stats: Tuple[str, str, str] = alpha_stats
         self._now_stats: Tuple[str, str, str] = now_stats
         self._bravo_prices_per_pos: Dict[str, str] = bravo_prices_per_pos
         self._alpha_prices_per_pos: Dict[str, str] = alpha_prices_per_pos
         self._now_prices_per_pos: Dict[str, str] = now_prices_per_pos
         self._list_of_pos: Set[str] = (
-            bravo_prices_per_pos.keys() | alpha_prices_per_pos.keys() | now_prices_per_pos.keys()
+            bravo_prices_per_pos.keys()
+            | alpha_prices_per_pos.keys()
+            | now_prices_per_pos.keys()
         )
-      
+
     @property
-    def now_awp(self) -> ArticleWithPrices:
+    def check(self) -> bool:
+        return self._check
+
+    @property
+    def now_awp(self) -> Optional[ArticleWithPrices]:
         return self._now_awp
 
     @property
-    def bravo_awp(self) -> ArticleWithPrices:
+    def bravo_awp(self) -> Optional[ArticleWithPrices]:
         return self._bravo_awp
 
     @property
-    def alpha_awp(self) -> ArticleWithPrices:
+    def alpha_awp(self) -> Optional[ArticleWithPrices]:
         return self._alpha_awp
 
     @property
     def code(self) -> str:
         return self._code
-    
+
     @property
     def name_and_brand(self) -> str:
         return self._name_and_brand
-    
+
     @property
     def now_stats(self) -> Tuple[str, str, str]:
         return self._now_stats
-    
+
     @property
     def bravo_stats(self) -> Tuple[str, str, str]:
         return self._bravo_stats
@@ -320,11 +335,11 @@ class DeltaArticleWithPrices:
     @property
     def alpha_stats(self) -> Tuple[str, str, str]:
         return self._alpha_stats
-    
+
     @property
     def now_prices_per_pos(self) -> Dict[str, str]:
         return self._now_prices_per_pos
-    
+
     @property
     def bravo_prices_per_pos(self) -> Dict[str, str]:
         return self._bravo_prices_per_pos
@@ -332,12 +347,11 @@ class DeltaArticleWithPrices:
     @property
     def alpha_prices_per_pos(self) -> Dict[str, str]:
         return self._alpha_prices_per_pos
-    
+
     @property
     def list_of_pos(self) -> Set[str]:
         return self._list_of_pos
-    
-            
+
 
 class ArticleWithPricesTable:
     def __init__(self) -> None:
@@ -348,24 +362,17 @@ class ArticleWithPricesTable:
         return self._article_with_prices
 
     def create(
-        self, 
-        article: Article, 
-        prices_per_point_of_sale: List[PointOfSaleAndPrice]
+        self, article: Article, prices_per_point_of_sale: List[PointOfSaleAndPrice]
     ) -> None:
         self.article_with_prices[article.code] = ArticleWithPrices(
             article, prices_per_point_of_sale
         )
-    
-    def insert(
-        self, 
-        article_with_prices: ArticleWithPrices
-    ) -> None:
+
+    def insert(self, article_with_prices: ArticleWithPrices) -> None:
         self.article_with_prices[article_with_prices.article.code] = article_with_prices
-        
-    
+
     def select_values_by_article_code(
-        self, 
-        article_codes: List[str]
+        self, article_codes: List[str]
     ) -> Generator[ArticleWithPrices, None, None]:
         for this_article_code in article_codes:
             try:
@@ -374,8 +381,7 @@ class ArticleWithPricesTable:
                 continue
 
     def select_values_by_prefix(
-        self, 
-        prefixes: List[str]
+        self, prefixes: List[str]
     ) -> Generator[ArticleWithPrices, None, None]:
         for this_prefix in prefixes:
             for article_code, article_with_prices in self.article_with_prices.items():
@@ -388,12 +394,10 @@ class ArticleWithPricesTable:
 
     def article_names(self) -> Generator[str, None, None]:
         for article_code, article_with_prices in self.article_with_prices.items():
-            yield article_with_prices.article.name        
-            
-    def get(self, pattern: str) -> Generator[str, None, None]:
+            yield article_with_prices.article.name
+
+    def get(self, pattern: str) -> Generator[ArticleWithPrices, None, None]:
         for article_with_prices in self.article_with_prices.values():
             name = article_with_prices.article.name
             if match(name, pattern):
                 yield article_with_prices
-            
-
