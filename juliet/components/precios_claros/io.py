@@ -1,20 +1,11 @@
 import logging
 from pathlib import Path
 
-from typing import (Dict, 
-                    Generator, 
-                    Protocol, 
-                    Tuple, 
-                    DefaultDict, 
-                    List, 
-                    Callable)
+from typing import Dict, Generator, Protocol, Tuple, DefaultDict, List, Callable
 from collections import Counter, defaultdict
 
 from components.helpers import get_container, i, classname
-from components.core import (MessageDocument, 
-                             MessageGenerator, 
-                             open_webclient, 
-                             show)
+from components.core import MessageDocument, MessageGenerator, open_webclient, show
 from components.precios_claros.models import (
     Article,
     PointOfSale,
@@ -137,12 +128,7 @@ class PointsOfSaleReader:
         origin.start()
         for message in origin.messages():
             identifier, name, province, city, address = self.get(message)
-            point_of_sale = PointOfSale(
-                identifier, 
-                name, 
-                province, 
-                city, 
-                address)
+            point_of_sale = PointOfSale(identifier, name, province, city, address)
             self.table.add(point_of_sale)
         origin.stop()
 
@@ -194,7 +180,9 @@ class ArticlesReader:
         self._points_of_sale_table: PointsOfSaleTable = points_of_sale_table
         self._articles_counter: Counter = Counter()
         self._articles: Dict[str, Article] = {}
-        self._prices: DefaultDict[str, List[Tuple[PointOfSale, int]]] = defaultdict(list)
+        self._prices: DefaultDict[str, List[Tuple[PointOfSale, int]]] = defaultdict(
+            list
+        )
 
     @property
     def points_of_sale_table(self) -> PointsOfSaleTable:
@@ -299,33 +287,33 @@ class IO:
             sample.points_of_sale.update(posg)
             sposg = PointsOfSaleSelector(sample.points_of_sale, select)
             sample.selected_points_of_sale.update(sposg)
-            aposg = ArticlesGenerator(
-                web_scraper, sample.selected_points_of_sale
-            )
+            aposg = ArticlesGenerator(web_scraper, sample.selected_points_of_sale)
             sample.articles_per_point_of_sale.update(aposg)
             web_scraper.stop()
             sample.stop()
 
     @staticmethod
     def get_article_with_prices_table(
-        sample: Sample, 
-        place: str, 
-        points_of_sale: List[PointOfSale], 
-        articles_reader: ArticlesReader
+        sample: Sample,
+        place: str,
+        points_of_sale: List[PointOfSale],
+        articles_reader: ArticlesReader,
     ) -> ArticleWithPricesTable:
         article_with_prices_table = ArticleWithPricesTable()
         for article_code, prices_per_point_of_sale in articles_reader.prices.items():
             try:
-                points_of_sale_with_prices = [(a_point_of_sale, price) 
-                            for a_point_of_sale, price in prices_per_point_of_sale 
-                            if a_point_of_sale in points_of_sale]
+                points_of_sale_with_prices = [
+                    (a_point_of_sale, price)
+                    for a_point_of_sale, price in prices_per_point_of_sale
+                    if a_point_of_sale in points_of_sale
+                ]
                 if points_of_sale_with_prices:
                     article = articles_reader.articles[article_code]
-                    article_with_prices_table.create(article, points_of_sale_with_prices)
+                    article_with_prices_table.create(
+                        article, points_of_sale_with_prices
+                    )
             except KeyError:
-                remark = (
-                    f"IO.get_article_with_prices_table: bad article_code {article_code:s}"
-                )
+                remark = f"IO.get_article_with_prices_table: bad article_code {article_code:s}"
                 raise PreciosClarosError(remark)
         return article_with_prices_table
 
@@ -348,8 +336,8 @@ class IO:
     def iterate(
         sample: Sample,
         points_of_sale_table: PointsOfSaleTable,
-        articles_reader: ArticlesReader
-    ) -> Generator[Tuple[str, ArticleWithPricesTable, PointOfSale], None, None]:
+        articles_reader: ArticlesReader,
+    ) -> Generator[Tuple[str, ArticleWithPricesTable, List[PointOfSale]], None, None]:
         for place, points_of_sale in points_of_sale_table.per_place.items():
             article_with_prices_table = IO.get_article_with_prices_table(
                 sample, place, points_of_sale, articles_reader
@@ -361,17 +349,15 @@ class IO:
         reference_place: str,
         current_sample: Sample,
         current_points_of_sale_table: PointsOfSaleTable,
-        current_articles_reader: ArticlesReader
-     ) -> Tuple[str, ArticleWithPricesTable, PointOfSale]:
+        current_articles_reader: ArticlesReader,
+    ) -> Tuple[str, ArticleWithPricesTable, List[PointOfSale]]:
         try:
-            points_of_sale = current_points_of_sale_table.per_place[reference_place]            
+            points_of_sale = current_points_of_sale_table.per_place[reference_place]
             article_with_prices_table = IO.get_article_with_prices_table(
                 current_sample, reference_place, points_of_sale, current_articles_reader
-            )            
+            )
         except KeyError:
-            remark = (
-               f"IO.retrieve: bad reference_place {reference_place:s}"
-            )            
+            remark = f"IO.retrieve: bad reference_place {reference_place:s}"
             raise PreciosClarosError(remark)
         # If we reach this point, reference_place == current_place
         return reference_place, article_with_prices_table, points_of_sale

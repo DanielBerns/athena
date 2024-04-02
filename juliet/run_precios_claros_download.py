@@ -4,6 +4,7 @@ from components.configuration import CLI
 from components.core import create_application, show
 from components.precios_claros import Actions
 
+
 def get_arguments() -> Dict[str, str]:
     cli = CLI()
     cli.add_arguments(
@@ -39,7 +40,7 @@ def main() -> None:
         {"provincia": "ar-u", "localidad": "esquel"},
         {"provincia": "ar-u", "localidad": "puerto madryn"},
         {"provincia": "ar-u", "localidad": "rawson"},
-        {"provincia": "ar-v", "localidad": "ushuaia"},        
+        {"provincia": "ar-v", "localidad": "ushuaia"},
     ]
 
     def select(message: Dict[str, str]) -> bool:
@@ -51,9 +52,7 @@ def main() -> None:
     with create_application(application_name, arguments) as application:
         show(f"{application_name:s} 1")
         sample = Actions.create_sample(application, select)
-        show(f"{application_name:s} 2")        
-        Actions.report_sample(application, sample)
-        show(f"{application_name:s} 3")
+        show(f"{application_name:s} 2")
 
 
 if __name__ == "__main__":

@@ -112,4 +112,3 @@ class Tokenizer:
         if -1 < word_start < cursor:
             this_token = "".join(text[word_start:cursor])
             yield this_token.strip()
-
