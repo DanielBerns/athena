@@ -235,7 +235,7 @@ class DeltaArticleWithPrices:
         now_stats: Tuple[str, str, str]
         now_attributes: Tuple[int, int, int]
         now_prices_per_pos: Dict[str, str]
-        
+
         now_bit: int = 0
         bravo_bit: int = 0
         alpha_bit: int = 0
@@ -243,7 +243,7 @@ class DeltaArticleWithPrices:
         now_attributes = (0, 0, 0)
         alpha_attributes = (0, 0, 0)
         bravo_attributes = (0, 0, 0)
-        
+
         if now_awp:
             now_bit = 1
             code = now_awp.code
@@ -266,7 +266,8 @@ class DeltaArticleWithPrices:
                 alpha_awp.prices_max,
             )
             alpha_prices_per_pos = alpha_awp.formatted_prices_per_point_of_sale
-            if now_bit:
+
+        if now_bit:
                 now_attributes = (
                     2 if now_awp.prices_min > alpha_awp.prices_min else 1,
                     2 if now_awp.prices_geomean > alpha_awp.prices_geomean else 1,
@@ -322,7 +323,6 @@ class DeltaArticleWithPrices:
         self._now_values: List[Tuple[str, int]] = [
             (ss, aa) for ss, aa in zip(now_stats, now_attributes)
         ]
-        
         self._bravo_prices_per_pos: Dict[str, str] = bravo_prices_per_pos
         self._alpha_prices_per_pos: Dict[str, str] = alpha_prices_per_pos
         self._now_prices_per_pos: Dict[str, str] = now_prices_per_pos
