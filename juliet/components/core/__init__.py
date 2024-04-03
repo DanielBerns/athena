@@ -10,3 +10,4 @@ from components.core.treestore import TreeStore
 from components.core.tasks import Task
 from components.core.text_lines_with_keys import TextLinesWithKeys
 from components.core.webclient import open_webclient, WebClient
+from components.core.scraper import open_scraper, Scraper
