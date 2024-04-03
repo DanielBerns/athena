@@ -9,8 +9,6 @@ from components.precios_claros.io import IO, Sample
 from components.precios_claros.models import ArticleWithPricesTable, get_place_key
 from components.precios_claros.html import HTML_CHILD, HTML_INDEX
 
-import pdb
-
 ONE_WORD: int = 1
 TWO_CHARACTERS: int = 2
 
@@ -55,7 +53,7 @@ class Actions:
             target.write(content)
 
     @staticmethod
-    def open_report_delta(
+    def start(
         application: Application, bravo_key: str, alpha_key: str, now_key: str
     ) -> Tuple[Path, str, Path, Path]:
         storage: Path = get_container(application.file_system.storage, "precios_claros")
@@ -82,7 +80,7 @@ class Actions:
             delta_key,
             results_precios_claros,
             reports_precios_claros,
-        ) = Actions.open_report_delta(application, bravo_key, alpha_key, now_key)
+        ) = Actions.start(application, bravo_key, alpha_key, now_key)
         store = FlatStore(storage_precios_claros, "flatstore")
         store.start()
         show(f"Actions.report_delta({bravo_key:s}, {alpha_key:s}, {now_key:s}) 2")
@@ -124,7 +122,6 @@ class Actions:
             f"    now_articles                       : {len(now_articles_reader.articles_counter):d}"
         )
         show(f"Actions.report_delta({bravo_key:s}, {alpha_key:s}, {now_key:s}) 4")
-        # pdb.set_trace()
         for now_place, now_article_with_prices_table, now_points_of_sale in IO.iterate(
             now_sample, now_points_of_sale_table, now_articles_reader
         ):

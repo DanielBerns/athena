@@ -227,15 +227,22 @@ class DeltaArticleWithPrices:
     ) -> None:
         code: str
         name_and_brand: str
-        now_stats: Tuple[str, str, str]
-        now_prices_per_pos: Dict[str, str]
         bravo_stats: Tuple[str, str, str]
+        bravo_attributes: Tuple[int, int, int]
         bravo_prices_per_pos: Dict[str, str]
         alpha_stats: Tuple[str, str, str]
+        alpha_attributes: Tuple[int, int, int]
+        now_stats: Tuple[str, str, str]
+        now_attributes: Tuple[int, int, int]
+        now_prices_per_pos: Dict[str, str]
 
         now_bit: int = 0
         bravo_bit: int = 0
         alpha_bit: int = 0
+
+        now_attributes = (0, 0, 0)
+        alpha_attributes = (0, 0, 0)
+        bravo_attributes = (0, 0, 0)
 
         if now_awp:
             now_bit = 1
@@ -259,6 +266,13 @@ class DeltaArticleWithPrices:
                 alpha_awp.prices_max,
             )
             alpha_prices_per_pos = alpha_awp.formatted_prices_per_point_of_sale
+
+        if now_bit:
+                now_attributes = (
+                    2 if now_awp.prices_min > alpha_awp.prices_min else 1,
+                    2 if now_awp.prices_geomean > alpha_awp.prices_geomean else 1,
+                    2 if now_awp.prices_max > alpha_awp.prices_max else 1
+                )
         else:
             alpha_stats = ("&nbsp;", "&nbsp;", "&nbsp;")
             alpha_prices_per_pos = {}
@@ -273,6 +287,18 @@ class DeltaArticleWithPrices:
                 bravo_awp.prices_max,
             )
             bravo_prices_per_pos = bravo_awp.formatted_prices_per_point_of_sale
+            if alpha_bit:
+                alpha_attributes = (
+                    2 if alpha_awp.prices_min > bravo_awp.prices_min else 1,
+                    2 if alpha_awp.prices_geomean > bravo_awp.prices_geomean else 1,
+                    2 if alpha_awp.prices_max > bravo_awp.prices_max else 1
+                )
+            elif now_bit:
+                now_attributes = (
+                    2 if now_awp.prices_min > bravo_awp.prices_min else 1,
+                    2 if now_awp.prices_geomean > bravo_awp.prices_geomean else 1,
+                    2 if now_awp.prices_max > bravo_awp.prices_max else 1
+                )
         else:
             bravo_stats = ("&nbsp;", "&nbsp;", "&nbsp;")
             bravo_prices_per_pos = {}
@@ -288,9 +314,15 @@ class DeltaArticleWithPrices:
         self._now_awp: Optional[ArticleWithPrices] = now_awp
         self._code: str = code
         self._name_and_brand: str = name_and_brand
-        self._bravo_stats: Tuple[str, str, str] = bravo_stats
-        self._alpha_stats: Tuple[str, str, str] = alpha_stats
-        self._now_stats: Tuple[str, str, str] = now_stats
+        self._bravo_values: List[Tuple[str, int]] = [
+            (ss, aa) for ss, aa in zip(bravo_stats, bravo_attributes)
+        ]
+        self._alpha_values: List[Tuple[str, int]] = [
+            (ss, aa) for ss, aa in zip(alpha_stats, alpha_attributes)
+        ]
+        self._now_values: List[Tuple[str, int]] = [
+            (ss, aa) for ss, aa in zip(now_stats, now_attributes)
+        ]
         self._bravo_prices_per_pos: Dict[str, str] = bravo_prices_per_pos
         self._alpha_prices_per_pos: Dict[str, str] = alpha_prices_per_pos
         self._now_prices_per_pos: Dict[str, str] = now_prices_per_pos
@@ -325,16 +357,16 @@ class DeltaArticleWithPrices:
         return self._name_and_brand
 
     @property
-    def now_stats(self) -> Tuple[str, str, str]:
-        return self._now_stats
+    def now_values(self) -> List[Tuple[str, int]]:
+        return self._now_values
 
     @property
-    def bravo_stats(self) -> Tuple[str, str, str]:
-        return self._bravo_stats
+    def bravo_values(self) -> List[Tuple[str, int]]:
+        return self._bravo_values
 
     @property
-    def alpha_stats(self) -> Tuple[str, str, str]:
-        return self._alpha_stats
+    def alpha_values(self) -> List[Tuple[str, int]]:
+        return self._alpha_values
 
     @property
     def now_prices_per_pos(self) -> Dict[str, str]:

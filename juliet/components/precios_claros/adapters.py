@@ -15,6 +15,8 @@ import pdb
 
 
 class DeltaChild:
+    ATTRIBUTES = ("w3-pale-blue", "w3-pale-green", "w3-pale-red")
+
     def __init__(
         self,
         pattern: str,
@@ -166,6 +168,7 @@ class DeltaChild:
         return template.render(
             title=self.pattern,
             local_style="",
+            attributes=DeltaChild.ATTRIBUTES,
             content=self.get_content(),
             header=self.header,
             pos_label=self.pos_label,

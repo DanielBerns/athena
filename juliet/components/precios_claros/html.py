@@ -68,22 +68,22 @@ HTML_CHILD = """
                 <div class="w3-col m3 l3 w3-right-align w3-sand">Mínimo</div> 
                 <div class="w3-col m3 l3 w3-right-align w3-sand">Indicativo</div> 
                 <div class="w3-col m3 l3 w3-right-align w3-sand">Máximo</div>                 
-                {% if dawp.now_stats %}
+                {% if dawp.now_values %}
                     <div class="w3-col m3 l3 w3-right-align">{{ now_label }}</div>
-                    {% for stat in dawp.now_stats %}
-                        <div class="w3-col m3 l3 w3-right-align">{{ stat }}</div>
+                    {% for ss, aa in dawp.now_values %}
+                        <div class="w3-col m3 l3 w3-right-align {{ attributes[aa] }}">{{ ss }}</div>
                     {% endfor %}
                 {% endif %}
-                {% if dawp.alpha_stats %}
+                {% if dawp.alpha_values %}
                     <div class="w3-col m3 l3 w3-right-align">{{ alpha_label }}</div>                
-                    {% for stat in dawp.alpha_stats %}
-                        <div class="w3-col m3 l3 w3-right-align">{{ stat }}</div>
+                    {% for ss, aa in dawp.alpha_values %}
+                        <div class="w3-col m3 l3 w3-right-align {{ attributes[aa] }}">{{ ss }}</div>
                     {% endfor %}
                 {% endif %}
-                {% if dawp.bravo_stats %}
+                {% if dawp.bravo_values %}
                     <div class="w3-col m3 l3 w3-right-align">{{ bravo_label }}</div>                                
-                    {% for stat in dawp.bravo_stats %}
-                        <div class="w3-col m3 l3 w3-right-align">{{ stat }}</div>
+                    {% for ss, aa in dawp.bravo_values %}
+                        <div class="w3-col m3 l3 w3-right-align {{ attributes[aa] }}">{{ ss }}</div>
                     {% endfor %}
                 {% endif %}
               </div>
