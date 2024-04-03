@@ -4,7 +4,7 @@ from typing import Any, Dict, Generator
 
 from requests import Session
 
-from components.helpers import classname
+from components.helpers import classname, get_timestamp
 
 
 class Scraper:
@@ -12,15 +12,21 @@ class Scraper:
         self._session: Session = Session()
 
     def start(self) -> None:
-        logging.info(f"{classname(self):s}.start()")
+        remark = f"{classname(self):s}.start()"
+        print(remark)
+        logging.info(remark)
 
     def stop(self) -> None:
         # https://stackoverflow.com/questions/49253246/how-to-close-requests-session
         self._session.close()
-        logging.info(f"{classname(self):s}.stop()")
+        remark = f"{classname(self):s}.stop()"
+        print(remark)
+        logging.info(remark)
 
     def get(self, url: str) -> Dict[Any, Any]:
-        logging.info(f"{classname(self):s}.get({url:s}) 1")
+        remark = f"{classname(self):s}.get({url:s}) 1"
+        print(remark)
+        logging.info(remark)
         try:
             response = self._session.get(url, headers={"User-Agent": "Mozilla/5.0"})
             content, http_code = response.text, response.status_code 
@@ -36,14 +42,17 @@ class Scraper:
             remark = (
                 f"{classname(self):s}.get({url:s}) 2 - " f"error {str(message):s}"
             )
+            print(remark)
             logging.debug(remark)
         else:
             remark = (
                 f"{classname(self):s}.get({url:s} 3 - "
                 f"http_code: {response.status_code:d}"
             )
+            print(remark)
             logging.info(remark)
-        logging.info(f"{classname(self):s}.get({url:s}) 4")
+        remark = f"{classname(self):s}.get({url:s}) 4"
+        logging.info(remark)
         return content, attributes
 
 
