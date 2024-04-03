@@ -16,7 +16,7 @@ import pdb
 
 class DeltaChild:
     ATTRIBUTES = ("w3-pale-blue", "w3-pale-green", "w3-pale-red")
-    
+
     def __init__(
         self,
         pattern: str,
