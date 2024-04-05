@@ -1,0 +1,1 @@
+from components.automatization.update_crontab import update_crontab
