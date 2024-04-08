@@ -1,6 +1,6 @@
 from pathlib import Path
 from jinja2 import Template
-from typing import Tuple, List, Dict
+from typing import Tuple, List, Dict, Optional
 from components.helpers import classname
 from components.core.application import show
 from components.precios_claros.models import (
@@ -124,35 +124,57 @@ class DeltaChild:
         article_with_prices_table: ArticleWithPricesTable,
         points_of_sale: List[PointOfSale],
     ) -> None:
+        show(f"now table {self.store_key:s} start {self.pattern:s}")
         for awp in article_with_prices_table.get(self.pattern):
+            if awp:
+                show(f"  article.code {awp.article.code:s}")
+            else:
+                show(f"awp is none")
+                pdb.set_trace()
             self.now_table.insert(awp)
+        show(f"now table {self.store_key:s} stop")            
 
     def fill_alpha_table(
         self,
         article_with_prices_table: ArticleWithPricesTable,
         points_of_sale: List[PointOfSale],
     ) -> None:
+        show(f"alpha table {self.store_key:s} start {self.pattern:s}")        
         for awp in article_with_prices_table.get(self.pattern):
+            if awp:
+                show(f"  article.code {awp.article.code:s}")
+            else:
+                show(f"awp is none")
+                pdb.set_trace()
             self.alpha_table.insert(awp)
-
+        show(f"alpha table {self.store_key:s} stop")            
+        
     def fill_bravo_table(
         self,
         article_with_prices_table: ArticleWithPricesTable,
         points_of_sale: List[PointOfSale],
     ) -> None:
+        show(f"bravo table {self.store_key:s} start {self.pattern:s}")                
         for awp in article_with_prices_table.get(self.pattern):
+            if awp:
+                show(f"  article.code {awp.article.code:s}")
+            else:
+                show(f"awp is none")
+                pdb.set_trace()
             self.bravo_table.insert(awp)
-
+        show(f"bravo table {self.store_key:s} stop")            
+        
     def get_content(self) -> List[DeltaArticleWithPrices]:
-        def get_delta(key: str) -> DeltaArticleWithPrices:
+        def get_delta(key: str) -> Optional[DeltaArticleWithPrices]:
             # pdb.set_trace()
             bravo_awp = self.bravo_table.article_with_prices.get(key, None)
             alpha_awp = self.bravo_table.article_with_prices.get(key, None)
             now_awp = self.now_table.article_with_prices.get(key, None)
-            dawp = DeltaArticleWithPrices(bravo_awp, alpha_awp, now_awp)
-            if not dawp.check:
-                remark = f"dawp.check is False for {key:s}"
-                show(remark)
+            try:
+                dawp = DeltaArticleWithPrices(bravo_awp, alpha_awp, now_awp)
+            except Exception as panic:
+                show(f"{key:s} error: {str(panic):s}")
+                dawp = None
             return dawp
 
         all_the_keys = (
@@ -161,7 +183,8 @@ class DeltaChild:
             | self.alpha_table.article_with_prices.keys()
         )
 
-        return [get_delta(key) for key in all_the_keys]
+        deltas = [get_delta(key) for key in all_the_keys]
+        return [dd for dd in deltas if dd]
 
     def write(self, template_text: str) -> str:
         template = Template(template_text)
@@ -271,6 +294,7 @@ class DeltaIndex:
         return child
 
     def write(self, template_text: str) -> str:
+        # pdb.set_trace()
         template = Template(template_text)
         return template.render(
             title=self.index_header,
