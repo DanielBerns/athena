@@ -267,7 +267,7 @@ class DeltaArticleWithPrices:
             )
             alpha_prices_per_pos = alpha_awp.formatted_prices_per_point_of_sale
 
-        if now_bit:
+            if now_bit:
                 now_attributes = (
                     2 if now_awp.prices_min > alpha_awp.prices_min else 1,
                     2 if now_awp.prices_geomean > alpha_awp.prices_geomean else 1,
@@ -307,22 +307,14 @@ class DeltaArticleWithPrices:
         if check == 0:
             remark = f"{classname(self):s}.__init__: {check} - {now_bit:d} {bravo_bit:d} {alpha_bit:d}"
             show(remark)
-            # raise ModelsError(remark)
+            raise ModelsError(remark)
         self._check: bool = check
         self._bravo_awp: Optional[ArticleWithPrices] = bravo_awp
         self._alpha_awp: Optional[ArticleWithPrices] = alpha_awp
         self._now_awp: Optional[ArticleWithPrices] = now_awp
         self._code: str = code
         self._name_and_brand: str = name_and_brand
-        self._bravo_values: List[Tuple[str, int]] = [
-            (ss, aa) for ss, aa in zip(bravo_stats, bravo_attributes)
-        ]
-        self._alpha_values: List[Tuple[str, int]] = [
-            (ss, aa) for ss, aa in zip(alpha_stats, alpha_attributes)
-        ]
-        self._now_values: List[Tuple[str, int]] = [
-            (ss, aa) for ss, aa in zip(now_stats, now_attributes)
-        ]
+
         self._bravo_prices_per_pos: Dict[str, str] = bravo_prices_per_pos
         self._alpha_prices_per_pos: Dict[str, str] = alpha_prices_per_pos
         self._now_prices_per_pos: Dict[str, str] = now_prices_per_pos
@@ -331,6 +323,15 @@ class DeltaArticleWithPrices:
             | alpha_prices_per_pos.keys()
             | now_prices_per_pos.keys()
         )
+        self._bravo_values = [
+            (ss, aa) for ss, aa in zip(bravo_stats, bravo_attributes)
+        ]
+        self._alpha_values = [
+            (ss, aa) for ss, aa in zip(alpha_stats, alpha_attributes)
+        ]
+        self._now_values = [
+            (ss, aa) for ss, aa in zip(now_stats, now_attributes)
+        ]
 
     @property
     def check(self) -> bool:

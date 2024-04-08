@@ -1,7 +1,7 @@
-from typing import List, TextIO
+from typing import List
 
 
-class Text:
+class TextLines:
     def __init__(self) -> None:
         self._lines: List[str] = []
 
@@ -9,6 +9,6 @@ class Text:
     def lines(self) -> List[str]:
         return self._lines
 
-    def write(self, target: TextIO) -> None:
-        for a_line in self.lines:
-            target.write(f"{a_line.strip():s}\n")
+    def content(self):
+        return "\n".join(line.strip() for line in self.lines)
+    
