@@ -69,7 +69,7 @@ def main() -> None:
                 show(
                     f"{application_name:s} Actions.report_delta stop: {bravo_key:s} - {alpha_key:s} - {bravo_key:s}"
                 )
-                time.sleep(30)
+                # time.sleep(30)
         except Exception as panic:
             show(f"{application_name:s} panic: {str(panic):s}")
         show(f"{application_name:s} 3: end")

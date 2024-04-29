@@ -4,10 +4,10 @@ import subprocess
 import logging
 
 from components.core.text_lines_with_keys import TextLinesWithKeys
+from components.core.application import register_error
 
 # https://www.adminschoice.com/crontab-quick-reference
 
-import pdb
 
 class CrontabException(Exception):
     pass
@@ -25,9 +25,9 @@ class Crontab:
         item = Path(command).expanduser()
         if item.exists():
             return str(item)
-        remark = f"{classname(self):s}.check_command: command doesn't exists {str(item):s}"
-        logging.debug(remark)
-        raise CrontabException(remark)
+        explanation = f"{classname(self):s}.check_command: command doesn't exists {str(item):s}"
+        register_error(explanation)
+        raise CrontabException(explanation)
 
     def check_minute(self, minute: str) -> str:
         if minute:
@@ -37,17 +37,17 @@ class Crontab:
                 if 0 <= int(minute) < 60:
                     return minute
                 else:
-                    remark = f"{classname(self):s}.check_minute: invalid minute range: {minute:s}"
-                    logging.debug(remark)
-                    raise CrontabException(remark)
+                    explanation = f"{classname(self):s}.check_minute: invalid minute range: {minute:s}"
+                    register_error(explanation)
+                    raise CrontabException(explanation)
             except ValueError:
-                remark = f"{classname(self):s}.check_minute: invalid minute value: {minute:s}"
-                logging.debug(remark)                
-                raise CrontabException(remark)
+                explanation = f"{classname(self):s}.check_minute: invalid minute value: {minute:s}"
+                register_error(explanation)                
+                raise CrontabException(explanation)
         else:
-            remark = f"{classname(self):s}.check_minute: invalid minute length"
-            logging.debug(remark)                
-            raise CrontabException(remark)
+            explanation = f"{classname(self):s}.check_minute: invalid minute length"
+            register_error(explanation)                
+            raise CrontabException(explanation)
 
     def check_hour(self, hour: str) -> str:
         if hour:
@@ -57,17 +57,17 @@ class Crontab:
                 if 0 <= int(hour) <= 23:
                     return hour
                 else:
-                    remark = f"{classname(self):s}.check_hour: invalid hour range: {hour:s}"
-                    logging.debug(remark)                                    
-                    raise CrontabException(remark)
+                    explanation = f"{classname(self):s}.check_hour: invalid hour range: {hour:s}"
+                    register_error(explanation)                                    
+                    raise CrontabException(explanation)
             except ValueError:
-                remark = f"{classname(self):s}.check_hour: invalid hour value: {hour:s}"
-                logging.debug(remark)                                                    
-                raise CrontabException(remark)
+                explanation = f"{classname(self):s}.check_hour: invalid hour value: {hour:s}"
+                register_error(explanation)                                                    
+                raise CrontabException(explanation)
         else:
-            remark = f"{classname(self):s}.check_hour: invalid hour length"
-            logging.debug(remark)                
-            raise CrontabException(remark)
+            explanation = f"{classname(self):s}.check_hour: invalid hour length"
+            register_error(explanation)                
+            raise CrontabException(explanation)
 
 
     def check_day_of_month(self, day_of_month: str) -> str:
@@ -78,17 +78,17 @@ class Crontab:
                 if 1 <= int(day_of_month) <= 31:
                     return day_of_month
                 else:
-                    remark = f"{classname(self):s}.check_day_of_month: invalid day_of_month range: {day_of_month:s}"
-                    logging.debug(remark)                                    
-                    raise CrontabException(remark)
+                    explanation = f"{classname(self):s}.check_day_of_month: invalid day_of_month range: {day_of_month:s}"
+                    register_error(explanation)                                    
+                    raise CrontabException(explanation)
             except ValueError:
-                remark = f"{classname(self):s}.check_day_of_month: invalid day_of_month value: {day_of_month:s}"
-                logging.debug(remark)                                                    
-                raise CrontabException(remark)
+                explanation = f"{classname(self):s}.check_day_of_month: invalid day_of_month value: {day_of_month:s}"
+                register_error(explanation)                                                    
+                raise CrontabException(explanation)
         else:
-            remark = f"{classname(self):s}.check_day_of_month: invalid day_of_month length"
-            logging.debug(remark)                
-            raise CrontabException(remark)
+            explanation = f"{classname(self):s}.check_day_of_month: invalid day_of_month length"
+            register_error(explanation)                
+            raise CrontabException(explanation)
 
 
     def check_month(self, month: str) -> str:
@@ -99,17 +99,17 @@ class Crontab:
                 if 1 <= int(month) <= 12:
                     return month
                 else:
-                    remark = f"{classname(self):s}.check_hour: invalid month range: {month:s}"
-                    logging.debug(remark)                                    
-                    raise CrontabException(remark)
+                    explanation = f"{classname(self):s}.check_hour: invalid month range: {month:s}"
+                    register_error(explanation)                                    
+                    raise CrontabException(explanation)
             except ValueError:
-                remark = f"{classname(self):s}.check_hour: invalid month value: {month:s}"
-                logging.debug(remark)                                                    
-                raise CrontabException(remark)
+                explanation = f"{classname(self):s}.check_hour: invalid month value: {month:s}"
+                register_error(explanation)                                                    
+                raise CrontabException(explanation)
         else:
-            remark = f"{classname(self):s}.check_hour: invalid month length"
-            logging.debug(remark)                
-            raise CrontabException(remark)
+            explanation = f"{classname(self):s}.check_hour: invalid month length"
+            register_error(explanation)                
+            raise CrontabException(explanation)
 
 
     def check_day_of_week(self, day_of_week: str) -> str:
@@ -120,17 +120,17 @@ class Crontab:
                 if 0 <= int(day_of_week) <= 6:
                     return day_of_week
                 else:
-                    remark = f"{classname(self):s}.check_hour: invalid day_of_week range: {day_of_week:s}"
-                    logging.debug(remark)                                    
-                    raise CrontabException(remark)
+                    explanation = f"{classname(self):s}.check_hour: invalid day_of_week range: {day_of_week:s}"
+                    register_error(explanation)                                    
+                    raise CrontabException(explanation)
             except ValueError:
-                remark = f"{classname(self):s}.check_hour: invalid day_of_week value: {day_of_week:s}"
-                logging.debug(remark)                                                    
-                raise CrontabException(remark)
+                explanation = f"{classname(self):s}.check_hour: invalid day_of_week value: {day_of_week:s}"
+                register_error(explanation)                                                    
+                raise CrontabException(explanation)
         else:
-            remark = f"{classname(self):s}.check_hour: invalid day_of_week length"
-            logging.debug(remark)                
-            raise CrontabException(remark)
+            explanation = f"{classname(self):s}.check_hour: invalid day_of_week length"
+            register_error(explanation)                
+            raise CrontabException(explanation)
 
     def add(
         self,
@@ -141,10 +141,10 @@ class Crontab:
         pdb.set_trace()
         parts = timing.split(' ')
         if len(parts) != 5:
-            remark = f"Error. Bad timing: {key:s} - {str(command):s} - {timing:s}"
-            logging.debug(remark)
-            print(remark)
-            raise CrontabException(remark)
+            explanation = f"Error. Bad timing: {key:s} - {str(command):s} - {timing:s}"
+            register_error(explanation)
+            print(explanation)
+            raise CrontabException(explanation)
         minute: str = parts[0]
         hour: str = parts[1]
         day_of_month: str = parts[2]
@@ -158,8 +158,8 @@ class Crontab:
             _month = self.check_month(month)
             _day_of_week = self.check_day_of_week(day_of_week)
         except CrontabException as message:
-            logging.debug(f"{str(message):s}")
-            remark = " ".join(
+            register_error(f"{str(message):s}")
+            explanation = " ".join(
                     (   "Erroneous parameters:",
                         command,
                         minute,
@@ -169,8 +169,8 @@ class Crontab:
                         day_of_week,
                     )
             )
-            logging.debug(remark)
-            raise CrontabException(remark)
+            register_error(explanation)
+            raise CrontabException(explanation)
         else:
             line = " ".join(
                 (_minute, _hour, _day_of_month, _month, _day_of_week, _command)

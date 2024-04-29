@@ -12,21 +12,21 @@ class Scraper:
         self._session: Session = Session()
 
     def start(self) -> None:
-        remark = f"{classname(self):s}.start()"
-        print(remark)
-        logging.info(remark)
+        explanation = f"{classname(self):s}.start()"
+        print(explanation)
+        logging.info(explanation)
 
     def stop(self) -> None:
         # https://stackoverflow.com/questions/49253246/how-to-close-requests-session
         self._session.close()
-        remark = f"{classname(self):s}.stop()"
-        print(remark)
-        logging.info(remark)
+        explanation = f"{classname(self):s}.stop()"
+        print(explanation)
+        logging.info(explanation)
 
     def get(self, url: str) -> Dict[Any, Any]:
-        remark = f"{classname(self):s}.get({url:s}) 1"
-        print(remark)
-        logging.info(remark)
+        explanation = f"{classname(self):s}.get({url:s}) 1"
+        print(explanation)
+        logging.info(explanation)
         try:
             response = self._session.get(url, headers={"User-Agent": "Mozilla/5.0"})
             content, http_code = response.text, response.status_code 
@@ -39,20 +39,20 @@ class Scraper:
         except Exception as message:
             content, http_code = "", -1
             attributes = {"error": str(message), "http_code": str(http_code)}
-            remark = (
+            explanation = (
                 f"{classname(self):s}.get({url:s}) 2 - " f"error {str(message):s}"
             )
-            print(remark)
-            logging.debug(remark)
+            print(explanation)
+            logging.debug(explanation)
         else:
-            remark = (
+            explanation = (
                 f"{classname(self):s}.get({url:s} 3 - "
                 f"http_code: {response.status_code:d}"
             )
-            print(remark)
-            logging.info(remark)
-        remark = f"{classname(self):s}.get({url:s}) 4"
-        logging.info(remark)
+            print(explanation)
+            logging.info(explanation)
+        explanation = f"{classname(self):s}.get({url:s}) 4"
+        logging.info(explanation)
         return content, attributes
 
 
@@ -63,7 +63,7 @@ def open_scraper() -> Generator[Scraper, None, None]:
         client.start()
         yield client
     except Exception as error:
-        remark = f"open_webclient error: {str(error):s}"
-        logging.debug(remark)
+        explanation = f"open_webclient error: {str(error):s}"
+        logging.debug(explanation)
     finally:
         client.stop()

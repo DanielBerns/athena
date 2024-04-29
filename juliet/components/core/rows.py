@@ -4,9 +4,10 @@ import os
 from pathlib import Path
 from typing import List, Dict, Protocol, DefaultDict, Any, Callable, Generator
 
-from components.helpers import get_directory, get_resource
+from components.helpers import get_directory, get_resource, classname
 
 from components.core.messages import MessageDocument
+from components.core.application import register_error
 
 
 class DictStatsError(Exception):
@@ -31,11 +32,15 @@ class DictStats:
         p = [count["total"] for key, count in self.counters.items()]
         test_p = all([v == p[0] for v in p])
         if not test_p:
-            raise DictStatsError("EventStats.keys: bad stats messages (not p).")
+            explanation = f"{classname(self):s}.keys: bad stats messages (not p)."
+            register_error(explanation)
+            raise DictStatsError(explanation)
         q = [len(count.keys()) == 2 for key, count in self.counters.items()]
         test_q = all(q)
         if not test_q:
-            raise DictStatsError("EventStats.keys: bad stats messages (not q).")
+            explanation = f"{classname(self):s}.keys: bad stats messages (not q)."
+            register_error(explanation)
+            raise DictStatsError(explanation)
         return [str(key) for key in self.counters.keys()]
 
 

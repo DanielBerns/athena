@@ -5,7 +5,7 @@ from typing import Dict, Generator, Protocol, Tuple, DefaultDict, List, Callable
 from collections import Counter, defaultdict
 
 from components.helpers import get_container, i, classname
-from components.core import MessageDocument, MessageGenerator, open_webclient, show
+from components.core import MessageDocument, MessageGenerator, open_webclient, show, FlatStore
 from components.precios_claros.models import (
     Article,
     PointOfSale,
@@ -16,9 +16,9 @@ from components.precios_claros import WebScraper
 
 
 class PreciosClarosError(Exception):
-    def __init__(self, remark: str) -> None:
-        logging.error(remark)
-        super().__init__(remark)
+    def __init__(self, explanation: str) -> None:
+        logging.error(explanation)
+        super().__init__(explanation)
 
 
 class Scraper(Protocol):
@@ -38,8 +38,8 @@ class Scraper(Protocol):
 
 
 class Sample:
-    def __init__(self, key: str, container: Path) -> None:
-        self._key: str = key
+    def __init__(self, container: Path) -> None:
+        self._key: str = container.stem
         self._points_of_sale = MessageDocument(
             get_container(container, "points_of_sale")
         )
@@ -213,14 +213,18 @@ class ArticlesReader:
         try:
             price = int(float(_price) * 100)
         except ValueError:
-            raise PreciosClarosError(f"{classname(self):s}.get 1")
+            explanation = f"{classname(self):s}.get 1"
+            register_error(explanation)
+            raise PreciosClarosError(explanation)
 
         try:
             point_of_sale = self.points_of_sale_table.per_identifier[
                 point_of_sale_identifier
             ]
         except KeyError:
-            raise PreciosClarosError(f"{classname(self):s}.get 2")
+            explanation = f"{classname(self):s}.get 2"
+            register_error(explanation)
+            raise PreciosClarosError(explanation)
 
         return article_code, brand, name, package, price, point_of_sale
 
@@ -242,7 +246,9 @@ class ArticlesReader:
                     )
                 )
                 if different_articles:
-                    raise PreciosClarosError(f"{classname(self):s}.update 1")
+                    explanation = f"{classname(self):s}.update 1"
+                    register_error(explanation)
+                    raise PreciosClarosError(explanation)
             self.prices[article_code].append((point_of_sale, price))
         origin.stop()
 
@@ -273,9 +279,9 @@ class IOException(Exception):
 
 
 class IO:
-    @staticmethod
-    def build(timestamp: str, sample_home: Path) -> Sample:
-        return Sample(timestamp, sample_home)
+    # @staticmethod
+    # def build(sample_home: Path) -> Sample:
+    #     return Sample(sample_home)
 
     @staticmethod
     def write(sample: Sample, select: Callable[[Dict[str, str]], bool]) -> None:
@@ -313,8 +319,9 @@ class IO:
                         article, points_of_sale_with_prices
                     )
             except KeyError:
-                remark = f"IO.get_article_with_prices_table: bad article_code {article_code:s}"
-                raise PreciosClarosError(remark)
+                explanation = f"IO.get_article_with_prices_table: bad article_code {article_code:s}"
+                register_error(explanation)
+                raise PreciosClarosError(explanation)
         return article_with_prices_table
 
     @staticmethod
@@ -325,11 +332,21 @@ class IO:
 
     @staticmethod
     def read(
-        sample: Sample,
+        sample: Sample
     ) -> Tuple[PointsOfSaleTable, ArticlesReader]:
         points_of_sale_table = IO.get_points_of_sale_table(sample)
         articles_reader = ArticlesReader(points_of_sale_table)
         articles_reader.update(sample.articles_per_point_of_sale)
+        show(
+            f"    {sample.key:s} points_of_sale.per_place     : {len(points_of_sale_table.per_place):d}"
+        )
+        show(
+            f"    {sample.key:s} points_of_sale.per_identifier: {len(points_of_sale_table.per_identifier):d}"
+        )
+        show(
+            f"    {sample.key:s} articles                     : {len(articles_reader.articles_counter):d}"
+        )
+        
         return points_of_sale_table, articles_reader
 
     @staticmethod
@@ -357,7 +374,8 @@ class IO:
                 current_sample, reference_place, points_of_sale, current_articles_reader
             )
         except KeyError:
-            remark = f"IO.retrieve: bad reference_place {reference_place:s}"
-            raise PreciosClarosError(remark)
+            explanation = f"IO.retrieve: bad reference_place {reference_place:s}"
+            register_error(explanation)
+            raise PreciosClarosError(explanation)
         # If we reach this point, reference_place == current_place
         return reference_place, article_with_prices_table, points_of_sale

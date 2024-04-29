@@ -24,6 +24,9 @@ def show(message: str) -> None:
     print(message)
     logging.info(message)
 
+def register_error(message: str) -> None:
+    print(message)
+    logging.error(message)
 
 LOG_LEVELS = {
     "NOTSET": logging.NOTSET,
@@ -54,7 +57,7 @@ def create_application(
         filename=log_txt,
         filemode="w",
         level=log_level,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        format="%(levelname)s > %(message)s",
     )
     logging.info("start")
 

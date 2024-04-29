@@ -1,4 +1,4 @@
-from components.core.application import Application, create_application, show
+from components.core.application import Application, create_application, show, register_error
 from components.core.crontab import Crontab
 from components.core.messages import MessageDocument, MessageGenerator
 from components.core.rows import RowDocument

@@ -6,7 +6,7 @@ from typing import Tuple, List, Set, Protocol, Dict, Generator, DefaultDict, Opt
 from math import log
 
 from components.helpers import classname, get_container, get_resource
-from components.core import show
+from components.core import show, register_error
 
 
 @dataclass
@@ -46,11 +46,11 @@ class SelectPointOfSaleProvinceAndCity:
         )
 
 
-def get_place_keys(place: str) -> Tuple[str, str]:
-    parts = place.split(":")
-    province_key = parts[0]
-    city_key = parts[1].replace(" ", "_")
-    return province_key, city_key
+# def get_place_keys(place: str) -> Tuple[str, str]:
+#     parts = place.split(":")
+#     province_key = parts[0]
+#     city_key = parts[1].replace(" ", "_")
+#     return province_key, city_key
 
 
 @dataclass
@@ -65,9 +65,9 @@ PointOfSaleAndPrice = Tuple[PointOfSale, int]
 
 
 class ModelsException(Exception):
-    def __init__(self, remark: str) -> None:
-        logging.error(remark)
-        super().__init__(remark)
+    def __init__(self, explanation: str) -> None:
+        logging.error(explanation)
+        super().__init__(explanation)
 
 
 class PointsOfSaleTable:
@@ -106,20 +106,18 @@ def i2f(i: int) -> float:
     return i / 100
 
 
-def get_place_key(place: str) -> str:
-    return place.replace("-", "_").replace(":", "_").replace(" ", "_")
-
-
 def get_price_descriptors(prices: List[PointOfSaleAndPrice]) -> Tuple[int, int, int]:
     if len(prices) == 0:
-        remark = "get_price_descriptors 1: len(prices) == 0"
-        raise ModelsException(remark)
+        explanation = "get_price_descriptors 1: len(prices) == 0"
+        register_error(explanation)
+        raise ModelsException(explanation)
     ordered_prices = sorted(prices, key=lambda x: x[1])
     try:
         int_prices = [price for point_of_sale, price in ordered_prices]
     except ValueError:
-        remark = "get_price_descriptors 2: bad prices"
-        raise ModelsException(remark)
+        explanation = "get_price_descriptors 2: bad prices"
+        register_error(explanation)
+        raise ModelsException(explanation)
     else:
         prices_min, prices_max = int_prices[0], int_prices[-1]
         if prices_min == prices_max:
@@ -217,6 +215,14 @@ def match(value: str, pattern: str) -> bool:
 class ModelsError(Exception):
     pass
 
+def  get_attributes(first_awp: ArticleWithPrices, second_awp: ArticleWithPrices) -> Tuple[int, int, int]:
+    attributes = (
+       2 if first_awp.prices_min > second_awp.prices_min else 3 if first_awp.prices_min < second_awp.prices_min else 1,
+       2 if first_awp.prices_geomean > second_awp.prices_geomean else 3 if first_awp.prices_geomean < second_awp.prices_geomean else 1,
+       2 if first_awp.prices_max > second_awp.prices_max else 3 if first_awp.prices_max < second_awp.prices_max else 1
+    )
+    return attributes
+
 
 class DeltaArticleWithPrices:
     def __init__(
@@ -268,11 +274,7 @@ class DeltaArticleWithPrices:
             alpha_prices_per_pos = alpha_awp.formatted_prices_per_point_of_sale
 
             if now_bit:
-                now_attributes = (
-                    2 if now_awp.prices_min > alpha_awp.prices_min else 1,
-                    2 if now_awp.prices_geomean > alpha_awp.prices_geomean else 1,
-                    2 if now_awp.prices_max > alpha_awp.prices_max else 1
-                )
+                now_attributes = get_attributes(now_awp, alpha_awp)
         else:
             alpha_stats = ("&nbsp;", "&nbsp;", "&nbsp;")
             alpha_prices_per_pos = {}
@@ -288,11 +290,7 @@ class DeltaArticleWithPrices:
             )
             bravo_prices_per_pos = bravo_awp.formatted_prices_per_point_of_sale
             if alpha_bit:
-                alpha_attributes = (
-                    2 if alpha_awp.prices_min > bravo_awp.prices_min else 1,
-                    2 if alpha_awp.prices_geomean > bravo_awp.prices_geomean else 1,
-                    2 if alpha_awp.prices_max > bravo_awp.prices_max else 1
-                )
+                alpha_attributes = get_attributes(alpha_awp, bravo_awp)
             elif now_bit:
                 now_attributes = (
                     2 if now_awp.prices_min > bravo_awp.prices_min else 1,
@@ -305,9 +303,9 @@ class DeltaArticleWithPrices:
 
         check: bool = ((now_bit * 2 + bravo_bit) * 2 + alpha_bit) != 0
         if check == 0:
-            remark = f"{classname(self):s}.__init__: {check} - {now_bit:d} {bravo_bit:d} {alpha_bit:d}"
-            show(remark)
-            raise ModelsError(remark)
+            explanation = f"{classname(self):s}.__init__: {check} - {now_bit:d} {bravo_bit:d} {alpha_bit:d}"
+            register_error(explanation)
+            raise ModelsError(explanation)
         self._check: bool = check
         self._bravo_awp: Optional[ArticleWithPrices] = bravo_awp
         self._alpha_awp: Optional[ArticleWithPrices] = alpha_awp
