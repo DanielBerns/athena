@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Tuple
 from components.core import show, register_error
 
-import pdb
 
 class HTMLException(Exception):
     pass

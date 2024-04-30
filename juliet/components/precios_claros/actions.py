@@ -75,13 +75,8 @@ class Actions:
         application: Application, bravo_key: str, alpha_key: str, now_key: str
     ) -> None:
         show(f"Actions.report_delta({bravo_key:s}, {alpha_key:s}, {now_key:s}) 1")
-        # # pdb.set_trace()        
         delta_root = DeltaRoot(bravo_key, alpha_key, now_key)
-        (
-            storage_precios_claros,
-            results_precios_claros,
-            reports_precios_claros,
-            index_alpha_html,            
+        (storage_precios_claros, results_precios_claros, reports_precios_claros, index_alpha_html
         ) = Actions.start(application, delta_root.root_constants.delta_key)
         store = FlatStore(storage_precios_claros, "flatstore")
         store.start()
@@ -97,42 +92,15 @@ class Actions:
         now_points_of_sale_table, now_articles_reader = IO.read(now_sample)
         show(f"Actions.report_delta({bravo_key:s}, {alpha_key:s}, {now_key:s}) 3")        
         # # pdb.set_trace()
-        for now_place, now_article_with_prices_table, now_points_of_sale in IO.iterate(
-            now_sample, now_points_of_sale_table, now_articles_reader
-        ):
-            (
-                bravo_place,
-                bravo_article_with_prices_table,
-                bravo_points_of_sale,
-            ) = IO.retrieve(
-                now_place,
-                bravo_sample,
-                bravo_points_of_sale_table,
-                bravo_articles_reader,
-            )
-            (
-                alpha_place,
-                alpha_article_with_prices_table,
-                alpha_points_of_sale,
-            ) = IO.retrieve(
-                now_place,
-                alpha_sample,
-                alpha_points_of_sale_table,
-                alpha_articles_reader,
-            )
-            # # pdb.set_trace()
+        for now_place, now_article_with_prices_table, now_points_of_sale in IO.iterate(now_sample, now_points_of_sale_table, now_articles_reader):
+            (bravo_place, bravo_article_with_prices_table, bravo_points_of_sale) = IO.retrieve(
+                now_place, bravo_sample, bravo_points_of_sale_table, bravo_articles_reader)
+            (alpha_place, alpha_article_with_prices_table, alpha_points_of_sale) = IO.retrieve(
+                now_place, alpha_sample, alpha_points_of_sale_table, alpha_articles_reader)
             delta_index = DeltaIndex(delta_root.root_constants, bravo_place, alpha_place, now_place)            
-            # # pdb.set_trace()            
-            results_precios_claros_with_place_key = get_container(
-                results_precios_claros, delta_index.index_constants.now_place_key
-            )
-            origin = Actions.write_origin(
-                now_article_with_prices_table, results_precios_claros_with_place_key
-            )
-            # # pdb.set_trace()
-            reports_precios_claros_with_place_key = get_container(
-                reports_precios_claros, delta_index.index_constants.now_place_key
-            )
+            results_precios_claros_with_place_key = get_container(results_precios_claros, delta_index.index_constants.now_place_key)
+            origin = Actions.write_origin(now_article_with_prices_table, results_precios_claros_with_place_key)
+            reports_precios_claros_with_place_key = get_container(reports_precios_claros, delta_index.index_constants.now_place_key)
             show(f"Actions.report_delta({bravo_key:s}, {alpha_key:s}, {now_key:s}) 4")                    
             show(f"    {str(reports_precios_claros_with_place_key):s}")
             for pattern in get_patterns(origin, max_length=ONE_WORD):
@@ -140,19 +108,16 @@ class Actions:
                     show(f"    Actions.report_delta: pattern too short {pattern:s}")
                     continue
                 child = delta_index.add(pattern)
-                child.fill_now_table(
-                    now_article_with_prices_table, now_points_of_sale
-                )
-                child.fill_alpha_table(
-                    alpha_article_with_prices_table, alpha_points_of_sale
-                )
-                child.fill_bravo_table(
-                    bravo_article_with_prices_table, bravo_points_of_sale
-                )
+                child.fill_table(bravo_article_with_prices_table, bravo_points_of_sale, child.bravo_table)
+                # bravo_test = [vv for vv in bravo_article_with_prices_table.values()]
+                child.fill_table(alpha_article_with_prices_table, alpha_points_of_sale, child.alpha_table)
+                # alpha_test = [vv for vv in alpha_article_with_prices_table.values()]
+                child.fill_table(now_article_with_prices_table, now_points_of_sale, child.now_table)
+                # now_test = [vv for vv in now_article_with_prices_table.values()]
+                
+                # print(len(bravo_test), len(alpha_test), len(now_test))
                 store_key = child.child_constants.store_key
-                directory = get_directory(
-                    Path(reports_precios_claros_with_place_key, store_key)
-                )
+                directory = get_directory(Path(reports_precios_claros_with_place_key, store_key))
                 content = child.write()
                 resource = get_resource(directory, child.child_constants.name, ".html")
                 Actions.write_target(resource, content)

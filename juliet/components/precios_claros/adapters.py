@@ -22,10 +22,10 @@ from components.precios_claros.html import (
     build_DeltaRootConstants,
 )
 
-import pdb
+# import pdb
 
 class DeltaChild:
-    ATTRIBUTES = ("w3-pale-blue", "w3-pale-green", "w3-pale-red", "w3-cyan w3-text-white")
+    ATTRIBUTES = ("w3-pale-blue", "w3-pale-green w3-text-black", "w3-pale-red w3-text-white", "w3-blue w3-text-yellow")
 
     def __init__(
         self,
@@ -37,9 +37,9 @@ class DeltaChild:
         self._root_constants = root_constants
         self._index_constants = index_constants
         self._child_constants = build_DeltaChildConstants(pattern, number)
-        self._now_table: ArticleWithPricesTable = ArticleWithPricesTable()
+        self._bravo_table: ArticleWithPricesTable = ArticleWithPricesTable()        
         self._alpha_table: ArticleWithPricesTable = ArticleWithPricesTable()
-        self._bravo_table: ArticleWithPricesTable = ArticleWithPricesTable()
+        self._now_table: ArticleWithPricesTable = ArticleWithPricesTable()
 
     @property
     def root_constants(self) -> DeltaRootConstants:
@@ -54,10 +54,6 @@ class DeltaChild:
         return self._child_constants
 
     @property
-    def now_table(self) -> ArticleWithPricesTable:
-        return self._now_table
-
-    @property
     def bravo_table(self) -> ArticleWithPricesTable:
         return self._bravo_table
 
@@ -65,53 +61,29 @@ class DeltaChild:
     def alpha_table(self) -> ArticleWithPricesTable:
         return self._alpha_table
 
-    def fill_now_table(
-        self,
-        article_with_prices_table: ArticleWithPricesTable,
-        points_of_sale: List[PointOfSale],
-    ) -> None:
-        show(f"now table {self.child_constants.store_key:s} start {self.child_constants.pattern:s}")
-        for awp in article_with_prices_table.get(self.child_constants.pattern):
-            if awp:
-                show(f"  article.code {awp.article.code:s}")
-            else:
-                show(f"awp is none")
-            self.now_table.insert(awp)
-        show(f"now table {self.child_constants.store_key:s} stop")            
+    @property
+    def now_table(self) -> ArticleWithPricesTable:
+        return self._now_table
 
-    def fill_alpha_table(
+    def fill_table(
         self,
         article_with_prices_table: ArticleWithPricesTable,
         points_of_sale: List[PointOfSale],
+        child_table: ArticleWithPricesTable
     ) -> None:
-        show(f"alpha table {self.child_constants.store_key:s} start {self.child_constants.pattern:s}")
+        show(f"table {self.child_constants.store_key:s} start {self.child_constants.pattern:s}")
         for awp in article_with_prices_table.get(self.child_constants.pattern):
             if awp:
                 show(f"  article.code {awp.article.code:s}")
+                child_table.insert(awp)                
             else:
                 show(f"awp is none")
-            self.alpha_table.insert(awp)
-        show(f"alpha {self.child_constants.store_key:s} stop")                        
-        
-    def fill_bravo_table(
-        self,
-        article_with_prices_table: ArticleWithPricesTable,
-        points_of_sale: List[PointOfSale],
-    ) -> None:
-        show(f"bravo table {self.child_constants.store_key:s} start {self.child_constants.pattern:s}")
-        for awp in article_with_prices_table.get(self.child_constants.pattern):
-            if awp:
-                show(f"  article.code {awp.article.code:s}")
-            else:
-                show(f"awp is none")
-            self.bravo_table.insert(awp)
-        show(f"bravo {self.child_constants.store_key:s} stop")                        
-        
+        show(f"{self.child_constants.store_key:s} stop")                        
+       
     def get_content(self) -> List[DeltaArticleWithPrices]:
         def get_delta(key: str) -> Optional[DeltaArticleWithPrices]:
-            # pdb.set_trace()
             bravo_awp = self.bravo_table.article_with_prices.get(key, None)
-            alpha_awp = self.bravo_table.article_with_prices.get(key, None)
+            alpha_awp = self.alpha_table.article_with_prices.get(key, None)
             now_awp = self.now_table.article_with_prices.get(key, None)
             try:
                 dawp = DeltaArticleWithPrices(bravo_awp, alpha_awp, now_awp)
@@ -121,9 +93,9 @@ class DeltaChild:
             return dawp
 
         all_the_keys = (
-            self.now_table.article_with_prices.keys()
-            | self.bravo_table.article_with_prices.keys()
+            self.bravo_table.article_with_prices.keys()
             | self.alpha_table.article_with_prices.keys()
+            | self.now_table.article_with_prices.keys()
         )
 
         deltas = [get_delta(key) for key in all_the_keys]
@@ -138,9 +110,9 @@ class DeltaChild:
             content=self.get_content(),
             header=self.index_constants.header,
             pos_label=self.root_constants.pos_label,
-            now_label=self.root_constants.now_label,
-            alpha_label=self.root_constants.alpha_label,
             bravo_label=self.root_constants.bravo_label,
+            alpha_label=self.root_constants.alpha_label,            
+            now_label=self.root_constants.now_label,
         )
 
 

@@ -235,7 +235,7 @@ class DeltaArticleWithPrices:
         name_and_brand: str
         bravo_stats: Tuple[str, str, str]
         bravo_attributes: Tuple[int, int, int]
-        bravo_prices_per_pos: Dict[str, str]
+        bravo_prices_per_pos: Dict[str, str]    
         alpha_stats: Tuple[str, str, str]
         alpha_attributes: Tuple[int, int, int]
         now_stats: Tuple[str, str, str]
@@ -266,13 +266,8 @@ class DeltaArticleWithPrices:
             alpha_bit = 1
             code = alpha_awp.code
             name_and_brand = alpha_awp.name_and_brand
-            alpha_stats = (
-                alpha_awp.prices_min,
-                alpha_awp.prices_geomean,
-                alpha_awp.prices_max,
-            )
+            alpha_stats = (alpha_awp.prices_min, alpha_awp.prices_geomean, alpha_awp.prices_max,)
             alpha_prices_per_pos = alpha_awp.formatted_prices_per_point_of_sale
-
             if now_bit:
                 now_attributes = get_attributes(now_awp, alpha_awp)
         else:
@@ -283,20 +278,12 @@ class DeltaArticleWithPrices:
             bravo_bit = 1
             code = bravo_awp.code
             name_and_brand = bravo_awp.name_and_brand
-            bravo_stats = (
-                bravo_awp.prices_min,
-                bravo_awp.prices_geomean,
-                bravo_awp.prices_max,
-            )
+            bravo_stats = (bravo_awp.prices_min, bravo_awp.prices_geomean, bravo_awp.prices_max,)
             bravo_prices_per_pos = bravo_awp.formatted_prices_per_point_of_sale
             if alpha_bit:
                 alpha_attributes = get_attributes(alpha_awp, bravo_awp)
             elif now_bit:
-                now_attributes = (
-                    2 if now_awp.prices_min > bravo_awp.prices_min else 1,
-                    2 if now_awp.prices_geomean > bravo_awp.prices_geomean else 1,
-                    2 if now_awp.prices_max > bravo_awp.prices_max else 1
-                )
+                now_attributes = get_attributes(now_awp, bravo_awp)
         else:
             bravo_stats = ("&nbsp;", "&nbsp;", "&nbsp;")
             bravo_prices_per_pos = {}
@@ -316,36 +303,14 @@ class DeltaArticleWithPrices:
         self._bravo_prices_per_pos: Dict[str, str] = bravo_prices_per_pos
         self._alpha_prices_per_pos: Dict[str, str] = alpha_prices_per_pos
         self._now_prices_per_pos: Dict[str, str] = now_prices_per_pos
-        self._list_of_pos: Set[str] = (
-            bravo_prices_per_pos.keys()
-            | alpha_prices_per_pos.keys()
-            | now_prices_per_pos.keys()
-        )
-        self._bravo_values = [
-            (ss, aa) for ss, aa in zip(bravo_stats, bravo_attributes)
-        ]
-        self._alpha_values = [
-            (ss, aa) for ss, aa in zip(alpha_stats, alpha_attributes)
-        ]
-        self._now_values = [
-            (ss, aa) for ss, aa in zip(now_stats, now_attributes)
-        ]
+        self._list_of_pos: Set[str] = (bravo_prices_per_pos.keys() | alpha_prices_per_pos.keys() | now_prices_per_pos.keys())
+        self._bravo_values = [(ss, aa) for ss, aa in zip(bravo_stats, bravo_attributes)]
+        self._alpha_values = [(ss, aa) for ss, aa in zip(alpha_stats, alpha_attributes)]
+        self._now_values = [(ss, aa) for ss, aa in zip(now_stats, now_attributes)]
 
     @property
     def check(self) -> bool:
         return self._check
-
-    @property
-    def now_awp(self) -> Optional[ArticleWithPrices]:
-        return self._now_awp
-
-    @property
-    def bravo_awp(self) -> Optional[ArticleWithPrices]:
-        return self._bravo_awp
-
-    @property
-    def alpha_awp(self) -> Optional[ArticleWithPrices]:
-        return self._alpha_awp
 
     @property
     def code(self) -> str:
@@ -356,8 +321,16 @@ class DeltaArticleWithPrices:
         return self._name_and_brand
 
     @property
-    def now_values(self) -> List[Tuple[str, int]]:
-        return self._now_values
+    def bravo_awp(self) -> Optional[ArticleWithPrices]:
+        return self._bravo_awp
+
+    @property
+    def alpha_awp(self) -> Optional[ArticleWithPrices]:
+        return self._alpha_awp
+
+    @property
+    def now_awp(self) -> Optional[ArticleWithPrices]:
+        return self._now_awp
 
     @property
     def bravo_values(self) -> List[Tuple[str, int]]:
@@ -368,8 +341,8 @@ class DeltaArticleWithPrices:
         return self._alpha_values
 
     @property
-    def now_prices_per_pos(self) -> Dict[str, str]:
-        return self._now_prices_per_pos
+    def now_values(self) -> List[Tuple[str, int]]:
+        return self._now_values
 
     @property
     def bravo_prices_per_pos(self) -> Dict[str, str]:
@@ -378,6 +351,10 @@ class DeltaArticleWithPrices:
     @property
     def alpha_prices_per_pos(self) -> Dict[str, str]:
         return self._alpha_prices_per_pos
+
+    @property
+    def now_prices_per_pos(self) -> Dict[str, str]:
+        return self._now_prices_per_pos
 
     @property
     def list_of_pos(self) -> Set[str]:

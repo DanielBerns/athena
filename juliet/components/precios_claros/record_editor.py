@@ -2,7 +2,7 @@ from typing import Dict, List, Generator
 from pathlib import Path
 from components.core import register_error
 from components.helpers import classname
-from components.precios_claros.edit_rules import RecordRule
+from components.precios_claros.record_editor_rules import RecordRule
 from components.precios_claros.collectors import Collector
 
 

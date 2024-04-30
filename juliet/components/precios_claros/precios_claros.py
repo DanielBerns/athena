@@ -34,6 +34,20 @@ class CitiesEditor:
 
     
 class PreciosClaros:
+
+    @staticmethod
+    def all_the_samples(storage: Path) -> None:
+        store = FlatStore(storage, "flatstore")
+        store.start()
+        for sample_key in store.sorted_sample_keys():
+            show(f"{str(sample_key):s}")
+            try:
+                sample_home = store.sample_home(sample_key)
+                yield sample_home
+            except Exception as panic:
+                explanation = str(panic)
+                register_error(explanation)
+
     
     def __init__(self, storage: Path, results: Path, reports: Path) -> None:
         self._storage = get_container(storage, "precios_claros")

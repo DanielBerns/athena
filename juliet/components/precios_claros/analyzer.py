@@ -33,7 +33,19 @@ class Analyzer:
                     'sample_key': sample_key,
                     'explanation': explanation
                 }
-
         precios_claros.write("")                
+
+    @staticmethod
+    def execute(storage: Path) -> None:
+        store = FlatStore(storage, "flatstore")
+        store.start()
+        for sample_key in store.sorted_sample_keys():
+            show(f"{str(sample_key):s}")
+            try:
+                sample_home = store.sample_home(sample_key)
+                yield sample_home
+            except Exception as panic:
+                explanation = str(panic)
+                register_error(explanation)
    
             

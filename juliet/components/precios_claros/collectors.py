@@ -5,7 +5,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from components.core import show, register_error
-from components.precios_claros.edit_rules import RecordRule, ABFieldRule
+from components.precios_claros.record_editor_rules import RecordRule, ABFieldRule
 
 class CollectorsException(Exception):
     pass
