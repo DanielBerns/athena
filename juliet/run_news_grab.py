@@ -45,7 +45,7 @@ def main() -> None:
         ("clarin_economia",         "https://www.clarin.com/rss/economia/",                   "info", ".xml"),
         ("clarin_internacional",    "https://www.clarin.com/rss/internacional/",              "info", ".xml"),
         ("ambito_ultimas_noticias", "https://www.ambito.com/rss/pages/ultimas-noticias.xml",  "info", ".xml"),
-        ("ambito_ecoonomia",        "https://www.ambito.com/rss/pages/economia.xml",          "info", ".xml"),
+        ("ambito_economia",         "https://www.ambito.com/rss/pages/economia.xml",          "info", ".xml"),
         ("ambito_finanzas",         "https://www.ambito.com/rss/pages/finanzas.xml",          "info", ".xml"),
         ("ambito_politica",         "https://www.ambito.com/rss/pages/politica.xml",          "info", ".xml"),        
     ]

@@ -24,26 +24,26 @@ class WebClient:
         try:
             response = self._session.get(url, headers={"User-Agent": "Mozilla/5.0"})
         except Exception as exception:
-            remark = (
+            explanation = (
                 f"{classname(self):s}.get({url:s}) 2 - " f"error {str(exception):s}"
             )
-            logging.debug(remark)
-            return {"errorMessage": remark}
+            logging.debug(explanation)
+            return {"errorMessage": explanation}
         else:
-            remark = (
+            explanation = (
                 f"{classname(self):s}.get({url:s} 3 - "
                 f"status_code: {response.status_code:d}"
             )
-            logging.info(remark)
+            logging.info(explanation)
             if response.status_code == 200:
                 return response.json()
             else:
-                remark = (
+                explanation = (
                     f"{classname(self):s}.get({url:s}) "
                     f"error unexpected status_code: {response.status_code:d}"
                 )
-                logging.debug(remark)
-                return {"errorMessage": remark}
+                logging.debug(explanation)
+                return {"errorMessage": explanation}
         logging.info(f"{classname(self):s}.get({url:s}) 4")
 
 
@@ -54,7 +54,7 @@ def open_webclient() -> Generator[WebClient, None, None]:
         webclient.start()
         yield webclient
     except Exception as error:
-        remark = f"open_webclient error: {str(error):s}"
-        logging.debug(remark)
+        explanation = f"open_webclient error: {str(error):s}"
+        logging.debug(explanation)
     finally:
         webclient.stop()

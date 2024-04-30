@@ -27,13 +27,10 @@ def get_arguments() -> Dict[str, str]:
     )
     return cli.arguments
 
-import pdb
-
 def main() -> None:
     application_name: str = "run_automatization_update_crontab"
     arguments = get_arguments()
 
-    pdb.set_trace()
     with create_application(application_name, arguments) as application:
         show(f"{application_name:s} 1")
         container = Path("~", "Commands").expanduser()

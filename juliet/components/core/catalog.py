@@ -21,7 +21,7 @@ class Catalog(Generic[T]):
         """Creates a new entry in the catalog."""
         try:
             _ = self._table[key]
-            raise CatalogException(f"Entry with key '{key}' already exists.")
+            raise CatalogException(f"Entry with key '{key:s}' already exists.")
         except KeyError:
             self._table[key] = value
 

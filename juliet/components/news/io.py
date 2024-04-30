@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Dict, Tuple
 import json
 
+from bs4 import BeautifulSoup
+
 from components.core import show
 from components.helpers import get_timestamp, get_resource
 

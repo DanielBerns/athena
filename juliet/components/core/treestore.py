@@ -4,14 +4,15 @@ from shutil import rmtree
 import logging
 from typing import Tuple, Dict, Generator
 
-from components.core import Store
+from components.core.store import Store
+from components.core.application import register_error
 from components.helpers import get_container, get_resource, classname
 
 
 class TreeStoreError(Exception):
-    def __init__(self, remark: str) -> None:
-        logging.error(remark)
-        super().__init__(remark)
+    def __init__(self, explanation: str) -> None:
+        logging.error(explanation)
+        super().__init__(explanation)
 
 
 def base_256(number: int) -> Tuple[int, int, int]:
@@ -115,11 +116,12 @@ class TreeStore(Store):
         elif 0 <= top <= self.index:
             pass
         else:
-            remark = (
+            explanation = (
                 f"{classname(self):s}.samples:"
                 f"top {top:d} out of range (-1, {self.index:d})"
             )
-            raise TreeStoreError(remark)
+            register_error(explanation)
+            raise TreeStoreError(explanation)
         for k in range(top):
             yield _get_sample_home(self.samples, k)
 

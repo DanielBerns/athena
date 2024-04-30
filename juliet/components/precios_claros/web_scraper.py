@@ -3,8 +3,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Any, Generator, List
 
 from components.helpers import classname
-from components.core import WebClient
-
+from components.core import WebClient, register_error
 
 @dataclass
 class QueryLimits:
@@ -80,19 +79,19 @@ class WebScraper:
         response = self.webclient.get(url)
         error_message = response.get("errorMessage", None)
         if error_message:
-            remark = f"{classname(self):s}.get_query_limits({url:s}) error_message 1"
-            logging.debug(remark)
+            explanation = f"{classname(self):s}.get_query_limits({url:s}) error_message 1"
+            logging.debug(explanation)
             total_items = max_queries_per_page = 0
         else:
             total_items = response.get("total", 0)
             max_queries_per_page = response.get("maxLimitPermitido", 0)
             if total_items == 0 or max_queries_per_page == 0:
                 total_items = max_queries_per_page = 0
-        remark = (
+        explanation = (
             f"total {str(total_items):s} - "
             f"max_queries_per_page {str(max_queries_per_page):s}"
         )
-        logging.info(remark)
+        logging.info(explanation)
         return QueryLimits(total_items, max_queries_per_page)
 
     def _points_of_sale(
@@ -103,32 +102,32 @@ class WebScraper:
         response = self.webclient.get(url)
         error_message = response.get("errorMessage", None)
         if error_message:
-            remark = (
+            explanation = (
                 f"{classname(self):s}.points_of_sale 2: "
                 f"page {str(offset):s} - {str(error_message):s} "
                 f"from {str(url):s}."
             )
-            logging.warning(remark)
+            logging.warning(explanation)
         else:
             points_of_sale = response.get("sucursales", None)
             if points_of_sale:
                 for a_point_of_sale in points_of_sale:
                     yield a_point_of_sale
             else:
-                remark = (
+                explanation = (
                     f"{classname(self):s}.points_of_sale 3: "
                     f"page {offset:d} - {str(error_message):s}"
                 )
-                logging.warning(remark)
+                logging.warning(explanation)
 
     def points_of_sale(self) -> Generator[Dict[str, str], None, None]:
         logging.info(f"{classname(self):s}.points_of_sale 1")
         url = self.points_of_sale_first_query_url()
         query_limits = self.get_query_limits(url)
         if query_limits.total_items == 0:
-            remark = f"{classname(self):s}.points_of_sale 2: zero query_limits"
-            logging.error(remark)
-            raise WebScraperError(remark)
+            explanation = f"{classname(self):s}.points_of_sale 2: zero query_limits"
+            register_error(explanation)
+            raise WebScraperError(explanation)
         for page in range(0, query_limits.full_pages):
             for a_point_of_sale in self._points_of_sale(
                 query_limits.offset(page), query_limits.full_page_queries
@@ -149,11 +148,11 @@ class WebScraper:
         response = self.webclient.get(url)
         error_message = response.get("errorMessage", None)
         if error_message:
-            remark = (
+            explanation = (
                 f"{classname(self):s}.get_articles_list 2: "
                 f"page {offset:d} - {str(error_message):s}"
             )
-            logging.warning(remark)
+            logging.warning(explanation)
             articles_list = []
         else:
             logging.info(f"{classname(self):s}.get_articles_list 3: done")
@@ -173,11 +172,11 @@ class WebScraper:
                 )
                 yield an_article
         else:
-            remark = (
+            explanation = (
                 f"{classname(self):s}.articles_per_point_of_sale 4: "
                 f"{identifier:s} - empty articles_list"
             )
-            logging.warning(remark)
+            logging.warning(explanation)
 
     def articles_per_point_of_sale(
         self, point_of_sale: Dict[str, str]
@@ -188,12 +187,12 @@ class WebScraper:
         url = self.articles_first_query_url(articles_url)
         query_limits = self.get_query_limits(url)
         if query_limits.total_items == 0:
-            remark = (
+            explanation = (
                 f"{classname(self):s}.articles_per_point_of_sale 2 "
                 f"{identifier:s}: zero query_limits"
             )
-            logging.error(remark)
-            raise WebScraperError(remark)
+            register_error(explanation)
+            raise WebScraperError(explanation)
         for page in range(0, query_limits.full_pages):
             for article in self._articles_per_point_of_sale(
                 articles_url,

@@ -1,7 +1,7 @@
 from logging import error
-import os
+import glob
 from pathlib import Path
-from typing import Generator, Optional
+from typing import Generator, Optional, List
 
 from components.core.store import Store
 from components.helpers import get_timestamp, get_container, classname
@@ -20,10 +20,15 @@ class FlatStore(Store):
     def samples(self) -> Path:
         return self._samples
 
+    def sorted_sample_keys(self) -> List[str]:
+        alpha = [dd for dd in glob.glob(f"{str(self.samples):s}/*")]
+        bravo = sorted(alpha)
+        charlie = [Path(dd).stem for dd in bravo]
+        return charlie
+    
     def iterate(self) -> Generator[Path, None, None]:
-        for root, dirs, files in os.walk(self.samples):
-            for dd in dirs:
-                yield Path(self.samples, dd)
+        for dd in glob.glob(f"{str(self.samples):s}/*"):
+            yield Path(dd)
 
     def sample_home(self, key: str) -> Path:
         return get_container(self.samples, key)

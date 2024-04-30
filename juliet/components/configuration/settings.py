@@ -22,7 +22,7 @@ class Settings:
     @staticmethod
     def write_dotenv(resource: Path, parameters: Dict[str, str]) -> None:
         """Write an example dotenv file, with expected keys.
-        User may modify the values, and add remarks.
+        User may modify the values, and add explanations.
         See https://pypi.org/project/python-dotenv/
         """
         with open(resource, "w") as target:
