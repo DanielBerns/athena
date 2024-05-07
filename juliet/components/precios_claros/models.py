@@ -8,6 +8,7 @@ from math import log
 from components.helpers import classname, get_container, get_resource
 from components.core import show, register_error
 
+import pdb
 
 @dataclass
 class PointOfSale:
@@ -209,7 +210,8 @@ def match(value: str, pattern: str) -> bool:
         return False
     if len(value) < len(pattern):
         return False
-    return all(a == b for a, b in zip(value, pattern))
+    result = all(a == b for a, b in zip(value, pattern))
+    return result
 
 
 class ModelsError(Exception):

@@ -52,6 +52,15 @@ TAIL = """
 class HTMLTarget:
     def __init__(self, target: TextIO) -> None:
         self._target: TextIO = target
+        self._counter: int = 0
+
+    @property
+    def counter(self) -> int:
+        return self._counter
+    
+    @counter.setter
+    def counter(self, value: int) -> None:
+        self._counter = value
 
     @property
     def head(self) -> str:
@@ -62,12 +71,15 @@ class HTMLTarget:
         return TAIL
     
     def start(self) -> None:
+        self.counter = 0
         self._target.write(self.head)
     
     def add(self, news: News) -> None:
-        self._target.write('<li class="w3-border-top w3-border-blue">\n')
-        self._target.write(f"{news.as_html:s}\n")
-        self._target.write("</li>\n")    
+        self.counter += 1
+        if self.counter % 25 == 1:
+            self._target.write('<li class="w3-border-top w3-border-blue">\n')
+            self._target.write(f"{news.as_html:s}\n")
+            self._target.write("</li>\n")    
 
     def stop(self) -> None:
         self._target.write(self.tail)

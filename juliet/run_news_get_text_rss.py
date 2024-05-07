@@ -36,11 +36,10 @@ def main() -> None:
     with create_application(application_name, arguments) as application:
         show(f"{application_name:s} 1")
         try:
-            # pdb.set_trace()
             container = Path("~/Info/athena/juliet/live/Storage/news/treestore/samples/000/000/007/ambito_ecoonomia").expanduser()
             name, suffix = "info", ".xml"
             content, attributes = IO.read(container, name, suffix)
-            reader = RSSXML(content)
+            reader = RSSXML(content, attributes)
             reader.read()
         except Exception as panic:
             show(f"{application_name:s} panic: {str(panic):s}")

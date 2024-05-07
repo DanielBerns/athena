@@ -47,12 +47,24 @@ def main() -> None:
         ("ambito_ultimas_noticias", "https://www.ambito.com/rss/pages/ultimas-noticias.xml",  "info", ".xml"),
         ("ambito_economia",         "https://www.ambito.com/rss/pages/economia.xml",          "info", ".xml"),
         ("ambito_finanzas",         "https://www.ambito.com/rss/pages/finanzas.xml",          "info", ".xml"),
-        ("ambito_politica",         "https://www.ambito.com/rss/pages/politica.xml",          "info", ".xml"),        
+        ("ambito_politica",         "https://www.ambito.com/rss/pages/politica.xml",          "info", ".xml"),
+        ("infobae_rss",             "https://www.infobae.com/feeds/rss/",                     "info", ".xml"),
+        ("cronica_actualidad",      "https://www.diariocronica.com.ar/rss/actualidad",        "info", ".xml"),
+        ("cronica_politica",        "https://www.diariocronica.com.ar/rss/politica",          "info", ".xml"),
+        ("cronica_economia",        "https://www.diariocronica.com.ar/rss/economia",          "info", ".xml"),
+        ("cronica_energia",         "https://www.diariocronica.com.ar/rss/energia",           "info", ".xml"),
+        ("cronica_noticias",        "https://www.diariocronica.com.ar/rss/noticias",          "info", ".xml"),                                
     ]
 
     with create_application(application_name, arguments) as application:
         show(f"{application_name:s} 1")
-        sample_home = Actions.create_sample(application, resources)
+        show(f"{application_name:s} 1")
+        (   storage_news,
+            results_news,
+            reports_news,
+        ) = Actions.start(application)
+        store = Actions.create_store(storage_news)
+        sample_home = Actions.create_sample(store, resources)
         show(f"{application_name:s} {str(sample_home):s} 2")
 
 if __name__ == "__main__":

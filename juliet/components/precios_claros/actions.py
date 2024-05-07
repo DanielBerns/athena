@@ -1,12 +1,12 @@
 from pathlib import Path
-from typing import Callable, Dict, Tuple, Optional
+from typing import Callable, Dict, Tuple, Optional, List
 from components.core import Application, FlatStore, show
 from components.configuration import CLI
 from components.helpers import get_container, get_timestamp, get_directory, get_resource
 from components.nlp.sequences import get_patterns
 from components.precios_claros.adapters import DeltaChild, DeltaIndex, DeltaRoot
 from components.precios_claros.io import IO, Sample
-from components.precios_claros.models import ArticleWithPricesTable
+from components.precios_claros.models import ArticleWithPricesTable, PointOfSale
 
 ONE_WORD: int = 1
 TWO_CHARACTERS: int = 2
@@ -16,7 +16,14 @@ TWO_CHARACTERS: int = 2
 class ActionsException(Exception):
     pass
 
-# import pdb
+import pdb
+
+def show_awp(xxx_test: List[Tuple[PointOfSale, int]]) -> None:
+    print("*"*80)
+    for awp in xxx_test:
+        print(f"article name: {awp.article.name:s} {awp.article.code:s}")
+        for pos, price in awp.prices_per_point_of_sale:
+            print(f"    {pos.name:>40s} - {price:>8d}")
 
 class Actions:
     @staticmethod
@@ -91,7 +98,6 @@ class Actions:
         now_sample = Sample(now_home)
         now_points_of_sale_table, now_articles_reader = IO.read(now_sample)
         show(f"Actions.report_delta({bravo_key:s}, {alpha_key:s}, {now_key:s}) 3")        
-        # # pdb.set_trace()
         for now_place, now_article_with_prices_table, now_points_of_sale in IO.iterate(now_sample, now_points_of_sale_table, now_articles_reader):
             (bravo_place, bravo_article_with_prices_table, bravo_points_of_sale) = IO.retrieve(
                 now_place, bravo_sample, bravo_points_of_sale_table, bravo_articles_reader)
@@ -109,13 +115,16 @@ class Actions:
                     continue
                 child = delta_index.add(pattern)
                 child.fill_table(bravo_article_with_prices_table, bravo_points_of_sale, child.bravo_table)
-                # bravo_test = [vv for vv in bravo_article_with_prices_table.values()]
+                bravo_test = [vv for vv in child.bravo_table.values()]
                 child.fill_table(alpha_article_with_prices_table, alpha_points_of_sale, child.alpha_table)
-                # alpha_test = [vv for vv in alpha_article_with_prices_table.values()]
+                alpha_test = [vv for vv in child.alpha_table.values()]
                 child.fill_table(now_article_with_prices_table, now_points_of_sale, child.now_table)
-                # now_test = [vv for vv in now_article_with_prices_table.values()]
-                
-                # print(len(bravo_test), len(alpha_test), len(now_test))
+                now_test = [vv for vv in child.now_table.values()]
+                show(f"tables {len(bravo_test):d}, {len(alpha_test):d}, {len(now_test):d}")
+                # show_awp(bravo_test)
+                # show_awp(alpha_test)
+                # show_awp(now_test)
+                # pdb.set_trace()                        
                 store_key = child.child_constants.store_key
                 directory = get_directory(Path(reports_precios_claros_with_place_key, store_key))
                 content = child.write()

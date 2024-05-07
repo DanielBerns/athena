@@ -25,7 +25,7 @@ from components.precios_claros.html import (
 # import pdb
 
 class DeltaChild:
-    ATTRIBUTES = ("w3-pale-blue", "w3-pale-green w3-text-black", "w3-pale-red w3-text-white", "w3-blue w3-text-yellow")
+    ATTRIBUTES = ("w3-pale-blue", "w3-pale-green w3-text-black", "w3-red w3-text-white", "w3-blue w3-text-white")
 
     def __init__(
         self,
