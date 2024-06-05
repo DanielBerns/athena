@@ -59,7 +59,7 @@ def build_DeltaRootConstants(bravo_key: str, alpha_key: str, now_key: str) -> De
     bravo_label = get_label(bravo_prefix)
     alpha_label = get_label(alpha_prefix)
     now_label = get_label(now_prefix)
-    delta_key = f"{bravo_prefix:s}-{alpha_prefix:s}-{now_prefix:s}"
+    delta_key = f"{now_prefix:s}-{alpha_prefix:s}-{bravo_prefix:s}"
     return DeltaRootConstants(bravo_label, alpha_label, now_label, delta_key, "Punto de venta")
 
 

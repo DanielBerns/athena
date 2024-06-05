@@ -1,3 +1,5 @@
+import pdb
+
 from pathlib import Path
 from typing import Callable, Dict, Tuple, Optional, List
 from components.core import Application, FlatStore, show
@@ -66,13 +68,14 @@ class Actions:
         storage: Path = get_container(application.file_system.storage, "precios_claros")
         results: Path = get_container(Path(application.file_system.results, "precios_claros"), delta_key)
         reports_root: Path = get_container(Path(application.file_system.reports), "precios_claros")
-        reports: Path = get_container(reports_root, delta_key)
-        index_alpha_html: Path = Path(reports_root, "index_alpha").with_suffix(".html")
+        reports_delta: Path = get_container(reports_root, delta_key)
+        index_alpha_html: Path = get_resource(reports_delta, "index_alpha", ".html")
         
         show(f"    {str(storage):s}")
         show(f"    {str(results):s}")
-        show(f"    {str(reports):s}")
-        return storage, results, reports, index_alpha_html
+        show(f"    {str(reports_delta):s}")
+        show(f"    {str(index_alpha_html):s}")
+        return storage, results, reports_delta, index_alpha_html
 
     @staticmethod
     def report_delta(
@@ -118,9 +121,6 @@ class Actions:
                 child.fill_table(now_article_with_prices_table, now_points_of_sale, child.now_table)
                 now_test = [vv for vv in child.now_table.values()]
                 show(f"tables {len(bravo_test):d}, {len(alpha_test):d}, {len(now_test):d}")
-                # show_awp(bravo_test)
-                # show_awp(alpha_test)
-                # show_awp(now_test)
                 store_key = child.child_constants.store_key
                 directory = get_directory(Path(reports_precios_claros_with_place_key, store_key))
                 content = child.write()
@@ -133,6 +133,7 @@ class Actions:
             Actions.write_target(resource, content)
         show(f"Actions.report_delta({bravo_key:s}, {alpha_key:s}, {now_key:s}) 5")
         content = delta_root.write()
+        pdb.set_trace()
         Actions.write_target(index_alpha_html, content)
             
         store.stop()
