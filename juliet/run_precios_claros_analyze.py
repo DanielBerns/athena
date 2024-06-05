@@ -4,9 +4,8 @@ import time
 
 from components.configuration import CLI
 from components.core import create_application, show
-from components.precios_claros import Analysis
+from components.precios_claros import Analyzer
 
-# import pdb
 
 def get_arguments() -> Dict[str, str]:
     cli = CLI()
@@ -45,13 +44,13 @@ def get_sample_keys(reports_list: Path) -> Generator[Tuple[str, str, str], None,
 
 
 def main() -> None:
-    application_name: str = "run_precios_claros_analysis"
+    application_name: str = "run_precios_claros_analyze"
     arguments = get_arguments()
 
     with create_application(application_name, arguments) as application:
-        show(f"{application_name:s} 1")
+        show(f"{application_name:s} 1: start")
         try:
-            Analysis.execute(application)
+            Analyzer.execute(application)
         except Exception as panic:
             show(f"{application_name:s} panic: {str(panic):s}")
         show(f"{application_name:s} 2: end")

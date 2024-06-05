@@ -1,51 +1,39 @@
 from dataclasses import asdict
 from pathlib import Path
-from typing import Callable, Dict, Tuple
+from typing import Callable, Dict, Tuple, Generator
 from components.core import Application, FlatStore, show
 from components.helpers import get_container
 from components.precios_claros.io import IO, Sample
 from components.precios_claros.models import ArticleWithPricesTable
 from components.precios_claros.collectors import Collector
-
-# import pdb
+from components.precios_claros.precios_claros import PreciosClaros
 
 
 class Analyzer:
 
     @staticmethod
     def execute(application: Application) -> None:
-        precios_claros = PreciosClaros(
-            application.file_system.storage,
-            application.file_system.results,
-            application.file_system.reports
-        )
-        store = FlatStore(precios_claros.storage, "flatstore")
-        store.start()
-        for sample_key in store.sorted_sample_keys():
-            show(f"{str(sample_key):s}")
-            try:
-                sample_home = store.sample_home(sample_key)
+        try:
+            articles_collector = Collector()
+            points_of_sale_collector = Collector()
+            errors_collector = Collector()
+            precios_claros = PreciosClaros(
+                application.file_system.storage,
+                application.file_system.results,
+                application.file_system.reports,
+                articles_collector,
+                points_of_sale_collector,
+                errors_collector
+            )
+            for sample_home in precios_claros.iterate(precios_claros.storage):
                 precios_claros.analyze(sample_home)
-            except Exception as panic:
+            precios_claros.write("")                
+        except Exception as panic:
                 explanation = str(panic)
                 show(explanation)
                 event = {
-                    'sample_key': sample_key,
+                    'sample_home': str(sample_home),
                     'explanation': explanation
                 }
-        precios_claros.write("")                
-
-    @staticmethod
-    def execute(storage: Path) -> None:
-        store = FlatStore(storage, "flatstore")
-        store.start()
-        for sample_key in store.sorted_sample_keys():
-            show(f"{str(sample_key):s}")
-            try:
-                sample_home = store.sample_home(sample_key)
-                yield sample_home
-            except Exception as panic:
-                explanation = str(panic)
-                register_error(explanation)
    
             

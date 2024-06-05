@@ -4,8 +4,8 @@ import time
 
 from components.configuration import CLI
 from components.core import create_application, show
-from components.precios_claros import Analysis
-from components.precios_claros_db import Actions 
+from components.precios_claros import PreciosClaros
+from components.precios_claros_db import Creator 
 
 
 def get_arguments() -> Dict[str, str]:
@@ -37,14 +37,7 @@ def main() -> None:
     with create_application(application_name, arguments) as application:
         show(f"{application_name:s} 1: begin")
         try:
-            (   storage_precios_claros,
-                results_precios_claros,
-                reports_precios_claros,
-            ) = Analysis.start(application)
-            Actions.create_db(
-                storage_precios_claros,
-                reports_precios_claros
-            )
+            Creator.execute(application)
         except Exception as panic:
             show(f"{application_name:s} panic: {str(panic):s}")
         show(f"{application_name:s} 2: end")

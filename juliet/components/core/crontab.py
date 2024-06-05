@@ -138,7 +138,6 @@ class Crontab:
         command: str,
         timing: str
     ) -> None:
-        pdb.set_trace()
         parts = timing.split(' ')
         if len(parts) != 5:
             explanation = f"Error. Bad timing: {key:s} - {str(command):s} - {timing:s}"

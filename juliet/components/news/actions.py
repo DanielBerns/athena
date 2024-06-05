@@ -6,7 +6,6 @@ from components.news.io import IO
 from components.news.news_processors import NewsProcessor
 from components.news.html_targets import HTMLTarget
 from components.news.news_targets import NewsTarget
-# import pdb
 
 class Actions:
     @staticmethod

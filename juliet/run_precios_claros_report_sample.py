@@ -6,7 +6,6 @@ from components.configuration import CLI
 from components.core import create_application, show
 from components.precios_claros import Actions
 
-# import pdb
 
 def get_arguments() -> Dict[str, str]:
     cli = CLI()
@@ -60,7 +59,6 @@ def main() -> None:
         reports_list = Path(arguments["reports_list"]).expanduser()
         show(f"{application_name:s} 2: reports_list {str(reports_list):s}")
         try:
-            # pdb.set_trace()
             for bravo_key, alpha_key, current_key in get_sample_keys(reports_list):
                 show(
                     f"{application_name:s} Actions.report_delta start: {bravo_key:s} - {alpha_key:s} - {bravo_key:s}"

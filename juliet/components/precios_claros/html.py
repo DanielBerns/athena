@@ -82,7 +82,6 @@ def build_DeltaIndexConstants(
     assert(bravo_place == now_place)
     assert(alpha_place == now_place)
     now_place_key = now_place.replace("-", "_").replace(":", "_").replace(" ", "_")
-    # pdb.set_trace()
     parts = now_place.split(":")
     if len(parts) != 2:
         explanation = f"build_DeltaIndexConstants: bad place {now_place:s}"

@@ -1,5 +1,5 @@
 from collections import Counter, defaultdict
-from components.nlp.tokenizer import Tokenizer
+from components.nlp.old_tokenizer import Tokenizer
 from typing import Dict, Tuple, Generator, List, TextIO, Callable, Optional
 from pathlib import Path
 

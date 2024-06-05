@@ -4,9 +4,8 @@ from uuid import uuid4
 from bs4 import BeautifulSoup
 
 from components.helpers import classname
-from components.news.models import Record, News
+from components.news.models import Record, News, year_month_day
 
-import pdb
 
 class Paragraph:
     def __init__(self, record: Record, data: List[str], label: str) -> None:
@@ -32,6 +31,11 @@ class Paragraph:
         if self._label:
             parts.append(self._label)
         return " - ".join(parts)
+
+    @property
+    def plain_text(self) -> str:
+        data = " ".join(self._data)
+        return f"{self.label:s}. {data:s}" if self.label else data
 
 
 class NewsADNSUR:
@@ -65,6 +69,10 @@ class NewsADNSUR:
         
         return ''.join([f"<p>{paragraph.as_html:s}</p>" for paragraph in self.content])
 
+    @property 
+    def plain_text(self) -> str:
+        return "\n".join(paragraph.plain_text for paragraph in self.content)
+
 
 class ADNSUR:
 
@@ -85,14 +93,13 @@ class ADNSUR:
     def suffix(self) -> str:
         return self._suffix
    
-    def read_span_rows(self, soup: BeautifulSoup) -> Generator[News, None, None]:
-        # <span class="item">
-        #   <strong>USD</strong> 
-        #   <span class="values">
-        #      <span class="value"><span class="number">$ 836,00</span> </span>
-        #      <span class="value"><span class="number">$ 876,00</span> </span>
-        #   </span>
-        # </span>
+    def read_span_rows(
+        self, 
+        soup: BeautifulSoup,
+        year: int,
+        month: int,
+        day: int
+    ) -> Generator[News, None, None]:
         find_spans_within_container_divs = [    
             div.find_all("span") for div in soup.find_all("div", class_="container")    
         ]
@@ -111,12 +118,18 @@ class ADNSUR:
                 news = NewsADNSUR("html-span")
                 publication_date = "unknown"
                 guid = str(uuid4())
-                record: Record = Record(span_number, publication_date, guid)    
+                record: Record = Record(span_number, publication_date, guid, year, month, day)    
                 label = ""   
                 news.add(record, data, label)
                 yield news
 
-    def read_link_rows(self, soup: BeautifulSoup) -> Generator[News, None, None]:
+    def read_link_rows(
+        self, 
+        soup: BeautifulSoup,
+        year: int,
+        month: int,
+        day: int
+    ) -> Generator[News, None, None]:
         find_links_within_divs = [div.find_all("a") for div in soup.find_all("div")]
         for links_within_divs in find_links_within_divs:
             for link_number, link in enumerate(links_within_divs):
@@ -126,13 +139,14 @@ class ADNSUR:
                         news = NewsADNSUR("html-link")                                            
                         publication_date = "unknown"
                         guid = link.get("href", str(uuid4())) 
-                        record: Record = Record(link_number, publication_date, guid)    
+                        record: Record = Record(link_number, publication_date, guid, year, month, day)    
                         label = link.get("aria-label", "")
                         news.add(record, data, label)
                         yield news
             
     def execute(self, content: str, attributes: Dict[str, str]) -> Generator[News, None, None]:
+        year, month, day = year_month_day(attributes)
         soup = BeautifulSoup(content, "html.parser")
-        yield from self.read_span_rows(soup)
-        yield from self.read_link_rows(soup)
+        yield from self.read_span_rows(soup, year, month, day)
+        yield from self.read_link_rows(soup, year, month, day)
         

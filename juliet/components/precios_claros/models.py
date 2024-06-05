@@ -8,7 +8,6 @@ from math import log
 from components.helpers import classname, get_container, get_resource
 from components.core import show, register_error
 
-import pdb
 
 @dataclass
 class PointOfSale:

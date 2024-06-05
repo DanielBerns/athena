@@ -110,7 +110,9 @@ def db_create_session(
             yield session
         except Exception as panic:
             print(str(panic))
-
+            session.rollback()            
+        finally:
+            session.close()
 
 @contextmanager
 def db_open_session(
@@ -125,5 +127,7 @@ def db_open_session(
             yield session
         except Exception as panic:
             print(str(panic))
+            session.rollback()
+        finally:
+            session.close()
 
-    

@@ -1,7 +1,9 @@
 from pathlib import Path 
+from collections import Counter
 
 from sqlalchemy import select
 from components.core import register_error, FlatStore
+from components.precios_claros.io import Sample, IO
 from components.precios_claros.collectors import Collector
 from components.precios_claros_db.models import (
     Article, 
@@ -9,10 +11,10 @@ from components.precios_claros_db.models import (
     City, 
     PointOfSale, 
     Timestamp, 
+    Price,
     db_create_session, 
     db_open_session
 )
-
 
 class Actions:
     @staticmethod
@@ -128,18 +130,65 @@ class Actions:
                 print(f"  {timestamp.difference:d}")
                         
     @staticmethod
-    def update_db(storage: Path, sample_key: str) -> None:
+    def update_sample_db(storage: Path, sample_key: str) -> None:
         db_uri=str(Path(storage, "precios_claros").with_suffix(".db"))
+        all_the_places: Counter = Counter()
+        all_the_points_of_sale: Counter = Counter()
         with db_open_session(db_uri) as session:
             store = FlatStore(storage, "flatstore")
             store.start()
             sample_home = store.sample_home(sample_key)
             sample = Sample(sample_home)
             sample_points_of_sale_table, sample_articles_reader = IO.read(sample)
+            print("sample_key", sample_key)
+            _year = int(sample_key[:4])
+            _month = int(sample_key[4:6])
+            _day = int(sample_key[6:8])
+            _difference = int(sample_key[8:])            
+            timestamp_query = select(Timestamp).where(
+                Timestamp.year == _year  and
+                Timestamp.month == _month and
+                Timestamp.day == _day and
+                timestamp.difference == _difference
+            )
+            timestamp = session.scalars(timestamp_query).first()
+            points_of_sale_query = select(PointOfSale)
+            results = session.scalars(points_of_sale_query).all()
+            db_points_of_sale = {value.code: value for value in results}
+            points_of_sale_table, articles_reader = IO.read(sample)
             for place, article_with_prices_table, points_of_sale in IO.iterate(
-                sample, points_of_sale_table, articles_reader
+                sample,
+                points_of_sale_table, 
+                articles_reader
             ):
-                pass
-        
+                all_the_places[place] += 1
+                for pos in points_of_sale:
+                    all_the_points_of_sale[pos.identifier] += 1
+                for awp in article_with_prices_table.values():
+                    articles_query = select(Article).where(
+                        Article.code == awp.article.code
+                    )
+                    articles = session.scalars(articles_query).all()
+                    this_article = articles[0]
+                    count = 0
+                    for pos, price in awp.prices_per_point_of_sale:
+                        if count % 1000 == 1:
+                            print(f"#{count:d}")
+                        count += 1
+                        _value = price
+                        _timestamp_id = timestamp.id
+                        _article_id = this_article.id
+                        _point_of_sale = db_points_of_sale.get(pos.identifier, None)
+                        if _point_of_sale:
+                            _point_of_sale_id = _point_of_sale.id
+                            db_price = Price(
+                                value=_value, 
+                                timestamp_id=_timestamp_id,
+                                article_id=_article_id,
+                                point_of_sale_id=_point_of_sale_id
+                            )
+                            session.add(db_price)
+                    session.commit()
+
             
             

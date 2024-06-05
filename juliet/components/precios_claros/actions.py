@@ -3,7 +3,7 @@ from typing import Callable, Dict, Tuple, Optional, List
 from components.core import Application, FlatStore, show
 from components.configuration import CLI
 from components.helpers import get_container, get_timestamp, get_directory, get_resource
-from components.nlp.sequences import get_patterns
+from components.nlp.old_sequences import get_patterns
 from components.precios_claros.adapters import DeltaChild, DeltaIndex, DeltaRoot
 from components.precios_claros.io import IO, Sample
 from components.precios_claros.models import ArticleWithPricesTable, PointOfSale
@@ -16,7 +16,6 @@ TWO_CHARACTERS: int = 2
 class ActionsException(Exception):
     pass
 
-import pdb
 
 def show_awp(xxx_test: List[Tuple[PointOfSale, int]]) -> None:
     print("*"*80)
@@ -30,7 +29,6 @@ class Actions:
     def create_sample(
         application: Application, select: Callable[[Dict[str, str]], bool]
     ) -> str:
-        # pdb.set_trace()
         precios_claros = get_container(
             application.file_system.storage, "precios_claros"
         )
@@ -40,7 +38,6 @@ class Actions:
         sample_home = store.sample_home(timestamp)
         sample = Sample(sample_home)
         sample.start()
-        # pdb.set_trace()
         IO.write(sample, select)
         sample.stop()
         store.stop()
@@ -124,7 +121,6 @@ class Actions:
                 # show_awp(bravo_test)
                 # show_awp(alpha_test)
                 # show_awp(now_test)
-                # pdb.set_trace()                        
                 store_key = child.child_constants.store_key
                 directory = get_directory(Path(reports_precios_claros_with_place_key, store_key))
                 content = child.write()
@@ -136,7 +132,6 @@ class Actions:
             )
             Actions.write_target(resource, content)
         show(f"Actions.report_delta({bravo_key:s}, {alpha_key:s}, {now_key:s}) 5")
-        # # pdb.set_trace()
         content = delta_root.write()
         Actions.write_target(index_alpha_html, content)
             

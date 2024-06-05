@@ -22,7 +22,6 @@ from components.precios_claros.html import (
     build_DeltaRootConstants,
 )
 
-# import pdb
 
 class DeltaChild:
     ATTRIBUTES = ("w3-pale-blue", "w3-pale-green w3-text-black", "w3-red w3-text-white", "w3-blue w3-text-white")
@@ -149,7 +148,6 @@ class DeltaIndex:
         return self._content
 
     def add(self, pattern: str) -> DeltaChild:
-        # pdb.set_trace()
         child = DeltaChild(
             pattern,
             len(self.content),

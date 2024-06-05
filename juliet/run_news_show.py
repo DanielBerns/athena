@@ -5,7 +5,6 @@ from components.core import create_application, show
 from components.helpers import get_resource
 from components.news import Actions, ADNSUR, RSS, HTMLTarget
 
-import pdb
 
 def get_arguments() -> Dict[str, str]:
     cli = CLI()
@@ -46,7 +45,7 @@ def main() -> None:
     ]
     
     with create_application(application_name, arguments) as application:
-        show(f"{application_name:s} 1")
+        show(f"{application_name:s} start")
         (   storage_news,
             results_news,
             reports_news,
@@ -56,7 +55,7 @@ def main() -> None:
         with open(resource, "w") as target:
             news_html = HTMLTarget(target)
             Actions.store_samples_to_news_target(store, news_html, processors)
-        show(f"{application_name:s} 2")
+        show(f"{application_name:s} stop")
 
 if __name__ == "__main__":
     main()

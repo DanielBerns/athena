@@ -4,7 +4,7 @@ import time
 
 from components.configuration import CLI
 from components.core import create_application, show
-from components.precios_claros import Analysis
+from components.precios_claros import PreciosClaros
 from components.precios_claros_db import Actions 
 
 
@@ -37,12 +37,13 @@ def main() -> None:
     with create_application(application_name, arguments) as application:
         show(f"{application_name:s} 1: begin")
         try:
-            (   storage_precios_claros,
-                results_precios_claros,
-                reports_precios_claros,
-            ) = Analysis.start(application)
+            precios_claros = PreciosClaros(
+                application.file_system.storage,
+                application.file_system.results,
+                application.file_system.reports
+            )
             Actions.test_db(
-                storage_precios_claros
+                precios_claros.storage
             )
         except Exception as panic:
             show(f"{application_name:s} panic: {str(panic):s}")

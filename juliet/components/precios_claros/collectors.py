@@ -1,164 +1,153 @@
 import logging
 
-from typing import Dict, DefaultDict, List, Generator
+from typing import Dict, DefaultDict, List, Generator, Tuple
 from collections import Counter, defaultdict
 from pathlib import Path
 
 from components.core import show, register_error
-from components.precios_claros.record_editor_rules import RecordRule, ABFieldRule
+from components.helpers import classname
+from components.precios_claros.record_editor_rules import RecordRule, FieldRule, ChangeFieldRule, NoChangeFieldRule
+
 
 class CollectorsException(Exception):
     pass
+
 
 def clean_dict(event: Dict[str, str]) -> Dict[str, str]:
     result = {pp.strip():qq.strip() for pp, qq in event.items()}
     return result
 
-class Collector:
-    CUT_1 = 3        
-    CUT_2 = 2
 
+class CollectorField:
+    def __init__(self, value: Dict[str, str]) -> None:
+        self._counter: int = 0
+        self._table: DefaultDict[str, List[Tuple[int, str]]] = defaultdict(list)
+        self.add(value)
+    
+    @property
+    def counter(self) -> int:
+        return self._counter
+    
+    @counter.setter
+    def counter(self, value: int) -> None:
+        self._counter = value
+
+    @property
+    def table(self) -> DefaultDict[str, List[Tuple[int, str]]]:
+        return self._table
+
+    def add(self, value: Dict[str, str]) -> None:
+        for key, value in value.items():
+            self.table[key].append((self.counter, value))
+        self.counter += 1
+
+
+class Collector:
     def __init__(self) -> None:
         self._counter: Counter = Counter()
-        self._table: Dict[str, Dict[str, str]] = {}
-        self._differences: Counter = Counter()
+        self._table: Dict[str, CollectorField] = {}
 
-    
     def insert(self, key: str, value: Dict[str, str]) -> None:
-        self._counter[key] += 1
-        if self._counter[key] == 1:
-            self._table[key] = clean_dict(value)
+        self.counter[key] += 1
+        collector_field = self.table.get(key, None)
+        if collector_field is None:
+            self.table[key] = CollectorField(value)
         else:
-            try:
-                test = self._table[key]
-                self.check(key, clean_dict(value), test)
-            except Exception as message:
-                explanation = f"Collector.insert error: key {key:s} -> {str(message):s}"
-                show(explanation)
-
-    def check(
-        self, 
-        key: str, 
-        value: Dict[str, str], 
-        test: Dict[str, str]
-    ) -> None:
-        auxiliar = [(test[pp] == qq, pp, test[pp], qq) for pp, qq in value.items()]
-        result = all(aa for aa, bb, cc, dd in auxiliar)
-        if not result:
-            explanation = []
-            explanation.append(f"## {key:s}\n")
-            for aa, bb, cc, dd in auxiliar:
-                if not aa:
-                    explanation.append(f'"{key:s}" -: "{bb:s}" -: "{cc:s}" -: "{dd:s}" -: AB\n')
-            difference = '= '.join(explanation) + '-'
-            show(difference)
-            self._differences[difference] += 1
+            collector_field.add(value)
             
-    def write_table(self, container: Path, name: str, suffix: str) -> None:
-        empty: Dict[str, str] = {}
+    def write(self, container: Path, name: str, suffix: str) -> None:
         resource = Path(container, name).with_suffix(suffix)
         with open(resource, 'w') as target:
             target.write(f"# {name:s}\n")
-            for number, (key, count) in enumerate(self._counter.items()):
-                value = self._table.get(key, empty)
-                target.write(f"## {number:d}: {key:s}\n")
-                for pp, qq in value.items():
-                    target.write(f"    {pp:s}: {qq:s}\n")
-                target.write(f"--\n")                
-
-    def write_differences(self, container: Path, name: str, suffix: str) -> None:    
-        differences_name = name + "_differences"
-        resource = Path(container, differences_name).with_suffix(suffix)
-        with open(resource, 'w') as target:
-            target.write(f"# {differences_name:s}\n")
-            for kk, vv in self._differences.items():
-                target.write(f"{kk:s} = {vv}\n")
-
-    @staticmethod
-    def read_table(container: Path, name: str, suffix: str) -> Generator[Dict[str, str], None, None]:
-        resource = Path(container, name).with_suffix(suffix)        
-        with open(resource, 'r') as origin:
-            title = origin.readline()
-            state = 1
-            event: Dict[str, str]
-            for number, line in enumerate(origin):
-                try:
-                    if state == 1:
-                        tag, value = line[:Collector.CUT_1], line[Collector.CUT_1:-1]
-                        assert(tag == "## ") 
-                        event = {}
-                        (identifier, article_code) = value.split(": ")
-                        state = 2
-                    elif state == 2:
-                        if line[0] == '-':
-                            state = 1
-                            yield event
+            for major_index, (major_key, count) in enumerate(self.counter.items()):
+                collector_field = self.table.get(major_key, None)
+                if collector_field:
+                    target.write(f"## {major_index:d} - {major_key:s} - {count:d}\n")
+                    for minor_index, (minor_key, instances) in enumerate(collector_field.table.items()):
+                        if len(instances) != count:
+                            show(f"{classname(self):s}.write_table error {major_index:d} - {major_key:s} - {minor_index} - {minor_key:s} - {len(instances)} != {count:d}")
                         else:
-                            try:
-                                (kk, vv) = line.split(":")
-                                key = kk.strip()
-                                value = vv.strip()
-                                event[key] = value
-                            except Exception as panic:
-                                register_error(str(panic))
-                                register_error(f"{number:d} - {value:s}")
-                    else:
-                        raise CollectorsException("invalid state: {state:d} - {number:d} - {line:s}")
-                except Exception as panic:
-                    explanation = f"{classname(self):s}.read_table: {str(panic):s}"
-                    register_error(explanation)
-                    break
+                            unique_values = set([vv for cc, vv in instances])
+                            check = ": X" if len(unique_values) > 1 else ": A"                            
+                            target.write(f"### {minor_index} - {minor_key:s}\n")                            
+                            for value_index, value in enumerate(unique_values):
+                                target.write(f"{value_index:d}. {value:s}{check:s}\n")
+                            target.write(f"\n")               
+                else:
+                    show(f"{classname(self):s}.write_table error {number:d} - {major_key:s}\n")
+
+    @property
+    def counter(self) -> Counter:
+        return self._counter
+   
+    @property
+    def table(self) -> Dict[str, CollectorField]:
+        return self._table
 
     @staticmethod
-    def read_differences(container: Path, name: str, suffix: str) -> Generator[RecordRule, None, None]:
-        differences_name = name + "_differences"        
-        resource = Path(container, differences_name).with_suffix(suffix)        
+    def read(
+        container: Path, 
+        name: str, 
+        suffix: str
+    ) -> Generator[Tuple[int, str, int, str, int, str, str, str], None, None]:
+        resource = Path(container, name).with_suffix(suffix)
         with open(resource, 'r') as origin:
             title = origin.readline()
             state = 1
-            for number, line in enumerate(origin):
+            for line in origin:
+                print("state", state)
                 try:
                     if state == 1:
-                        tag, value = line[:Collector.CUT_1], line[Collector.CUT_1:-1]
-                        assert(tag == "## ") 
-                        code_1 = value
-                        record_rule = RecordRule(code_1)
+                        prefix, info = line[:3], line[3:]
+                        assert(prefix == "## ")
+                        (_major_index, _major_key, _count) = info.split(" - ")
+                        major_index = int(_major_index)
+                        major_key = _major_key.strip()
+                        count = int(_count)
+                        yield major_index, major_key, -1, "", -1, "", "", "new_record"                                                                        
                         state = 2
                     elif state == 2:
-                        if line[0] == '=':
-                            tag, value = line[:Collector.CUT_2], line[Collector.CUT_2:-1]
-                            try:
-                                assert(tag == "= ")
-                                (cc, kk, aa, bb, mm) = value.split(" -: ")
-                                code_2 = cc[1:-1]    # scrap delimiters "
-                                key = kk[1:-1]       # scrap delimiters "
-                                value_a = aa[1:-1]   # scrap delimiters "
-                                value_b = bb[1:-1]   # scrap delimiters "
-                                method = mm
-                                assert(code_1 == code_2)
-                            except Exception as panic:
-                                register_error(str(panic))
-                                register_error(f"{number:d} - {value:s}")
-                                continue
-                            if method == "AB":
-                                record_rule.field_rules.append(
-                                    ABFieldRule(key, value_a, value_b)
-                                )
-                            elif method == "BA":
-                                record_rule.field_rules.append(
-                                    ABFieldRule(key, value_b, value_a)
-                                )
-                            elif method == "XX":
-                                register_error(line)
-                                continue
-                        elif line[0] == '-':
-                            state = 1
-                            yield record_rule
+                        prefix, info = line[:4], line[4:]
+                        assert(prefix == "### ")
+                        (_minor_index, _minor_key) = info.split(" - ")
+                        minor_index = int(_minor_index.strip())
+                        minor_key = _minor_key.strip()
+                        yield major_index, major_key, minor_index, minor_key, -1, "", "", "new_field"                        
+                        state = 3
+                    elif state == 3:
+                        if line == "\n":
+                            yield major_index, major_key, minor_index, minor_key, -1, "", "", "end_of_field"                            
+                            state = 4
+                        else:
+                            (_value_index, info) = line.split('.')
+                            value_index = int(_value_index)
+                            (_value, _check) = info.split(':')
+                            value = _value.strip()
+                            check = _check.strip()
+                            yield major_index, major_key, minor_index, minor_key, value_index, value, check, "new_value"
+                    elif state == 4:
+                        if line.startswith("## "):
+                            yield major_index, major_key, -1, "", -1, "", "", "end_of_record"
+                            prefix, info = line[:3], line[3:]
+                            assert(prefix == "## ")
+                            (_major_index, _major_key, _count) = info.split(" - ")
+                            major_index = int(_major_index.strip())
+                            major_key = _major_key.strip()
+                            count = int(_count.strip())
+                            yield major_index, major_key, -1, "", -1, "", "", "new_record"                                                                                                   
+                            state = 2                            
+                        elif line.startswith("### "):
+                            prefix, info = line[:4], line[4:]
+                            assert(prefix == "### ")
+                            (_minor_index, _minor_key) = info.split(" - ")
+                            minor_index = int(_minor_index.strip())
+                            minor_key = _minor_key.strip()
+                            yield major_index, major_key, minor_index, minor_key, -1, "", "", "new_field"                        
+                            state = 3
+                        else:
+                            raise CollectorsException(f"Collector.read_table error state 4")
                     else:
-                        raise CollectorsException("invalid state: {state:d} - {number:d} - {line:s}")
+                        raise CollectorsException(f"Collector.read_table error wrong state")                        
                 except Exception as panic:
-                    explanation = f"{classname(self):s}.load_rules: {str(panic):s}"
-                    register_error(explanation)
-                    break
-
-    
+                    pass
+                    

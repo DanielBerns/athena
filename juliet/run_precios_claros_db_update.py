@@ -4,8 +4,8 @@ import time
 
 from components.configuration import CLI
 from components.core import create_application, show
-from components.news import IO, RSSXML
-
+from components.precios_claros import PreciosClaros
+from components.precios_claros_db import Actions 
 
 def get_arguments() -> Dict[str, str]:
     cli = CLI()
@@ -30,17 +30,21 @@ def get_arguments() -> Dict[str, str]:
 
 
 def main() -> None:
-    application_name: str = "run_precios_claros_xml_get_text"
+    application_name: str = "run_precios_claros_db_creator"
     arguments = get_arguments()
 
     with create_application(application_name, arguments) as application:
-        show(f"{application_name:s} 1")
+        show(f"{application_name:s} 1: begin")
         try:
-            container = Path("~/Info/athena/juliet/live/Storage/news/treestore/samples/000/000/007/ambito_ecoonomia").expanduser()
-            name, suffix = "info", ".xml"
-            content, attributes = IO.read(container, name, suffix)
-            reader = RSSXML(content, attributes)
-            reader.read()
+            precios_claros = PreciosClaros(
+                application.file_system.storage,
+                application.file_system.results,
+                application.file_system.reports
+            )
+            Actions.update_sample_db(
+                precios_claros.storage,
+                "20231026100910"
+            )
         except Exception as panic:
             show(f"{application_name:s} panic: {str(panic):s}")
         show(f"{application_name:s} 2: end")
@@ -48,3 +52,29 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

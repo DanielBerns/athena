@@ -1,2 +1,2 @@
-from components.nlp.new_sequences import NLP, Trie, TrieNode
-from components.nlp.new_tokenizer import Parser, Tokenizer, SimpleParser, SimpleTokenizer
+from components.nlp.tries import Trie, TrieNode
+from components.nlp.tokenizer import Parser, Tokenizer, SimpleParser, SimpleTokenizer
