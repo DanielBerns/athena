@@ -4,8 +4,8 @@ import time
 
 from components.configuration import CLI
 from components.core import create_application, show
-from components.precios_claros import PreciosClaros
-from components.precios_claros_db import Actions 
+from components.precios_claros.precios_claros import PreciosClaros
+from components.precios_claros_db.tester import Tester
 
 
 def get_arguments() -> Dict[str, str]:
@@ -31,20 +31,18 @@ def get_arguments() -> Dict[str, str]:
 
 
 def main() -> None:
-    application_name: str = "run_precios_claros_db_creator"
+    application_name: str = "run_precios_claros_db_tester"
     arguments = get_arguments()
 
     with create_application(application_name, arguments) as application:
         show(f"{application_name:s} 1: begin")
         try:
-            precios_claros = PreciosClaros(
+            storage, results, reports = PreciosClaros.get_containers(
                 application.file_system.storage,
                 application.file_system.results,
-                application.file_system.reports
+                application.file_system.reports,
             )
-            Actions.test_db(
-                precios_claros.storage
-            )
+            Tester.execute(storage, results, reports)
         except Exception as panic:
             show(f"{application_name:s} panic: {str(panic):s}")
         show(f"{application_name:s} 2: end")

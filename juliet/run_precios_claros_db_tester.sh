@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 cd ~/projects/athena/juliet
 . ~/.venvs/fce/bin/activate
-python run_precios_claros_db_creator.py -m live
+python run_precios_claros_db_tester.py -m live
 deactivate

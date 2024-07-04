@@ -1,5 +1,3 @@
-import pdb
-
 from pathlib import Path
 from typing import Callable, Dict, Tuple, Optional, List
 from components.core import Application, FlatStore, show
@@ -69,10 +67,11 @@ class Actions:
         results: Path = get_container(Path(application.file_system.results, "precios_claros"), delta_key)
         reports_root: Path = get_container(Path(application.file_system.reports), "precios_claros")
         reports_delta: Path = get_container(reports_root, delta_key)
-        index_alpha_html: Path = get_resource(reports_delta, "index_alpha", ".html")
+        index_alpha_html: Path = get_resource(reports_root, "index_alpha", ".html")
         
         show(f"    {str(storage):s}")
         show(f"    {str(results):s}")
+        show(f"    {str(reports_root):s}")        
         show(f"    {str(reports_delta):s}")
         show(f"    {str(index_alpha_html):s}")
         return storage, results, reports_delta, index_alpha_html
@@ -133,7 +132,6 @@ class Actions:
             Actions.write_target(resource, content)
         show(f"Actions.report_delta({bravo_key:s}, {alpha_key:s}, {now_key:s}) 5")
         content = delta_root.write()
-        pdb.set_trace()
         Actions.write_target(index_alpha_html, content)
             
         store.stop()

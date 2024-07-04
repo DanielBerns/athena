@@ -5,7 +5,7 @@ import time
 from components.configuration import CLI
 from components.core import create_application, show
 from components.precios_claros import PreciosClaros
-from components.precios_claros_db import Actions 
+from components.precios_claros_db import Updater 
 
 def get_arguments() -> Dict[str, str]:
     cli = CLI()
@@ -26,25 +26,25 @@ def get_arguments() -> Dict[str, str]:
         required=False,
         help="how to run? dev, test or live",
     )
+    cli.add_arguments(
+        "-s",
+        "--sample",
+        type=str,
+        required=True,
+        help="precios_claros sample identifier",
+    )
     return cli.arguments
 
-
 def main() -> None:
-    application_name: str = "run_precios_claros_db_creator"
+    application_name: str = "run_precios_claros_db_update"
     arguments = get_arguments()
 
     with create_application(application_name, arguments) as application:
         show(f"{application_name:s} 1: begin")
         try:
-            precios_claros = PreciosClaros(
-                application.file_system.storage,
-                application.file_system.results,
-                application.file_system.reports
-            )
-            Actions.update_sample_db(
-                precios_claros.storage,
-                "20231026100910"
-            )
+            # alpha: Updater.execute(application, "20201028183600")
+            
+            Updater.execute(application, arguments["sample"])
         except Exception as panic:
             show(f"{application_name:s} panic: {str(panic):s}")
         show(f"{application_name:s} 2: end")

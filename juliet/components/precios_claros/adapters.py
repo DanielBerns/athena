@@ -165,6 +165,7 @@ class DeltaIndex:
             content=self.content,
         )
 
+
 class DeltaRoot:
     def __init__(
         self, 

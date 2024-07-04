@@ -24,7 +24,8 @@ class Creator:
     @staticmethod
     def execute(application: Application) -> None:
         storage = application.file_system.storage        
-        results = application.file_system.results   
+        results = application.file_system.results 
+        storage_precios_claros = get_container(storage, "precios_claros")
         results_precios_claros = get_container(results, "precios_claros")
         db_uri=str(Path(storage, "precios_claros").with_suffix(".db"))
         with db_create_session(db_uri) as session:
@@ -92,7 +93,8 @@ class Creator:
             session.commit()        
 
             print("Timestamp")
-            store = FlatStore(storage, "flatstore")
+            
+            store = FlatStore(storage_precios_claros, "flatstore")
             store.start()
             for number, sample_key in enumerate(store.sorted_sample_keys()):
                 try:
