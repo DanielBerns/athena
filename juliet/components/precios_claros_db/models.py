@@ -45,7 +45,17 @@ class City(Base):
     name: Mapped[str] = mapped_column(sa.String(32))
     state_id: Mapped[int] = mapped_column(sa.ForeignKey("states.id"))
     state: Mapped["State"] = relationship(back_populates="cities")
-    points_of_sale: Mapped[List["PointOfSale"]] = relationship(back_populates="city")
+    places: Mapped[List["Place"]] = relationship(back_populates="city")
+
+
+class Place(Base):
+    __tablename__ = "places"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    address: Mapped[str] = mapped_column(sa.String(32))
+    city_id: Mapped[int] = mapped_column(sa.ForeignKey("cities.id"))
+    city: Mapped["City"] = relationship(back_populates="places")    
+    point_of_sale_id: Mapped[int] = mapped_column(sa.ForeignKey("points_of_sale.id"))    
+    point_of_sale: Mapped["PointOfSale"] = relationship(back_populates="gates")
 
 
 class PointOfSale(Base):
@@ -53,9 +63,11 @@ class PointOfSale(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     code: Mapped[str] = mapped_column(sa.String(16))
     name: Mapped[str] = mapped_column(sa.String(32))
-    address: Mapped[str] = mapped_column(sa.String(32))    
-    city_id: Mapped[int] = mapped_column(sa.ForeignKey("cities.id"))
-    city: Mapped["City"] = relationship(back_populates="points_of_sale")    
+    gates: Mapped[List["Place"]] = relationship(back_populates="point_of_sale")
+
+
+
+
 
 
 class Timestamp(Base):

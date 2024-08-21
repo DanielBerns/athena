@@ -14,10 +14,10 @@ from components.precios_claros_db.models import (
     Article, 
     State, 
     City, 
+    Place,
     PointOfSale, 
     Timestamp, 
     Price,
-    db_create_session, 
     db_open_session
 )
 
@@ -59,8 +59,9 @@ class Tester:
             result  = session.execute(points_of_sale_query)
             points_of_sale_in_db = {}
             for number, point_of_sale in enumerate(result.scalars()):
-                show(f"{number:d} - {point_of_sale.code:s} {point_of_sale.name:s} {point_of_sale.address:s}")
-                show(f"  at {point_of_sale.city.name:s} - {point_of_sale.city.state.name:s}")
+                show(f"{number:d} - {point_of_sale.code:s} {point_of_sale.name:s}")
+                for a_gate in point_of_sale.gates:
+                    show(f"   {a_gate.address:s}  {a_gate.city.name:s} - {a_gate.city.state.name:s}")
                 points_of_sale_in_db[point_of_sale.id] = point_of_sale
             states_query = select(State)
             result  = session.execute(states_query)
@@ -68,8 +69,8 @@ class Tester:
                 show(f"{number:d} - {state.code:s} {state.name:s}")
                 for city in state.cities:
                     show(f"  {city.name:s}")
-                    for point_of_sale in city.points_of_sale:
-                        show(f"    {point_of_sale.code:s}: {point_of_sale.name:s} {point_of_sale.address:s}")
+                    for a_place in city.places:
+                        show(f"    {a_place.address:s} - {a_place.point_of_sale.code:s}: {a_place.point_of_sale.name:s}" )
             show("All the timestamps")
             timestamps_query = select(Timestamp)
             rows = session.execute(timestamps_query)

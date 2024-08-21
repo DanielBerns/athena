@@ -1,4 +1,4 @@
-# import pdb
+import pdb
 
 from collections import Counter
 from pathlib import Path 
@@ -19,10 +19,10 @@ from components.precios_claros_db.models import (
     Article, 
     State, 
     City, 
+    Place,
     PointOfSale, 
     Timestamp, 
     Price,
-    db_create_session, 
     db_open_session
 )
 
@@ -67,16 +67,34 @@ class Updater:
         return results[0] if len(results) else None
 
     @staticmethod
-    def create_article(DataclassArticle: DataclassArticle, session: Session) -> Article:    
+    def create_article(dataclass_article: DataclassArticle, session: Session) -> Article:    
         article = Article(
-            code=DataclassArticle.code,
-            brand=DataclassArticle.brand,
-            description=DataclassArticle.name,
-            packaging=DataclassArticle.package
+            code=dataclass_article.code,
+            brand=dataclass_article.brand,
+            description=dataclass_article.name,
+            packaging=dataclass_article.package
         )
         session.add(article)
         session.commit()
         return article
+
+    @staticmethod
+    def read_states(session: Session) -> Dict[str, City]:
+        states_query = select(State)
+        results = session.scalars(states_query).all()
+        return {value.name: value for value in results}
+
+    @staticmethod
+    def read_cities(session: Session) -> Dict[str, City]:
+        cities_query = select(City)
+        results = session.scalars(cities_query).all()
+        return {value.name: value for value in results}
+
+    @staticmethod
+    def read_places(session: Session) -> Dict[str, Place]:
+        places_query = select(Place)
+        results = session.scalars(places_query).all()
+        return {value.address: value for value in results}
         
     @staticmethod
     def read_points_of_sale(session: Session) -> Dict[str, PointOfSale]:
@@ -87,17 +105,52 @@ class Updater:
     @staticmethod
     def create_point_of_sale(
         dataclass_point_of_sale: DataclassPointOfSale, 
-        db_city: City,
         session: Session
     ) -> PointOfSale:    
         point_of_sale = PointOfSale(
             code=dataclass_point_of_sale.identifier,
-            name=dataclass_point_of_sale.name,
-            address=dataclass_point_of_sale.address,
-            city=db_city
+            name=dataclass_point_of_sale.name
         )
         session.add(point_of_sale)
         session.commit()
+        return point_of_sale
+        
+    @staticmethod
+    def create_state(
+        state_name: str,
+        session: Session
+    ) -> State:
+        state = State(name=state_name)
+        session.add(state)
+        session.commit()
+        return state
+
+    @staticmethod
+    def create_city(
+        city_name: str,
+        a_state: State,
+        session: Session
+    ) -> City:
+        city = City(name=city_name, state=a_state)
+        session.add(city)
+        session.commit()
+        return city
+    
+    @staticmethod
+    def create_place(
+        an_address: str,
+        a_point_of_sale: PointOfSale,
+        a_city: City,
+        session: Session
+    ) -> Place:    
+        place = Place(
+            address=an_address,
+            city=a_city,
+            point_of_sale=a_point_of_sale
+        )
+        session.add(place)
+        session.commit()
+        return place
     
     @staticmethod
     def execute(application: Application, sample_key: str) -> None:
@@ -106,7 +159,7 @@ class Updater:
         storage_precios_claros = get_container(storage, "precios_claros")
         results_precios_claros = get_container(results, "precios_claros")
         db_uri=str(Path(storage, "precios_claros").with_suffix(".db"))
-        all_the_places: Counter = Counter()
+        all_the_locations: Counter = Counter()
         all_the_points_of_sale: Counter = Counter()
         with db_open_session(db_uri) as session:
             store = FlatStore(storage_precios_claros, "flatstore")
@@ -114,26 +167,32 @@ class Updater:
             sample_home = store.sample_home(sample_key)
             sample = Sample(sample_home)
             sample_points_of_sale_table, sample_articles_reader = IO.read(sample)
-            # pdb.set_trace()
             timestamp = Updater.read_timestamp(sample_key, session)
             if timestamp is None:
                 timestamp = Updater.create_timestamp(sample_key, session)
-            _timestamp_id = timestamp.id                                    
             points_of_sale_in_db = Updater.read_points_of_sale(session)
+            states_in_db = Updater.read_states(session)
+            cities_in_db = Updater.read_cities(session)
+            places_in_db = Updater.read_places(session)
             points_of_sale_table, articles_reader = IO.read(sample)
-            for place, article_with_prices_table, points_of_sale in IO.iterate(
+            pdb.set_trace()
+            for location, article_with_prices_table, points_of_sale in IO.iterate(
                 sample,
                 points_of_sale_table, 
                 articles_reader
             ):
-                print(place)
-                all_the_places[place] += 1
+                print(location)
+                all_the_locations[location] += 1
+                _city = Updater.read_city(location)
                 for pos in points_of_sale:
                     all_the_points_of_sale[pos.identifier] += 1
-                    _point_of_sale = points_of_sale_in_db.get(pos.identifier, None)                    
+                    _point_of_sale = points_of_sale_in_db.get(pos.identifier, None)
+                    _place = places_in_db.get(pos.address, None)
                     if _point_of_sale is None:
                         _point_of_sale = Updater.create_point_of_sale(pos, session)
                         points_of_sale_in_db[pos.identifier] = _point_of_sale
+                    if _place is None:
+                        _place = Updater.create_place(pos, _point_of_sale, _city)
                 for awp_number, awp in enumerate(article_with_prices_table.values()):
                     article = Updater.read_article(awp.article.code, session)
                     if article is None:
@@ -156,7 +215,7 @@ class Updater:
                             _point_of_sale_id = _point_of_sale.id
                             db_price = Price(
                                 value=_value, 
-                                timestamp_id=_timestamp_id,
+                                timestamp_id=timestamp.id,
                                 article_id=_article_id,
                                 point_of_sale_id=_point_of_sale_id
                             )

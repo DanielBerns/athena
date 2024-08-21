@@ -1,26 +1,28 @@
 from pathlib import Path 
 
-from sqlalchemy import select
+from sqlalchemy import select, insert
 
 from components.precios_claros.buckets import Bucket
-from components.core import Application, register_error, FlatStore
+from components.core import Application, show, register_error, FlatStore
 from components.helpers import get_container
-
 
 
 from components.precios_claros_db.models import (
     Article, 
     State, 
     City, 
+    Place,
     PointOfSale, 
     Timestamp, 
     Price,
     db_create_session, 
-    db_open_session
 )
 
-class Creator:
+class CreatorException(Exception):
+    pass
 
+class Creator:
+    
     @staticmethod
     def execute(application: Application) -> None:
         storage = application.file_system.storage        
@@ -29,25 +31,571 @@ class Creator:
         results_precios_claros = get_container(results, "precios_claros")
         db_uri=str(Path(storage, "precios_claros").with_suffix(".db"))
         with db_create_session(db_uri) as session:
-            for number, (key, json_article) in enumerate(Bucket.read(results_precios_claros, "clean_articles", ".md")):
-                try:
-                    db_article = Article(
-                        code=json_article.get('code', 'code_error'),
-                        brand=json_article.get('brand', 'brand_error'),
-                        description=json_article.get('name', 'name_error'),
-                        packaging=json_article.get('package','package_error')
-                    )
-                    session.add(db_article)
-                    if (number % 1000) == 0:
-                        print("Articles", number)
-                except Exception as panic:
-                    register_error(f"Articles {number:d} {str(panic)}")
-            session.commit()
+            show("Articles")            
+            try:
+                bulk = [
+                    {"code": json_article.get('code', 'code_error'),
+                     "brand": json_article.get('brand', 'brand_error'),
+                     "description": json_article.get('name', 'name_error'),
+                     "packaging": json_article.get('package','package_error')
+                    }
+                    for key, json_article in Bucket.read(results_precios_claros, "clean_articles", ".md")
+                ] 
+                session.execute(insert(Article), bulk)
+                session.commit()
+            except Exception as panic:
+                register_error(f"Articles {number:d} {str(panic)}")
+                session.rollback()
+                raise CreatorException("Articles")
+
             states = {
-                "ar-u": "Chubut",
-                "ar-z": "Santa Cruz",
-                "ar-v": "Tierra del Fuego",
+              "ar-a": "Salta",
+              "ar-b": "Buenos Aires",
+              "ar-c": "CABA",
+              "ar-d": "San Luis",
+              "ar-e": "Entre Rios",
+              "ar-f": "La Rioja",
+              "ar-g": "Santiago del Estero",
+              "ar-h": "Chaco",
+              "ar-j": "San Juan",
+              "ar-k": "Catamarca",
+              "ar-l": "La Pampa",
+              "ar-m": "Mendoza",
+              "ar-n": "Misiones",
+              "ar-p": "Formosa",
+              "ar-q": "Neuquén",
+              "ar-r": "Río Negro",
+              "ar-s": "Santa Fé",
+              "ar-t": "Tucumán",
+              "ar-u": "Chubut",
+              "ar-v": "Tierra del Fuego",
+              "ar-w": "Corrientes",
+              "ar-x": "Córdoba",
+              "ar-y": "San Salvador de Jujuy",
+              "ar-z": "Santa Cruz",
             }
+            cities = {
+              "tartagal": ("tartagal", "Salta"),
+              "salta": ("salta", "Salta"),
+              "barrio castaï¿½ares": ("barrio castañares", "Salta"),
+              "san ramon de la nueva oran": ("san ramon de la nueva oran", "Salta"),
+              "oran": ("oran", "Salta"),
+              "gral. rodriguez": ("gral. rodriguez", "Buenos Aires"),
+              "olivos": ("olivos", "Buenos Aires"),
+              "san nicolas": ("san nicolas", "Buenos Aires"),
+              "mayor buratovich": ("mayor buratovich", "Buenos Aires"),
+              "america": ("america", "Buenos Aires"),
+              "san clemente del tuyu": ("san clemente del tuyu", "Buenos Aires"),
+              "ingeniero pablo nogues": ("ingeniero pablo nogues", "Buenos Aires"),
+              "san fernando": ("san fernando", "Buenos Aires"),
+              "gral madariaga": ("gral madariaga", "Buenos Aires"),
+              "ituzaingó": ("ituzaingó", "Buenos Aires"),
+              "villa gesell": ("villa gesell", "Buenos Aires"),
+              "pehuajó": ("pehuajó", "Buenos Aires"),
+              "tres arroyos": ("tres arroyos", "Buenos Aires"),
+              "general lavalle": ("general lavalle", "Buenos Aires"),
+              "gerli": ("gerli", "Buenos Aires"),
+              "olavarría": ("olavarría", "Buenos Aires"),
+              "quilmes": ("quilmes", "Buenos Aires"),
+              "25 de mayo": ("25 de mayo", "Buenos Aires"),
+              "punta chica": ("punta chica", "Buenos Aires"),
+              "adrogue": ("adrogue", "Buenos Aires"),
+              "san carlos de bolivar": ("san carlos de bolivar", "Buenos Aires"),
+              "mercedes": ("mercedes", "Buenos Aires"),
+              "cabildo": ("cabildo", "Buenos Aires"),
+              "caseros": ("caseros", "Buenos Aires"),
+              "villa ballester": ("villa ballester", "Buenos Aires"),
+              "villa bosh": ("villa bosh", "Buenos Aires"),
+              "mar de ajo": ("mar de ajo", "Buenos Aires"),
+              "ciudad jardín del palomar": ("ciudad jardín del palomar", "Buenos Aires"),
+              "pehuajo": ("pehuajo", "Buenos Aires"),
+              "ensenada": ("ensenada", "Buenos Aires"),
+              "martínez": ("martínez", "Buenos Aires"),
+              "barrio el dorado": ("barrio el dorado", "Buenos Aires"),
+              "victoria": ("victoria", "Buenos Aires"),
+              "san miguel": ("san miguel", "Buenos Aires"),
+              "merlo": ("merlo", "Buenos Aires"),
+              "remedios de escalada": ("remedios de escalada", "Buenos Aires"),
+              "batán": ("batán", "Buenos Aires"),
+              "ezeiza": ("ezeiza", "Buenos Aires"),
+              "lobos": ("lobos", "Buenos Aires"),
+              "haedo": ("haedo", "Buenos Aires"),
+              "jose c paz": ("jose c paz", "Buenos Aires"),
+              "munro": ("munro", "Buenos Aires"),
+              "junin": ("junin", "Buenos Aires"),
+              "ciudadela": ("ciudadela", "Buenos Aires"),
+              "lujan": ("lujan", "Buenos Aires"),
+              "palomar": ("palomar", "Buenos Aires"),
+              "gregorio de laferrere": ("gregorio de laferrere", "Buenos Aires"),
+              "arrecifes": ("arrecifes", "Buenos Aires"),
+              "sarandi": ("sarandi", "Buenos Aires"),
+              "olavarria": ("olavarria", "Buenos Aires"),
+              "balcarce": ("balcarce", "Buenos Aires"),
+              "puerto belgrano": ("puerto belgrano", "Buenos Aires"),
+              "monte chingolo": ("monte chingolo", "Buenos Aires"),
+              "castelar": ("castelar", "Buenos Aires"),
+              "belen de escobar": ("belen de escobar", "Buenos Aires"),
+              "pilar": ("pilar", "Buenos Aires"),
+              "laprida": ("laprida", "Buenos Aires"),
+              "villa adelina": ("villa adelina", "Buenos Aires"),
+              "zárate": ("zárate", "Buenos Aires"),
+              "cañuelas": ("cañuelas", "Buenos Aires"),
+              "general viamonte ": ("general viamonte ", "Buenos Aires"),
+              "mendoza": ("mendoza", "Buenos Aires"),
+              "bahía blanca": ("bahía blanca", "Buenos Aires"),
+              "general pacheco": ("general pacheco", "Buenos Aires"),
+              "maquinista savio": ("maquinista savio", "Buenos Aires"),
+              "adrogué": ("adrogué", "Buenos Aires"),
+              "berisso": ("berisso", "Buenos Aires"),
+              "lincoln": ("lincoln", "Buenos Aires"),
+              "tristan suarez": ("tristan suarez", "Buenos Aires"),
+              "san martín": ("san martín", "Buenos Aires"),
+              "hurlingham": ("hurlingham", "Buenos Aires"),
+              "monte grande": ("monte grande", "Buenos Aires"),
+              "general alvear": ("general alvear", "Buenos Aires"),
+              "la matanza": ("la matanza", "Buenos Aires"),
+              "san isidro": ("san isidro", "Buenos Aires"),
+              "chacabuco": ("chacabuco", "Buenos Aires"),
+              "buenos aires autom.": ("buenos aires autom.", "Buenos Aires"),
+              "las lomas": ("las lomas", "Buenos Aires"),
+              "avellaneda": ("avellaneda", "Buenos Aires"),
+              "necochea": ("necochea", "Buenos Aires"),
+              "san justo": ("san justo", "Buenos Aires"),
+              "san nicolas de los arroyos,est.s.nicolas": ("san nicolas de los arroyos,est.s.nicolas", "Buenos Aires"),
+              "tortuguitas": ("tortuguitas", "Buenos Aires"),
+              "martín coronado": ("martín coronado", "Buenos Aires"),
+              "jose león suárez": ("jose león suárez", "Buenos Aires"),
+              "quilmes oeste": ("quilmes oeste", "Buenos Aires"),
+              "bella vista": ("bella vista", "Buenos Aires"),
+              "moreno": ("moreno", "Buenos Aires"),
+              "stroeder            ": ("stroeder            ", "Buenos Aires"),
+              "zarate": ("zarate", "Buenos Aires"),
+              "luján": ("luján", "Buenos Aires"),
+              "quequen": ("quequen", "Buenos Aires"),
+              "guamini": ("guamini", "Buenos Aires"),
+              "tablada": ("tablada", "Buenos Aires"),
+              "coronel pringles": ("coronel pringles", "Buenos Aires"),
+              "lanus": ("lanus", "Buenos Aires"),
+              "gral.villegas": ("gral.villegas", "Buenos Aires"),
+              "rauch": ("rauch", "Buenos Aires"),
+              "paso del rey": ("paso del rey", "Buenos Aires"),
+              "carmen de patagones ": ("carmen de patagones ", "Buenos Aires"),
+              "casbas": ("casbas", "Buenos Aires"),
+              "pigue": ("pigue", "Buenos Aires"),
+              "claypole": ("claypole", "Buenos Aires"),
+              "vte lopez": ("vte lopez", "Buenos Aires"),
+              "villa celina": ("villa celina", "Buenos Aires"),
+              "jose clemente paz": ("jose clemente paz", "Buenos Aires"),
+              "canning": ("canning", "Buenos Aires"),
+              "acassuso": ("acassuso", "Buenos Aires"),
+              "bolivar": ("bolivar", "Buenos Aires"),
+              "bragado": ("bragado", "Buenos Aires"),
+              "tigre": ("tigre", "Buenos Aires"),
+              "general villegas": ("general villegas", "Buenos Aires"),
+              "9 de julio": ("9 de julio", "Buenos Aires"),
+              "garin": ("garin", "Buenos Aires"),
+              "santos lugares": ("santos lugares", "Buenos Aires"),
+              "glew": ("glew", "Buenos Aires"),
+              "las armas": ("las armas", "Buenos Aires"),
+              "la horqueta": ("la horqueta", "Buenos Aires"),
+              "san francisco solano": ("san francisco solano", "Buenos Aires"),
+              "pinamar": ("pinamar", "Buenos Aires"),
+              "isidro casanova": ("isidro casanova", "Buenos Aires"),
+              "zona delta tigre": ("zona delta tigre", "Buenos Aires"),
+              "bahia blanca": ("bahia blanca", "Buenos Aires"),
+              "lobería": ("lobería", "Buenos Aires"),
+              "capitán sarmiento": ("capitán sarmiento", "Buenos Aires"),
+              "wilde": ("wilde", "Buenos Aires"),
+              "aldo bonzi": ("aldo bonzi", "Buenos Aires"),
+              "matanza": ("matanza", "Buenos Aires"),
+              "morón": ("morón", "Buenos Aires"),
+              "canuelas": ("canuelas", "Buenos Aires"),
+              "carapachay": ("carapachay", "Buenos Aires"),
+              "azul": ("azul", "Buenos Aires"),
+              "saavedra": ("saavedra", "Buenos Aires"),
+              "los polvorines": ("los polvorines", "Buenos Aires"),
+              "campana": ("campana", "Buenos Aires"),
+              "budge": ("budge", "Buenos Aires"),
+              "tornquist": ("tornquist", "Buenos Aires"),
+              "valentín alsina": ("valentín alsina", "Buenos Aires"),
+              "malvinas argentinas": ("malvinas argentinas", "Buenos Aires"),
+              "colon": ("colon", "Buenos Aires"),
+              "williams morris *": ("williams morris *", "Buenos Aires"),
+              "alto del talar": ("alto del talar", "Buenos Aires"),
+              "henderson": ("henderson", "Buenos Aires"),
+              "florentino ameghino": ("florentino ameghino", "Buenos Aires"),
+              "florida": ("florida", "Buenos Aires"),
+              "chascomus": ("chascomus", "Buenos Aires"),
+              "3 de febrero": ("3 de febrero", "Buenos Aires"),
+              "vicente lópez": ("vicente lópez", "Buenos Aires"),
+              "laplata": ("laplata", "Buenos Aires"),
+              "lomas de zamora": ("lomas de zamora", "Buenos Aires"),
+              "vicente lopez": ("vicente lopez", "Buenos Aires"),
+              "rojas": ("rojas", "Buenos Aires"),
+              "buenos aires": ("buenos aires", "Buenos Aires"),
+              "chivilcoy": ("chivilcoy", "Buenos Aires"),
+              "carlos casares": ("carlos casares", "Buenos Aires"),
+              "san antonio de padua": ("san antonio de padua", "Buenos Aires"),
+              "tierra del fuego": ("tierra del fuego", "Buenos Aires"),
+              "ramos mejía": ("ramos mejía", "Buenos Aires"),
+              "moron": ("moron", "Buenos Aires"),
+              "del viso": ("del viso", "Buenos Aires"),
+              "san bernardo del tuyu": ("san bernardo del tuyu", "Buenos Aires"),
+              "don torcuato": ("don torcuato", "Buenos Aires"),
+              "saladillo": ("saladillo", "Buenos Aires"),
+              "ingeniero white": ("ingeniero white", "Buenos Aires"),
+              "llavallol": ("llavallol", "Buenos Aires"),
+              "pergamino": ("pergamino", "Buenos Aires"),
+              "san pedro": ("san pedro", "Buenos Aires"),
+              "florencio varela": ("florencio varela", "Buenos Aires"),
+              "general cerri": ("general cerri", "Buenos Aires"),
+              "dolores": ("dolores", "Buenos Aires"),
+              "miramar": ("miramar", "Buenos Aires"),
+              "san martin": ("san martin", "Buenos Aires"),
+              "villalonga": ("villalonga", "Buenos Aires"),
+              "la plata noroeste de la calle 50": ("la plata noroeste de la calle 50", "Buenos Aires"),
+              "coronel suarez": ("coronel suarez", "Buenos Aires"),
+              "san vicente": ("san vicente", "Buenos Aires"),
+              "la lucila": ("la lucila", "Buenos Aires"),
+              "villa santos tesei": ("villa santos tesei", "Buenos Aires"),
+              "pedro luro": ("pedro luro", "Buenos Aires"),
+              "ituzaingo": ("ituzaingo", "Buenos Aires"),
+              "coronel dorrego": ("coronel dorrego", "Buenos Aires"),
+              "vte. lopez": ("vte. lopez", "Buenos Aires"),
+              "escobar": ("escobar", "Buenos Aires"),
+              "temperley": ("temperley", "Buenos Aires"),
+              "derqui": ("derqui", "Buenos Aires"),
+              "city bell": ("city bell", "Buenos Aires"),
+              "carmen de patagones": ("carmen de patagones", "Buenos Aires"),
+              "general rodríguez": ("general rodríguez", "Buenos Aires"),
+              "san fernando/ virreyes": ("san fernando/ virreyes", "Buenos Aires"),
+              "adolfo sordeaux": ("adolfo sordeaux", "Buenos Aires"),
+              "chilavert": ("chilavert", "Buenos Aires"),
+              "ezpeleta": ("ezpeleta", "Buenos Aires"),
+              "tandil": ("tandil", "Buenos Aires"),
+              "mar del plata": ("mar del plata", "Buenos Aires"),
+              "berazategui": ("berazategui", "Buenos Aires"),
+              "ramos mejia": ("ramos mejia", "Buenos Aires"),
+              "lanús": ("lanús", "Buenos Aires"),
+              "burzaco": ("burzaco", "Buenos Aires"),
+              "benito juarez": ("benito juarez", "Buenos Aires"),
+              "la plata": ("la plata", "Buenos Aires"),
+              "longchamps": ("longchamps", "Buenos Aires"),
+              "beccar": ("beccar", "Buenos Aires"),
+              "pcia. bs.as.": ("pcia. bs.as.", "Buenos Aires"),
+              "la larga": ("la larga", "Buenos Aires"),
+              "san nicolás": ("san nicolás", "Buenos Aires"),
+              "almirante brown": ("almirante brown", "Buenos Aires"),
+              "general la madrid": ("general la madrid", "Buenos Aires"),
+              "resistencia": ("resistencia", "Buenos Aires"),
+              "bernal": ("bernal", "Buenos Aires"),
+              "la agraria": ("la agraria", "Buenos Aires"),
+              "martinez": ("martinez", "Buenos Aires"),
+              "tapalque": ("tapalque", "Buenos Aires"),
+              "tapiales": ("tapiales", "Buenos Aires"),
+              "don bosco": ("don bosco", "Buenos Aires"),
+              "banfield": ("banfield", "Buenos Aires"),
+              "grand bourg": ("grand bourg", "Buenos Aires"),
+              "monte hermoso": ("monte hermoso", "Buenos Aires"),
+              "puan": ("puan", "Buenos Aires"),
+              "las flores": ("las flores", "Buenos Aires"),
+              "médanos": ("médanos", "Buenos Aires"),
+              "trenque lauquen": ("trenque lauquen", "Buenos Aires"),
+              "gonzalez catan": ("gonzalez catan", "Buenos Aires"),
+              "salto": ("salto", "Buenos Aires"),
+              "maschwitz": ("maschwitz", "Buenos Aires"),
+              "boulogne": ("boulogne", "Buenos Aires"),
+              "punta alta": ("punta alta", "Buenos Aires"),
+              "mataderos": ("mataderos", "CABA"),
+              "ciudad aut. bs.as": ("ciudad aut. bs.as", "CABA"),
+              "villa urquiza": ("villa urquiza", "CABA"),
+              "san telmo": ("san telmo", "CABA"),
+              "ciudad autonoma de buenos aires (902)": ("ciudad autonoma de buenos aires (902)", "CABA"),
+              "capital  federal": ("capital  federal", "CABA"),
+              "floresta": ("floresta", "CABA"),
+              "constitucion": ("constitucion", "CABA"),
+              "lugano": ("lugano", "CABA"),
+              "capital federal": ("capital federal", "CABA"),
+              "abasto": ("abasto", "CABA"),
+              "flores sur": ("flores sur", "CABA"),
+              "almagro": ("almagro", "CABA"),
+              "saavedra": ("saavedra", "CABA"),
+              "devoto": ("devoto", "CABA"),
+              "tribunales": ("tribunales", "CABA"),
+              "caba": ("caba", "CABA"),
+              "boedo": ("boedo", "CABA"),
+              "cap. fed.": ("cap. fed.", "CABA"),
+              "cdad. de bs.as": ("cdad. de bs.as", "CABA"),
+              "v illa lugano": ("v illa lugano", "CABA"),
+              "capital": ("capital", "CABA"),
+              "villa luro": ("villa luro", "CABA"),
+              "ciudad autónoma de buenos aires": ("ciudad autónoma de buenos aires", "CABA"),
+              "pompeya": ("pompeya", "CABA"),
+              "villa crespo": ("villa crespo", "CABA"),
+              "once": ("once", "CABA"),
+              "san cristobal": ("san cristobal", "CABA"),
+              "moreno": ("moreno", "CABA"),
+              "belgrano": ("belgrano", "CABA"),
+              "flores": ("flores", "CABA"),
+              "parque chacabuco": ("parque chacabuco", "CABA"),
+              "ciudad autonoma buenos aires": ("ciudad autonoma buenos aires", "CABA"),
+              "barrio norte": ("barrio norte", "CABA"),
+              "parque patricios": ("parque patricios", "CABA"),
+              "villa devoto": ("villa devoto", "CABA"),
+              "caballito": ("caballito", "CABA"),
+              "villa allende": ("villa allende", "CABA"),
+              "paternal": ("paternal", "CABA"),
+              "ciudad autonoma de buenos aires (901)": ("ciudad autonoma de buenos aires (901)", "CABA"),
+              "liniers": ("liniers", "CABA"),
+              "palermo": ("palermo", "CABA"),
+              "san martin": ("san martin", "San Luis"),
+              "desaguadero": ("desaguadero", "San Luis"),
+              "villa mercedes": ("villa mercedes", "San Luis"),
+              "san luis": ("san luis", "San Luis"),
+              "colon": ("colon", "Entre Rios"),
+              "concordia": ("concordia", "Entre Rios"),
+              "gualeguaychu": ("gualeguaychu", "Entre Rios"),
+              "concepcion del uruguay": ("concepcion del uruguay", "Entre Rios"),
+              "parana": ("parana", "Entre Rios"),
+              "paraná": ("paraná", "Entre Rios"),
+              "hernandez": ("hernandez", "Entre Rios"),
+              "concepcion": ("concepcion", "Entre Rios"),
+              "nogoyá": ("nogoyá", "Entre Rios"),
+              "chajari": ("chajari", "Entre Rios"),
+              "crespo": ("crespo", "Entre Rios"),
+              "la rioja": ("la rioja", "La Rioja"),
+              "santiago del estero": ("santiago del estero", "Santiago del Estero"),
+              "tres isletas": ("tres isletas", "Chaco"),
+              "saenz peña": ("saenz peña", "Chaco"),
+              "castelli": ("castelli", "Chaco"),
+              "resistencia": ("resistencia", "Chaco"),
+              "gral.san martin": ("gral.san martin", "Chaco"),
+              "las breñas": ("las breñas", "Chaco"),
+              "antequeras": ("antequeras", "Chaco"),
+              "fontana": ("fontana", "Chaco"),
+              "quitilipi": ("quitilipi", "Chaco"),
+              "barranqueras": ("barranqueras", "Chaco"),
+              "villa angela": ("villa angela", "Chaco"),
+              "machagai": ("machagai", "Chaco"),
+              "charata": ("charata", "Chaco"),
+              "barrio rivadavia": ("barrio rivadavia", "San Juan"),
+              "san juan": ("san juan", "San Juan"),
+              "barrio rawson": ("barrio rawson", "San Juan"),
+              "san fernando del valle de catamarca": ("san fernando del valle de catamarca", "Catamarca"),
+              "san fdo.del valle de catamarca ,est.": ("san fdo.del valle de catamarca ,est.", "Catamarca"),
+              "villa dolores": ("villa dolores", "Catamarca"),
+              "catamarca": ("catamarca", "Catamarca"),
+              "san fdo del valle de catamarca": ("san fdo del valle de catamarca", "Catamarca"),
+              "santa rosa": ("santa rosa", "La Pampa"),
+              "guatrache": ("guatrache", "La Pampa"),
+              "general pico": ("general pico", "La Pampa"),
+              "intendente alvear": ("intendente alvear", "La Pampa"),
+              "eduardo castex": ("eduardo castex", "La Pampa"),
+              "general acha": ("general acha", "La Pampa"),
+              "san rafael": ("san rafael", "Mendoza"),
+              "villa nueva-gllen": ("villa nueva-gllen", "Mendoza"),
+              "villanueva": ("villanueva", "Mendoza"),
+              "godoy cruz": ("godoy cruz", "Mendoza"),
+              "general alvear": ("general alvear", "Mendoza"),
+              "maipu": ("maipu", "Mendoza"),
+              "lujan de cuyo": ("lujan de cuyo", "Mendoza"),
+              "tunuyan": ("tunuyan", "Mendoza"),
+              "barrio rivadavia": ("barrio rivadavia", "Mendoza"),
+              "eugenio bustos": ("eugenio bustos", "Mendoza"),
+              "general san martin": ("general san martin", "Mendoza"),
+              "guaymallen": ("guaymallen", "Mendoza"),
+              "tupungato": ("tupungato", "Mendoza"),
+              "las heras": ("las heras", "Mendoza"),
+              "malargue": ("malargue", "Mendoza"),
+              "mendoza ciudad": ("mendoza ciudad", "Mendoza"),
+              "rodeo de la cruz": ("rodeo de la cruz", "Mendoza"),
+              "luján de cuyo": ("luján de cuyo", "Mendoza"),
+              "villa nueva de guaymallen": ("villa nueva de guaymallen", "Mendoza"),
+              "gral.gutierrez": ("gral.gutierrez", "Mendoza"),
+              "posadas": ("posadas", "Mendoza"),
+              "san jose de guaymallen": ("san jose de guaymallen", "Mendoza"),
+              "uspallata": ("uspallata", "Mendoza"),
+              "carrodilla  la puntilla": ("carrodilla  la puntilla", "Mendoza"),
+              "mendoza": ("mendoza", "Mendoza"),
+              "obera": ("obera", "Misiones"),
+              "leandro alem": ("leandro alem", "Misiones"),
+              "puerto iguazu": ("puerto iguazu", "Misiones"),
+              "montecarlo": ("montecarlo", "Misiones"),
+              "iguazu": ("iguazu", "Misiones"),
+              "puerto rico": ("puerto rico", "Misiones"),
+              "san vicente": ("san vicente", "Misiones"),
+              "aristobulo del valle": ("aristobulo del valle", "Misiones"),
+              "jardin america": ("jardin america", "Misiones"),
+              "posadas": ("posadas", "Misiones"),
+              "eldorado": ("eldorado", "Misiones"),
+              "puerto esperanza": ("puerto esperanza", "Misiones"),
+              "apostoles": ("apostoles", "Misiones"),
+              "formosa": ("formosa", "Formosa"),
+              "pirane": ("pirane", "Formosa"),
+              "clorinda": ("clorinda", "Formosa"),
+              "el colorado": ("el colorado", "Formosa"),
+              "san martín de los andes": ("san martín de los andes", "Neuquén"),
+              "san martin de los andes": ("san martin de los andes", "Neuquén"),
+              "plottier": ("plottier", "Neuquén"),
+              "aguada san roque": ("aguada san roque", "Neuquén"),
+              "neuquén": ("neuquén", "Neuquén"),
+              "junín de los andes": ("junín de los andes", "Neuquén"),
+              "rincon de los sauces": ("rincon de los sauces", "Neuquén"),
+              "san martin de los an": ("san martin de los an", "Neuquén"),
+              "cutral co": ("cutral co", "Neuquén"),
+              "junin de los andes": ("junin de los andes", "Neuquén"),
+              "zapala": ("zapala", "Neuquén"),
+              "andacollo": ("andacollo", "Neuquén"),
+              "plaza huincul": ("plaza huincul", "Neuquén"),
+              "rincón de los sauces": ("rincón de los sauces", "Neuquén"),
+              "las lajas": ("las lajas", "Neuquén"),
+              "centenario": ("centenario", "Neuquén"),
+              "piedra del aguila": ("piedra del aguila", "Neuquén"),
+              "neuquen": ("neuquen", "Neuquén"),
+              "chos malal": ("chos malal", "Neuquén"),
+              "villa la angostura": ("villa la angostura", "Neuquén"),
+              "loncopué": ("loncopué", "Neuquén"),
+              "fernandez oro": ("fernandez oro", "Río Negro"),
+              "chimpay": ("chimpay", "Río Negro"),
+              "cipolletti": ("cipolletti", "Río Negro"),
+              "cipolleti": ("cipolleti", "Río Negro"),
+              "el bolson": ("el bolson", "Río Negro"),
+              "san carlos de bariloche": ("san carlos de bariloche", "Río Negro"),
+              "gral. roca": ("gral. roca", "Río Negro"),
+              "sierra grande": ("sierra grande", "Río Negro"),
+              "rio negro": ("rio negro", "Río Negro"),
+              "villa regina": ("villa regina", "Río Negro"),
+              "ingeniero huergo": ("ingeniero huergo", "Río Negro"),
+              "general roca": ("general roca", "Río Negro"),
+              "san antonio oeste": ("san antonio oeste", "Río Negro"),
+              "rio colorado": ("rio colorado", "Río Negro"),
+              "lamarque": ("lamarque", "Río Negro"),
+              "cinco saltos": ("cinco saltos", "Río Negro"),
+              "río colorado": ("río colorado", "Río Negro"),
+              "las grutas": ("las grutas", "Río Negro"),
+              "allen": ("allen", "Río Negro"),
+              "choele choel": ("choele choel", "Río Negro"),
+              "bariloche": ("bariloche", "Río Negro"),
+              "catriel": ("catriel", "Río Negro"),
+              "luis beltran": ("luis beltran", "Río Negro"),
+              "viedma": ("viedma", "Río Negro"),
+              "esperanza": ("esperanza", "Santa Fé"),
+              "santa fe": ("santa fe", "Santa Fé"),
+              "rafaela": ("rafaela", "Santa Fé"),
+              "capital": ("capital", "Santa Fé"),
+              "san justo": ("san justo", "Santa Fé"),
+              "cuidad de santa fe": ("cuidad de santa fe", "Santa Fé"),
+              "villa cañas": ("villa cañas", "Santa Fé"),
+              "san jorge": ("san jorge", "Santa Fé"),
+              "arocena": ("arocena", "Santa Fé"),
+              "sunchales": ("sunchales", "Santa Fé"),
+              "timbues": ("timbues", "Santa Fé"),
+              "venado tuerto": ("venado tuerto", "Santa Fé"),
+              "susana": ("susana", "Santa Fé"),
+              "reconquista": ("reconquista", "Santa Fé"),
+              "villa gobernador gal": ("villa gobernador gal", "Santa Fé"),
+              "fisherton": ("fisherton", "Santa Fé"),
+              "ciudad de santa fe": ("ciudad de santa fe", "Santa Fé"),
+              "arroyo seco": ("arroyo seco", "Santa Fé"),
+              "fighiera": ("fighiera", "Santa Fé"),
+              "rosario": ("rosario", "Santa Fé"),
+              "funes": ("funes", "Santa Fé"),
+              "rufino": ("rufino", "Santa Fé"),
+              "juan bautista alberdi": ("juan bautista alberdi", "Tucumán"),
+              "yerba buena": ("yerba buena", "Tucumán"),
+              "san miguel de tucumán": ("san miguel de tucumán", "Tucumán"),
+              "tucuman": ("tucuman", "Tucumán"),
+              "s.m. de tucuman": ("s.m. de tucuman", "Tucumán"),
+              "banda del rio sali": ("banda del rio sali", "Tucumán"),
+              "san miguel de tucuman": ("san miguel de tucuman", "Tucumán"),
+              "concepcion": ("concepcion", "Tucumán"),
+              "tafi viejo": ("tafi viejo", "Tucumán"),
+              "monteros viejo": ("monteros viejo", "Tucumán"),
+              "esquel": ("esquel", "Chubut"),
+              "comodoro": ("comodoro", "Chubut"),
+              "puerto madryn": ("puerto madryn", "Chubut"),
+              "trevelin": ("trevelin", "Chubut"),
+              "gaiman": ("gaiman", "Chubut"),
+              "trelew": ("trelew", "Chubut"),
+              "comodoro rivadavia": ("comodoro rivadavia", "Chubut"),
+              "playa union": ("playa union", "Chubut"),
+              "sarmiento": ("sarmiento", "Chubut"),
+              "rada tilly": ("rada tilly", "Chubut"),
+              "rawson": ("rawson", "Chubut"),
+              "lago puelo": ("lago puelo", "Chubut"),
+              "ushuaia": ("ushuaia", "Tierra del Fuego"),
+              "tolhuin": ("tolhuin", "Tierra del Fuego"),
+              "rio grande": ("rio grande", "Tierra del Fuego"),
+              "río grande": ("río grande", "Tierra del Fuego"),
+              "bella vista": ("bella vista", "Corrientes"),
+              "ituzaingo": ("ituzaingo", "Corrientes"),
+              "mercedes": ("mercedes", "Corrientes"),
+              "goya": ("goya", "Corrientes"),
+              "corrientes": ("corrientes", "Corrientes"),
+              "paso de los libres": ("paso de los libres", "Corrientes"),
+              "esquina": ("esquina", "Corrientes"),
+              "curuzu cuatia": ("curuzu cuatia", "Corrientes"),
+              "monte caseros": ("monte caseros", "Corrientes"),
+              "virasoro": ("virasoro", "Corrientes"),
+              "villa maría": ("villa maría", "Córdoba"),
+              "villa urquiza": ("villa urquiza", "Córdoba"),
+              "villa allende lomas": ("villa allende lomas", "Córdoba"),
+              "córdoba": ("córdoba", "Córdoba"),
+              "río cuarto": ("río cuarto", "Córdoba"),
+              "la carlota": ("la carlota", "Córdoba"),
+              "villa carlos paz": ("villa carlos paz", "Córdoba"),
+              "san francisco": ("san francisco", "Córdoba"),
+              "la falda": ("la falda", "Córdoba"),
+              "marcos juares": ("marcos juares", "Córdoba"),
+              "rio tercero": ("rio tercero", "Córdoba"),
+              "jardin espinoza": ("jardin espinoza", "Córdoba"),
+              "villa maria": ("villa maria", "Córdoba"),
+              "cordoba": ("cordoba", "Córdoba"),
+              "marcos juarez": ("marcos juarez", "Córdoba"),
+              "rio cuarto": ("rio cuarto", "Córdoba"),
+              "ciudad de cordoba norte": ("ciudad de cordoba norte", "Córdoba"),
+              "barrio matienzo *": ("barrio matienzo *", "Córdoba"),
+              "alta gracia": ("alta gracia", "Córdoba"),
+              "alto verde": ("alto verde", "Córdoba"),
+              "bell ville": ("bell ville", "Córdoba"),
+              "arroyito": ("arroyito", "Córdoba"),
+              "quintas de arguello": ("quintas de arguello", "Córdoba"),
+              "jesus maria": ("jesus maria", "Córdoba"),
+              "leones - m. juarez": ("leones - m. juarez", "Córdoba"),
+              "rio ceballos": ("rio ceballos", "Córdoba"),
+              "s.francisco": ("s.francisco", "Córdoba"),
+              "laboulaye": ("laboulaye", "Córdoba"),
+              "villa allende": ("villa allende", "Córdoba"),
+              "carlos paz": ("carlos paz", "Córdoba"),
+              "cruz del eje": ("cruz del eje", "Córdoba"),
+              "morteros": ("morteros", "Córdoba"),
+              "barrio aeronautico *": ("barrio aeronautico *", "Córdoba"),
+              "villa nueva": ("villa nueva", "Córdoba"),
+              "cosquin": ("cosquin", "Córdoba"),
+              "jujuy": ("jujuy", "San Salvador de Jujuy"),
+              "san salvador dejujuy": ("san salvador dejujuy", "San Salvador de Jujuy"),
+              "ledesma": ("ledesma", "San Salvador de Jujuy"),
+              "san pedro": ("san pedro", "San Salvador de Jujuy"),
+              "san salvador de jujuy": ("san salvador de jujuy", "San Salvador de Jujuy"),
+              "el calafate": ("el calafate", "Santa Cruz"),
+              "las heras": ("las heras", "Santa Cruz"),
+              "yacimientos rio turbio": ("yacimientos rio turbio", "Santa Cruz"),
+              "puerto deseado": ("puerto deseado", "Santa Cruz"),
+              "río gallegos": ("río gallegos", "Santa Cruz"),
+              "gobernador gregores": ("gobernador gregores", "Santa Cruz"),
+              "san julian": ("san julian", "Santa Cruz"),
+              "piedra buena": ("piedra buena", "Santa Cruz"),
+              "pico truncado": ("pico truncado", "Santa Cruz"),
+              "perito moreno": ("perito moreno", "Santa Cruz"),
+              "caleta olivia-sta cruz": ("Caleta Olivia", "Santa Cruz"),
+              "puerto santa cruz": ("puerto santa cruz", "Santa Cruz"),
+              "rio gallegos": ("rio gallegos", "Santa Cruz"),
+              "santa cruz": ("santa cruz", "Santa Cruz"),
+              "28 de noviembre": ("28 de noviembre", "Santa Cruz"),
+              "caleta olivia": ("Caleta Olivia", "Santa Cruz"),
+            }
+
+            
             cities = {
                 "comodoro rivadavia": ("Comodoro Rivadavia", "Chubut"),
                 "esquel": ("Esquel", "Chubut"),
@@ -60,53 +608,88 @@ class Creator:
                 "rawson": ("Rawson", "Chubut"),
                 "ushuaia": ("Ushuaia", "Tierra del Fuego")
             }
-            for key, value in states.items():
-                print(key, value)
-                db_state = State(code=key, name=value)
-                session.add(db_state)
-            session.commit()
-            for key, (city_name, state_name) in cities.items():
-                print(city_name, 'at', state_name)
-                state_query = select(State).where(State.name == state_name)
-                db_state = session.scalars(state_query).one()
-                db_city = City(name=city_name, state=db_state)
-                session.add(db_city)
-            session.commit()
+            show("States")            
+            try:
+                bulk = [{"code": key, "name": value} for key, value in states.items()] 
+                session.execute(insert(State), bulk)
+            except Exception as panic:
+                register_error(f"States {str(panic)}")
+                session.rollback()
+                raise CreatorException("States")
+            else:
+                session.commit()
             
-            for number, (key, json_point_of_sale) in enumerate(Bucket.read(results_precios_claros, "clean_points_of_sale", ".md")):
-                try:
+            show("Cities")
+            try:
+                for key, (city_name, state_name) in cities.items():
+                    print(city_name, 'at', state_name)
+                    state_query = select(State).where(State.name == state_name)
+                    db_state = session.scalars(state_query).one()
+                    db_city = City(name=city_name, state=db_state)
+                    session.add(db_city)
+            except Exception as panic:
+                register_error(f"Cities {str(panic)}")
+                session.rollback()
+                raise CreatorException("Cities")
+            else:
+                session.commit()
+
+            show("PointOfSale")
+            try:
+                for number, (key, json_point_of_sale) in enumerate(Bucket.read(results_precios_claros, "clean_points_of_sale", ".md")):                    
                     json_city = json_point_of_sale['city']
                     (city_name, state_name) = cities[json_city]
                     city_query = select(City).where(City.name == city_name) 
                     db_city = session.scalars(city_query).one()
                     db_point_of_sale = PointOfSale(
-                        code=json_point_of_sale['identifier'],
-                        name=json_point_of_sale['name'],
-                        address=json_point_of_sale['address'],
-                        city=db_city
+                         code=json_point_of_sale['identifier'],
+                         name=json_point_of_sale['name']
                     )
                     session.add(db_point_of_sale)
-                    if (number % 10) == 0:
-                        print("PointsfSale", number)
-                except Exception as panic:
-                    register_error(f"PointsOfSale {number:d} {str(panic)}")
-            session.commit()        
+            except Exception as panic:
+                register_error(f"PointOfSale {str(panic)}")
+                session.rollback()
+                raise CreatorException("PointOfSale")
+            else:
+                session.commit()
 
-            print("Timestamp")
-            
+            show("Places")
+            try:
+                for key, json_point_of_sale in Bucket.read(results_precios_claros, "clean_points_of_sale", ".md"):
+                    json_city = json_point_of_sale['city']
+                    (city_name, state_name) = cities[json_city]
+                    city_query = select(City).where(City.name == city_name) 
+                    db_city = session.scalars(city_query).one()
+                    point_of_sale_query = select(PointOfSale).where(PointOfSale.code == json_point_of_sale['identifier']) 
+                    db_point_of_sale = session.scalars(point_of_sale_query).one()
+                    db_place = Place(
+                         address=json_point_of_sale['address'],
+                         city=db_city,
+                         point_of_sale=db_point_of_sale
+                    )
+                    session.add(db_place)
+            except Exception as panic:
+                register_error(f"Places {str(panic)}")
+                session.rollback()
+                raise CreatorException("Places")
+            else:
+                session.commit()        
+
+            show("Timestamps")
             store = FlatStore(storage_precios_claros, "flatstore")
             store.start()
-            for number, sample_key in enumerate(store.sorted_sample_keys()):
-                try:
-                    print("sample_key", sample_key, number)
-                    _year = int(sample_key[:4])
-                    _month = int(sample_key[4:6])
-                    _day = int(sample_key[6:8])
-                    _difference = int(sample_key[8:])
-                    db_timestamp = Timestamp(year=_year, month=_month, day=_day, difference=_difference)
-                    session.add(db_timestamp)
-                except Exception as panic:
-                    register_error(f"Timestamp: {number:d} {sample_key:s} {str(panic):s}")
-            session.commit()
+            try:
+                bulk = [{"year": int(sample_key[:4]),
+                         "month": int(sample_key[4:6]),
+                         "day": int(sample_key[6:8]),
+                         "difference": int(sample_key[8:])
+                         } for sample_key in store.sorted_sample_keys()]
+                session.execute(insert(Timestamp), bulk)
+            except Exception as panic:
+                register_error(f"Timestamps {sample_key:s} {str(panic):s}")
+                session.rollback()
+                raise CreatorException("Timestamps")                
+            else:
+                session.commit()
             store.stop()
 

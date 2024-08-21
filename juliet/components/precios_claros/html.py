@@ -218,63 +218,19 @@ HTML_ROOT = """
 <div class="w3-panel w3-pale-green" style="min-height:460px">
   <br>
 
-
+  {% for a_city in cities %}
   <div class="w3-bar-block w3-border w3-light-grey">
-    <h3 class="w3-bar-item">Precios en Comodoro Rivadavia</h3>
+    <h3 class="w3-bar-item">Precios en {{a_city[0]}}</h3>
     
     <p class="w3-bar-item">
-      <a href="/precios_claros/index/{{ constants.delta_key }}/ar_u_comodoro_rivadavia">
-       ({{ constants.bravo_label }} - {{ constants.alpha_label }} - {{ constants.now_label }})
-      </a>
-    </p>
-    
-  </div>
-  <br>
-
-  <div class="w3-bar-block w3-border w3-light-grey">
-    <h3 class="w3-bar-item">Precios en Puerto Madryn</h3>
-    <p class="w3-bar-item">
-      <a href="/precios_claros/index/{{ constants.delta_key }}/ar_u_puerto_madryn">
+      <a href="/precios_claros/index/{{ constants.delta_key }}/{{ a_city[1] }}">
        ({{ constants.bravo_label }} - {{ constants.alpha_label }} - {{ constants.now_label }})
       </a>
     </p>
     
   </div>
   <br>
-
-  <div class="w3-bar-block w3-border w3-light-grey">
-    <h3 class="w3-bar-item">Precios en Rada Tilly</h3>
-    <p class="w3-bar-item">
-      <a href="/precios_claros/index/{{ constants.delta_key }}/ar_u_rada_tilly">
-       ({{ constants.bravo_label }} - {{ constants.alpha_label }} - {{ constants.now_label }})
-      </a>
-    </p>
-    
-  </div>
-  <br>
-
-
-  <div class="w3-bar-block w3-border w3-light-grey">
-    <h3 class="w3-bar-item">Precios en Trelew</h3>
-
-    <p class="w3-bar-item">
-      <a href="/precios_claros/index/{{ constants.delta_key }}/ar_u_trelew">
-       ({{ constants.bravo_label }} - {{ constants.alpha_label }} - {{ constants.now_label }})
-      </a>
-    </p>
-  </div>
-  <br>
-
-  <div class="w3-bar-block w3-border w3-light-grey">
-    <h3 class="w3-bar-item">Precios en Ushuaia</h3>
-    <p class="w3-bar-item">
-      <a href="/precios_claros/index/{{ constants.delta_key }}/ar_v_ushuaia">
-       ({{ constants.bravo_label }} - {{ constants.alpha_label }} - {{ constants.now_label }})
-      </a>
-    </p>
-
-  </div>
-  <br>
+  {% endfor %}
   
 </div>
 """ 

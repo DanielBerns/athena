@@ -102,8 +102,9 @@ class Actions:
                 now_place, bravo_sample, bravo_points_of_sale_table, bravo_articles_reader)
             (alpha_place, alpha_article_with_prices_table, alpha_points_of_sale) = IO.retrieve(
                 now_place, alpha_sample, alpha_points_of_sale_table, alpha_articles_reader)
-            delta_index = DeltaIndex(delta_root.root_constants, bravo_place, alpha_place, now_place)            
+            delta_index = DeltaIndex(delta_root.root_constants, bravo_place, alpha_place, now_place)
             results_precios_claros_with_place_key = get_container(results_precios_claros, delta_index.index_constants.now_place_key)
+            delta_root.cities.append((now_place, delta_index.index_constants.now_place_key))            
             origin = Actions.write_origin(now_article_with_prices_table, results_precios_claros_with_place_key)
             reports_precios_claros_with_place_key = get_container(reports_precios_claros, delta_index.index_constants.now_place_key)
             show(f"Actions.report_delta({bravo_key:s}, {alpha_key:s}, {now_key:s}) 4")                    

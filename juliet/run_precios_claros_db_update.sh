@@ -22,16 +22,21 @@ cd ~/projects/athena/juliet
 # python run_precios_claros_db_update.py -m live -s 20240320213923
 # python run_precios_claros_db_update.py -m live -s 20240313172132
 # python run_precios_claros_db_update.py -m live -s 20240307230351
-python run_precios_claros_db_update.py -m live -s 20240229175844
-python run_precios_claros_db_update.py -m live -s 20240221225638
-python run_precios_claros_db_update.py -m live -s 20240214175232
-python run_precios_claros_db_update.py -m live -s 20240206162344
-python run_precios_claros_db_update.py -m live -s 20240129183719
-python run_precios_claros_db_update.py -m live -s 20240122145412
-python run_precios_claros_db_update.py -m live -s 20240117201121
-python run_precios_claros_db_update.py -m live -s 20240111133430
-python run_precios_claros_db_update.py -m live -s 20240102191924
-python run_precios_claros_db_update.py -m live -s 20231226141145
-python run_precios_claros_db_update.py -m live -s 20231218150359
-python run_precios_claros_db_update.py -m live -s 20231211121751
+# python run_precios_claros_db_update.py -m live -s 20240229175844
+# python run_precios_claros_db_update.py -m live -s 20240221225638
+# python run_precios_claros_db_update.py -m live -s 20240214175232
+# python run_precios_claros_db_update.py -m live -s 20240206162344
+# python run_precios_claros_db_update.py -m live -s 20240129183719
+# python run_precios_claros_db_update.py -m live -s 20240122145412
+# python run_precios_claros_db_update.py -m live -s 20240117201121
+# python run_precios_claros_db_update.py -m live -s 20240111133430
+# python run_precios_claros_db_update.py -m live -s 20240102191924
+# python run_precios_claros_db_update.py -m live -s 20231226141145
+# python run_precios_claros_db_update.py -m live -s 20231218150359
+# python run_precios_claros_db_update.py -m live -s 20231211121751
+python run_precios_claros_db_update.py -m live -s 20240703183002
+python run_precios_claros_db_update.py -m live -s 20240710183002
+python run_precios_claros_db_update.py -m live -s 20240717183002
+python run_precios_claros_db_update.py -m live -s 20240724183003
+python run_precios_claros_db_update.py -m live -s 20240731183003
 deactivate
