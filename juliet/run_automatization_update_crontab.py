@@ -35,7 +35,8 @@ def main() -> None:
         show(f"{application_name:s} 1")
         container = Path("~", "Commands").expanduser()
         commands_txt =  Path(container, "crontab").with_suffix('.txt')
-        commands = {"grab_news": ("~/Commands/run_news_grab.sh", "20 * * * *")}
+        commands = {"grab_news": ("~/Commands/run_news_grab.sh", "20 * * * *"),
+                    "download": ("~/Commands/run_precios_claros_download.sh", "30 18 * * 3")}
         update_crontab(commands_txt, commands)
         show(f"{application_name:s} 2")
 

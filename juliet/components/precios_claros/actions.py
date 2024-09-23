@@ -1,5 +1,3 @@
-import pdb
-
 from pathlib import Path
 from typing import Callable, Dict, Tuple, Optional, List
 from components.core import Application, FlatStore, show
@@ -69,10 +67,11 @@ class Actions:
         results: Path = get_container(Path(application.file_system.results, "precios_claros"), delta_key)
         reports_root: Path = get_container(Path(application.file_system.reports), "precios_claros")
         reports_delta: Path = get_container(reports_root, delta_key)
-        index_alpha_html: Path = get_resource(reports_delta, "index_alpha", ".html")
+        index_alpha_html: Path = get_resource(reports_root, "index_alpha", ".html")
         
         show(f"    {str(storage):s}")
         show(f"    {str(results):s}")
+        show(f"    {str(reports_root):s}")        
         show(f"    {str(reports_delta):s}")
         show(f"    {str(index_alpha_html):s}")
         return storage, results, reports_delta, index_alpha_html
@@ -103,8 +102,9 @@ class Actions:
                 now_place, bravo_sample, bravo_points_of_sale_table, bravo_articles_reader)
             (alpha_place, alpha_article_with_prices_table, alpha_points_of_sale) = IO.retrieve(
                 now_place, alpha_sample, alpha_points_of_sale_table, alpha_articles_reader)
-            delta_index = DeltaIndex(delta_root.root_constants, bravo_place, alpha_place, now_place)            
+            delta_index = DeltaIndex(delta_root.root_constants, bravo_place, alpha_place, now_place)
             results_precios_claros_with_place_key = get_container(results_precios_claros, delta_index.index_constants.now_place_key)
+            delta_root.cities.append((now_place, delta_index.index_constants.now_place_key))            
             origin = Actions.write_origin(now_article_with_prices_table, results_precios_claros_with_place_key)
             reports_precios_claros_with_place_key = get_container(reports_precios_claros, delta_index.index_constants.now_place_key)
             show(f"Actions.report_delta({bravo_key:s}, {alpha_key:s}, {now_key:s}) 4")                    
@@ -133,7 +133,6 @@ class Actions:
             Actions.write_target(resource, content)
         show(f"Actions.report_delta({bravo_key:s}, {alpha_key:s}, {now_key:s}) 5")
         content = delta_root.write()
-        pdb.set_trace()
         Actions.write_target(index_alpha_html, content)
             
         store.stop()

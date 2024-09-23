@@ -1,4 +1,5 @@
 import logging
+import time
 from contextlib import contextmanager
 from typing import Generator, Dict
 from components.core.filesystem import FileSystem
@@ -63,11 +64,14 @@ def create_application(
 
     application = Application(file_system, settings)
     show("application started")
+    start_time = time.time()
     try:
         yield application
     except Exception as message:
         logging.warning(f"exception: {str(message):s}\n")
     finally:
+        end_time = time.time()
         file_system.stop()
         show("application stopped")
+        show(f"Execution time: {int(end_time - start_time) * 1000} ms")
     logging.info("stop")

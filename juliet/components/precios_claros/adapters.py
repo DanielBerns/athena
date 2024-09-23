@@ -165,6 +165,7 @@ class DeltaIndex:
             content=self.content,
         )
 
+
 class DeltaRoot:
     def __init__(
         self, 
@@ -173,11 +174,16 @@ class DeltaRoot:
         now_key: str
         ) -> None:
         self._root_constants: DeltaRootConstants = build_DeltaRootConstants(bravo_key, alpha_key, now_key)
+        self._cities: List[Tuple[str, str]] = []
         
     @property
     def root_constants(self) -> DeltaRootConstants:
         return self._root_constants
     
+    @property
+    def cities(self) -> List[Tuple[str, str]]:
+        return self._cities
+
     def write(self) -> str:
         template = Template(HTML_ROOT)
-        return template.render(constants=self.root_constants)    
+        return template.render(constants=self.root_constants, cities=self.cities)    

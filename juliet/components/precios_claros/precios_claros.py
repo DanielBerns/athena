@@ -45,7 +45,17 @@ class CitiesEditor:
     
 class PreciosClaros:
 
-   
+    @staticmethod
+    def get_containers(
+        storage: Path, 
+        results: Path, 
+        reports: Path
+    ) -> None:
+        storage_precios_claros = get_container(storage, "precios_claros")
+        results_precios_claros = get_container(results, "precios_claros")
+        reports_precios_claros = get_container(reports, "precios_claros")
+        return storage_precios_claros, results_precios_claros, reports_precios_claros
+
     def __init__(
         self, 
         storage: Path, 
@@ -55,9 +65,10 @@ class PreciosClaros:
         points_of_sale_tool: Tool,
         errors_tool: Tool
     ) -> None:
-        self._storage = get_container(storage, "precios_claros")
-        self._results = get_container(results, "precios_claros")
-        self._reports = get_container(reports, "precios_claros")
+        _storage, _results, _reports = PreciosClaros.get_containers(storage, results, reports)
+        self._storage = _storage
+        self._results = _results
+        self._reports = _reports
         self._articles_editor = RecordEditor()        
         self._points_of_sale_editor = RecordEditor()        
         self._articles_tool = articles_tool

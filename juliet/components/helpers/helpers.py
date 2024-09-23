@@ -11,6 +11,16 @@ from shutil import rmtree
 indentation = "    "
 
 
+# def time_it(func):
+#     def wrapper():
+#         start = time.time()
+#         result = func()
+#         end = time.time()
+#         print(f'{func.__name__} took {int(end - start) * 1000} ms')
+#         return result
+#     return wrapper
+
+
 def classname(thing: Any) -> str:
     return thing.__class__.__name__
 
