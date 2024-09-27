@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-cd ~/projects/athena/juliet
+cd ~/Apps/athena/juliet
 . ~/.venvs/fce/bin/activate
 # cp /home/dberns/Info/athena/juliet/live/Backup/precios_claros/charlie.db /home/dberns/Info/athena/juliet/live/Storage/precios_claros.db
 # python run_precios_claros_db_update.py -m live -s 20240612173646
