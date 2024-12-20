@@ -676,6 +676,7 @@ class Creator:
                 session.commit()        
 
             show("Timestamps")
+            pdb.set_trace()
             store = FlatStore(storage_precios_claros, "flatstore")
             store.start()
             try:
