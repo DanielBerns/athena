@@ -44,7 +44,7 @@ class Creator:
                 session.execute(insert(Article), bulk)
                 session.commit()
             except Exception as panic:
-                register_error(f"Articles {number:d} {str(panic)}")
+                register_error(f"Articles {str(panic)}")
                 session.rollback()
                 raise CreatorException("Articles")
 
