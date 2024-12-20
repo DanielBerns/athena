@@ -1,42 +1,192 @@
 #!/usr/bin/env bash
 cd ~/Apps/athena/juliet
 . ~/.venvs/fce/bin/activate
-# cp /home/dberns/Info/athena/juliet/live/Backup/precios_claros/charlie.db /home/dberns/Info/athena/juliet/live/Storage/precios_claros.db
-# python run_precios_claros_db_update.py -m live -s 20240612173646
-# python run_precios_claros_db_update.py -m live -s 20240605185125
-# cp /home/dberns/Info/athena/juliet/live/Backup/precios_claros/delta.db /home/dberns/Info/athena/juliet/live/Storage/precios_claros.db
-# python run_precios_claros_db_update.py -m live -s 20240522164524
-# python run_precios_claros_db_update.py -m live -s 20240529164111
-# python run_precios_claros_db_update.py -m live -s 20240619180700
-# python run_precios_claros_db_update.py -m live -s 20240626183004
-# cp /home/dberns/Info/athena/juliet/live/Backup/precios_claros/golf.db /home/dberns/Info/athena/juliet/live/Storage/precios_claros.db
-# python run_precios_claros_db_update.py -m live -s 20240515145338
-# python run_precios_claros_db_update.py -m live -s 20240508214703
-# python run_precios_claros_db_update.py -m live -s 20240503222950
-# python run_precios_claros_db_update.py -m live -s 20240427192844
-# python run_precios_claros_db_update.py -m live -s 20240410162429
-# python run_precios_claros_db_update.py -m live -s 20240417165152
-# python run_precios_claros_db_update.py -m live -s 20240424162130
-# python run_precios_claros_db_update.py -m live -s 20240403173256
-# python run_precios_claros_db_update.py -m live -s 20240327233820
-# python run_precios_claros_db_update.py -m live -s 20240320213923
-# python run_precios_claros_db_update.py -m live -s 20240313172132
-# python run_precios_claros_db_update.py -m live -s 20240307230351
-# python run_precios_claros_db_update.py -m live -s 20240229175844
-# python run_precios_claros_db_update.py -m live -s 20240221225638
-# python run_precios_claros_db_update.py -m live -s 20240214175232
-# python run_precios_claros_db_update.py -m live -s 20240206162344
-# python run_precios_claros_db_update.py -m live -s 20240129183719
-# python run_precios_claros_db_update.py -m live -s 20240122145412
-# python run_precios_claros_db_update.py -m live -s 20240117201121
-# python run_precios_claros_db_update.py -m live -s 20240111133430
-# python run_precios_claros_db_update.py -m live -s 20240102191924
-# python run_precios_claros_db_update.py -m live -s 20231226141145
-# python run_precios_claros_db_update.py -m live -s 20231218150359
-# python run_precios_claros_db_update.py -m live -s 20231211121751
+python run_precios_claros_db_update.py -m live -s 20201028183600
+python run_precios_claros_db_update.py -m live -s 20201118225800
+python run_precios_claros_db_update.py -m live -s 20201119220800
+python run_precios_claros_db_update.py -m live -s 20201125230500
+python run_precios_claros_db_update.py -m live -s 20201126234100
+python run_precios_claros_db_update.py -m live -s 20201202232500
+python run_precios_claros_db_update.py -m live -s 20201203233800
+python run_precios_claros_db_update.py -m live -s 20201205233100
+python run_precios_claros_db_update.py -m live -s 20201208120500
+python run_precios_claros_db_update.py -m live -s 20201209084100
+python run_precios_claros_db_update.py -m live -s 20201230124500
+python run_precios_claros_db_update.py -m live -s 20210101235500
+python run_precios_claros_db_update.py -m live -s 20210102223000
+python run_precios_claros_db_update.py -m live -s 20210103235600
+python run_precios_claros_db_update.py -m live -s 20210104232100
+python run_precios_claros_db_update.py -m live -s 20210106162900
+python run_precios_claros_db_update.py -m live -s 20210203204200
+python run_precios_claros_db_update.py -m live -s 20210215205700
+python run_precios_claros_db_update.py -m live -s 20210315231100
+python run_precios_claros_db_update.py -m live -s 20210316222900
+python run_precios_claros_db_update.py -m live -s 20210414215600
+python run_precios_claros_db_update.py -m live -s 20210415224300
+python run_precios_claros_db_update.py -m live -s 20210517095100
+python run_precios_claros_db_update.py -m live -s 20210616220200
+python run_precios_claros_db_update.py -m live -s 20210716102100
+python run_precios_claros_db_update.py -m live -s 20210816201200
+python run_precios_claros_db_update.py -m live -s 20210916123200
+python run_precios_claros_db_update.py -m live -s 20211020162100
+python run_precios_claros_db_update.py -m live -s 20211112200100
+python run_precios_claros_db_update.py -m live -s 20211115153800
+python run_precios_claros_db_update.py -m live -s 20211116192300
+python run_precios_claros_db_update.py -m live -s 20211117215500
+python run_precios_claros_db_update.py -m live -s 20211216012900
+python run_precios_claros_db_update.py -m live -s 20220115194400
+python run_precios_claros_db_update.py -m live -s 20220215231200
+python run_precios_claros_db_update.py -m live -s 20220315201000deactivate
+python run_precios_claros_db_update.py -m live -s 20220322222000
+python run_precios_claros_db_update.py -m live -s 20220329124000
+python run_precios_claros_db_update.py -m live -s 20220329180700
+python run_precios_claros_db_update.py -m live -s 20220406204900
+python run_precios_claros_db_update.py -m live -s 20220415220700
+python run_precios_claros_db_update.py -m live -s 20220515231600
+python run_precios_claros_db_update.py -m live -s 20220606150500
+python run_precios_claros_db_update.py -m live -s 20220608150800
+python run_precios_claros_db_update.py -m live -s 20220615172600
+python run_precios_claros_db_update.py -m live -s 20220622175200
+python run_precios_claros_db_update.py -m live -s 20220630091100
+python run_precios_claros_db_update.py -m live -s 20220702184700
+python run_precios_claros_db_update.py -m live -s 20220706195700
+python run_precios_claros_db_update.py -m live -s 20220713195900
+python run_precios_claros_db_update.py -m live -s 20220715191000
+python run_precios_claros_db_update.py -m live -s 20220720192400
+python run_precios_claros_db_update.py -m live -s 20220727195400
+python run_precios_claros_db_update.py -m live -s 20220729224400
+python run_precios_claros_db_update.py -m live -s 20220803215700
+python run_precios_claros_db_update.py -m live -s 20220810202700
+python run_precios_claros_db_update.py -m live -s 20220815202400
+python run_precios_claros_db_update.py -m live -s 20220827190500
+python run_precios_claros_db_update.py -m live -s 20220908093800
+python run_precios_claros_db_update.py -m live -s 20220912154100
+python run_precios_claros_db_update.py -m live -s 20220912164100
+python run_precios_claros_db_update.py -m live -s 20220912180600
+python run_precios_claros_db_update.py -m live -s 20220915161700
+python run_precios_claros_db_update.py -m live -s 20220922221000
+python run_precios_claros_db_update.py -m live -s 20221006134000
+python run_precios_claros_db_update.py -m live -s 20221012225000
+python run_precios_claros_db_update.py -m live -s 20221014223100
+python run_precios_claros_db_update.py -m live -s 20221015200900
+python run_precios_claros_db_update.py -m live -s 20221102224800
+python run_precios_claros_db_update.py -m live -s 20221109203500
+python run_precios_claros_db_update.py -m live -s 20221116130100
+python run_precios_claros_db_update.py -m live -s 20221130152000
+python run_precios_claros_db_update.py -m live -s 20221201173400
+python run_precios_claros_db_update.py -m live -s 20221205190100
+python run_precios_claros_db_update.py -m live -s 20221215204300
+python run_precios_claros_db_update.py -m live -s 20221221201800
+python run_precios_claros_db_update.py -m live -s 20221228210400
+python run_precios_claros_db_update.py -m live -s 20221231174300
+python run_precios_claros_db_update.py -m live -s 20230101223700
+python run_precios_claros_db_update.py -m live -s 20230116161100
+python run_precios_claros_db_update.py -m live -s 20230201225500
+python run_precios_claros_db_update.py -m live -s 20230202224400
+python run_precios_claros_db_update.py -m live -s 20230203160900
+python run_precios_claros_db_update.py -m live -s 20230215195700
+python run_precios_claros_db_update.py -m live -s 20230301163500
+python run_precios_claros_db_update.py -m live -s 20230316150000
+python run_precios_claros_db_update.py -m live -s 20230401184800
+python run_precios_claros_db_update.py -m live -s 20230414170500
+python run_precios_claros_db_update.py -m live -s 20230415220900
+python run_precios_claros_db_update.py -m live -s 20230427202300
+python run_precios_claros_db_update.py -m live -s 20230504232800
+python run_precios_claros_db_update.py -m live -s 20230514215900
+python run_precios_claros_db_update.py -m live -s 20230514224600
+python run_precios_claros_db_update.py -m live -s 20230515192600
+python run_precios_claros_db_update.py -m live -s 20230605222500
+python run_precios_claros_db_update.py -m live -s 20230606090000
+python run_precios_claros_db_update.py -m live -s 20230615203500
+python run_precios_claros_db_update.py -m live -s 20230714193400
+python run_precios_claros_db_update.py -m live -s 20230731194500
+python run_precios_claros_db_update.py -m live -s 20230815190200
+python run_precios_claros_db_update.py -m live -s 20230901171900
+python run_precios_claros_db_update.py -m live -s 20230913173800
+python run_precios_claros_db_update.py -m live -s 20230913205900
+python run_precios_claros_db_update.py -m live -s 20231023224500
+python run_precios_claros_db_update.py -m live -s 20231026100910
+python run_precios_claros_db_update.py -m live -s 20231026191353
+python run_precios_claros_db_update.py -m live -s 20231030184751
+python run_precios_claros_db_update.py -m live -s 20231106185003
+python run_precios_claros_db_update.py -m live -s 20231113224451
+python run_precios_claros_db_update.py -m live -s 20231114175557
+python run_precios_claros_db_update.py -m live -s 20231115155427
+python run_precios_claros_db_update.py -m live -s 20231120192549
+python run_precios_claros_db_update.py -m live -s 20231204175645
+python run_precios_claros_db_update.py -m live -s 20231211121751
+python run_precios_claros_db_update.py -m live -s 20231215145031
+python run_precios_claros_db_update.py -m live -s 20231218150359
+python run_precios_claros_db_update.py -m live -s 20231221191057
+python run_precios_claros_db_update.py -m live -s 20231226141145
+python run_precios_claros_db_update.py -m live -s 20231229120815
+python run_precios_claros_db_update.py -m live -s 20240102191924
+python run_precios_claros_db_update.py -m live -s 20240108115626
+python run_precios_claros_db_update.py -m live -s 20240111133430
+python run_precios_claros_db_update.py -m live -s 20240117201121
+python run_precios_claros_db_update.py -m live -s 20240118222908
+python run_precios_claros_db_update.py -m live -s 20240122145412
+python run_precios_claros_db_update.py -m live -s 20240129183719
+python run_precios_claros_db_update.py -m live -s 20240206162344
+python run_precios_claros_db_update.py -m live -s 20240214175232
+python run_precios_claros_db_update.py -m live -s 20240216230955
+python run_precios_claros_db_update.py -m live -s 20240217123932
+python run_precios_claros_db_update.py -m live -s 20240217183349
+python run_precios_claros_db_update.py -m live -s 20240218121023
+python run_precios_claros_db_update.py -m live -s 20240218121153
+python run_precios_claros_db_update.py -m live -s 20240221204414
+python run_precios_claros_db_update.py -m live -s 20240221225638
+python run_precios_claros_db_update.py -m live -s 20240227154250
+python run_precios_claros_db_update.py -m live -s 20240229175844
+python run_precios_claros_db_update.py -m live -s 20240307230351
+python run_precios_claros_db_update.py -m live -s 20240313172132
+python run_precios_claros_db_update.py -m live -s 20240320171004
+python run_precios_claros_db_update.py -m live -s 20240320213923
+python run_precios_claros_db_update.py -m live -s 20240327221506
+python run_precios_claros_db_update.py -m live -s 20240327233820
+python run_precios_claros_db_update.py -m live -s 20240403173256
+python run_precios_claros_db_update.py -m live -s 20240408204334
+python run_precios_claros_db_update.py -m live -s 20240410162429
+python run_precios_claros_db_update.py -m live -s 20240415172126
+python run_precios_claros_db_update.py -m live -s 20240417165152
+python run_precios_claros_db_update.py -m live -s 20240422230219
+python run_precios_claros_db_update.py -m live -s 20240424162130
+python run_precios_claros_db_update.py -m live -s 20240427192844
+python run_precios_claros_db_update.py -m live -s 20240503222950
+python run_precios_claros_db_update.py -m live -s 20240508214703
+python run_precios_claros_db_update.py -m live -s 20240515145338
+python run_precios_claros_db_update.py -m live -s 20240522164524
+python run_precios_claros_db_update.py -m live -s 20240529164111
+python run_precios_claros_db_update.py -m live -s 20240530212638
+python run_precios_claros_db_update.py -m live -s 20240605185125
+python run_precios_claros_db_update.py -m live -s 20240611173631
+python run_precios_claros_db_update.py -m live -s 20240612173646
+python run_precios_claros_db_update.py -m live -s 20240619180700
+python run_precios_claros_db_update.py -m live -s 20240626183004
 python run_precios_claros_db_update.py -m live -s 20240703183002
 python run_precios_claros_db_update.py -m live -s 20240710183002
 python run_precios_claros_db_update.py -m live -s 20240717183002
 python run_precios_claros_db_update.py -m live -s 20240724183003
 python run_precios_claros_db_update.py -m live -s 20240731183003
+python run_precios_claros_db_update.py -m live -s 20240814183002
+python run_precios_claros_db_update.py -m live -s 20240821183002
+python run_precios_claros_db_update.py -m live -s 20240828183002
+python run_precios_claros_db_update.py -m live -s 20240903155148
+python run_precios_claros_db_update.py -m live -s 20240904183001
+python run_precios_claros_db_update.py -m live -s 20240911183003
+python run_precios_claros_db_update.py -m live -s 20240918183003
+python run_precios_claros_db_update.py -m live -s 20240925183002
+python run_precios_claros_db_update.py -m live -s 20241002182400
+python run_precios_claros_db_update.py -m live -s 20241009183002
+python run_precios_claros_db_update.py -m live -s 20241016183001
+python run_precios_claros_db_update.py -m live -s 20241023183002
+python run_precios_claros_db_update.py -m live -s 20241030183002
+python run_precios_claros_db_update.py -m live -s 20241106183002
+python run_precios_claros_db_update.py -m live -s 20241113183002
+python run_precios_claros_db_update.py -m live -s 20241120183001
+python run_precios_claros_db_update.py -m live -s 20241127105652
+python run_precios_claros_db_update.py -m live -s 20241127183003
+python run_precios_claros_db_update.py -m live -s 20241204183002
+python run_precios_claros_db_update.py -m live -s 20241210183811
+python run_precios_claros_db_update.py -m live -s 20241218183003
 deactivate

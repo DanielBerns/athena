@@ -1,4 +1,4 @@
-import pdb
+# import pdb
 
 from collections import Counter
 from pathlib import Path 
@@ -175,7 +175,7 @@ class Updater:
             cities_in_db = Updater.read_cities(session)
             places_in_db = Updater.read_places(session)
             points_of_sale_table, articles_reader = IO.read(sample)
-            pdb.set_trace()
+            # pdb.set_trace()
             for location, article_with_prices_table, points_of_sale in IO.iterate(
                 sample,
                 points_of_sale_table, 
