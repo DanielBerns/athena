@@ -29,7 +29,7 @@ def get_arguments() -> Dict[str, str]:
     )
     return cli.arguments
 
-# import pdb
+import pdb
 
 def main() -> None:
     application_name: str = "run_precios_claros_db_creator"
@@ -38,7 +38,7 @@ def main() -> None:
     with create_application(application_name, arguments) as application:
         show(f"{application_name:s} 1: begin")
         try:
-            # pdb.set_trace()
+            pdb.set_trace()
             Creator.execute(application)
         except Exception as panic:
             show(f"{application_name:s} panic: {str(panic):s}")
