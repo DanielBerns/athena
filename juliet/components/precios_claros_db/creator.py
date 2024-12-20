@@ -686,7 +686,7 @@ class Creator:
                          } for sample_key in store.sorted_sample_keys()]
                 session.execute(insert(Timestamp), bulk)
             except Exception as panic:
-                register_error(f"Timestamps {sample_key:s} {str(panic):s}")
+                register_error(f"Timestamps {str(panic):s}")
                 session.rollback()
                 raise CreatorException("Timestamps")                
             else:
