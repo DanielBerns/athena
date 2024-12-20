@@ -175,7 +175,7 @@ class Updater:
             cities_in_db = Updater.read_cities(session)
             places_in_db = Updater.read_places(session)
             points_of_sale_table, articles_reader = IO.read(sample)
-            # pdb.set_trace()
+            pdb.set_trace()
             for location, article_with_prices_table, points_of_sale in IO.iterate(
                 sample,
                 points_of_sale_table, 
@@ -183,7 +183,10 @@ class Updater:
             ):
                 print(location)
                 all_the_locations[location] += 1
-                _city = Updater.read_city(location)
+                try:
+                    _city = cities_in_db[location]
+                except KeyError as message:
+                    break
                 for pos in points_of_sale:
                     all_the_points_of_sale[pos.identifier] += 1
                     _point_of_sale = points_of_sale_in_db.get(pos.identifier, None)
