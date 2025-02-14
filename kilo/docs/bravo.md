@@ -76,6 +76,9 @@ High
 
 ##### JSON Data Structure
 
+In the former version of this software, the json data structure is described below. 
+However, we want to change some field names and eliminate some fields.
+
 point_of_sale(json_from_webserver: dict[str, str]) -> dict[str, str]:
 {   "identifier": json_from_webserver["id"],
     "provincia": (json_from_webserver["provincia"]).lower(),
@@ -120,7 +123,28 @@ articles_per_point_of_sale example
 
 ##### Data Fields of Interest
     * **1.2.2. Data Fields of Interest:**  Which specific fields from the JSON data are you interested in extracting and storing? Not all fields might be relevant for your pipeline.
-    
+
+    1. We want the point_of_sale with the same content as described above. However, we want to translate the names of the fields to english. 
+        point_of_sale(json_from_webserver: dict[str, str]) -> dict[str, str]:
+        {   "key": json_from_webserver["id"],
+            "state": (json_from_webserver["provincia"]).lower(),
+            "city": (json_from_webserver["localidad"]).lower(),
+            "address": (json_from_webserver["direccion"]).lower(),
+            "flag": (json_from_webserver["banderaDescripcion"]).lower(),
+            "company": (json_from_webserver["comercioRazonSocial"]).lower(),
+            "branch": (json_from_webserver["sucursalNombre"]).lower(),
+        }
+ 
+    2. We want articles_per_point_of_sale with the following fields
+        articles_per_point_of_sale(json_from_webserver: dict[str, str]) -> dict[str, str]:
+        {   "identifier": json_from_webserver["id"],
+            "brand": (json_from_webserver["marca"]).lower(),
+            "name": (json_from_webserver["nombre"]).lower(),
+            "package": (json_from_webserver["presentacion"]).lower(),
+            "price": str(int(float(json_from_webserver["precio"])*100)),
+            "point_of_sale_key": json_from_webserver["point_of_sale"],
+        }
+        
 ##### Data Consistency and Quality
     * **1.2.3. Data Consistency and Quality:** Are there any known inconsistencies in the data? Are there null values, unexpected data types, or variations in the JSON structure across different responses?
     
