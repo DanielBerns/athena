@@ -9,11 +9,11 @@ from components.helpers.helpers import (
     classname, indentation, i, aware_utcnow, get_timestamp, read_json, write_json,
     read_text, write_text, read_text_lines, write_text_lines,
     get_directory, get_container, get_resource, get_resource_with_timestamp,
-    remove_directory, get_environment_variable
+    remove_directory, get_environment_variable, erase_directory_contents
 )
 
 
-class TestMyModule(unittest.TestCase):
+class TestHelpers(unittest.TestCase):
 
     def setUp(self):
         # Create a temporary directory for testing
@@ -163,6 +163,22 @@ class TestMyModule(unittest.TestCase):
         self.assertEqual(get_environment_variable("TEST_VAR", ""), "test_value")
         del os.environ["TEST_VAR"]
 
+    def test_erase_directory_contents(self):
+            with TemporaryDirectory() as temp_dir:
+                temp_path = Path(temp_dir)
+                # Create some dummy files and subdirectories
+                (temp_path / "file1.txt").touch()
+                (temp_path / "file2.txt").touch()
+                subdir = temp_path / "subdir"
+                subdir.mkdir()
+                (subdir / "subfile.txt").touch()
+
+                erase_directory_contents_no_prompt(temp_path)
+
+                # Check if everything is gone
+                self.assertFalse((temp_path / "file1.txt").exists())
+                self.assertFalse((temp_path / "file2.txt").exists())
+                self.assertFalse(subdir.exists())
 
 if __name__ == '__main__':
     unittest.main()

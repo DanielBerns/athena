@@ -292,3 +292,37 @@ def get_environment_variable(name: str, default_value: str = "-") -> str:
         not set.
     """
     return os.environ.get(name) or default_value
+
+
+import os
+import shutil
+from pathlib import Path
+
+
+def erase_directory_contents(directory: Path) -> None:
+    """Erases all files and subdirectories within the specified directory.
+    Args:
+        directory pathlib.Path The path to the directory whose contents should be erased.
+    Raises:
+        FileNotFoundError: If the provided directory does not exist.
+        TypeError: If the directory isn't a pathlib.Path.
+        PermissionError: If you do not have the correct permissions.
+    """
+
+    if not directory.exists():
+        raise FileNotFoundError(f"The directory '{directory}' does not exist.")
+
+    if not directory.is_dir():
+        raise ValueError(f"The path '{directory}' is not a directory.")
+
+    for item in directory.iterdir():
+        try:
+            if item.is_file():
+                item.unlink()  # Delete files
+            elif item.is_dir():
+                shutil.rmtree(item)  # Delete subdirectories and their contents recursively
+            elif item.is_symlink():
+                item.unlink() # Delete symbolic links
+        except OSError as e:
+            print(f"Error deleting {item}: {e}")
+            raise # re-raise exception. Good practice.
