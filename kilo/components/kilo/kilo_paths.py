@@ -10,12 +10,12 @@ class KiloPaths:
         mode (str, optional): The operating mode (e.g., 'live', 'test'). Defaults to 'live'.
     """
 
-    def __init__(self, mode: str = "live") -> None:
+    def __init__(self, mode: str) -> None:
         user_home = Path("~").expanduser()
         library = "athena"
         version = "kilo"
-        self._apps = get_directory(Path(user_home, "Apps", libray, version))
-        self._info = get_directory(Path(user_home, "Info", libray, version, mode))
+        self._apps = get_directory(Path(user_home, "Apps", library, version))
+        self._info = get_directory(Path(user_home, "Info", library, version, mode))
         self._backup = get_container(self.info, "Backup")
         self._commands = get_container(self.info, "Commands")
         self._logs = get_container(self.info, "Logs")
@@ -42,18 +42,18 @@ class KiloPaths:
         return self._backup
 
     @property
-    def cli(self) -> Path:
-        """The path to the CLI directory.
-           Files in this directory are inputs for command line applications
-        """
-        return self._cli
-
-    @property
     def commands(self) -> Path:
         """The path to the commands directory.
            Perhaps this is same as cli.
         """
         return self._commands
+
+    @property
+    def cli(self) -> Path:
+        """The path to the commands directory.
+           Files in this directory are inputs for command line applications
+        """
+        return self.commands
 
     @property
     def logs(self) -> Path:

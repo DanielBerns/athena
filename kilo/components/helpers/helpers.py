@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Dict, Any, Generator
 from shutil import rmtree
 
+
 indentation = "    "  # Define an indentation constant.
 
 
@@ -294,9 +295,6 @@ def get_environment_variable(name: str, default_value: str = "-") -> str:
     return os.environ.get(name) or default_value
 
 
-import os
-import shutil
-from pathlib import Path
 
 
 def erase_directory_contents(directory: Path) -> None:
@@ -320,9 +318,16 @@ def erase_directory_contents(directory: Path) -> None:
             if item.is_file():
                 item.unlink()  # Delete files
             elif item.is_dir():
-                shutil.rmtree(item)  # Delete subdirectories and their contents recursively
+                rmtree(item)  # Delete subdirectories and their contents recursively
             elif item.is_symlink():
                 item.unlink() # Delete symbolic links
         except OSError as e:
             print(f"Error deleting {item}: {e}")
             raise # re-raise exception. Good practice.
+
+
+def get_json_lines(home: Path, name: str, identifier) -> dict[str, str]:
+    container = get_container(home, name)
+    resource = get_resource(container, identifier, ".jsonl")
+    for a_line in read_text_lines(resource):
+        yield json.loads(a_line)

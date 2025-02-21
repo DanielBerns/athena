@@ -76,12 +76,11 @@ class FlatStore:
 
     def iterate(self) -> Generator[Path, None, None]:
         """
-        Iterates over the sample directories within the FlatStore's home directory.
+        Iterates over the samples directory within the FlatStore's home directory.
 
         Yields:
-            Path:  A `Path` object representing each sample directory.  The order
-            in which directories are yielded is determined by the filesystem
-            (typically not sorted).
+            Path:  A `Path` object representing each sample directory.
+                   Samples are sorted
 
         Example:
             ```python
@@ -89,7 +88,7 @@ class FlatStore:
                 print(sample_path)  # Prints the Path to each sample directory.
             ```
         """
-        for dd in glob.glob(f"{str(self.home):s}/*"):
+        for dd in self.sorted_sample_keys():
             yield Path(dd)
 
     def sample_home(self, key: str) -> Path:

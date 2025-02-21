@@ -1,1 +1,2 @@
 from components.juliet.juliet_paths import JulietPaths
+from components.juliet.juliet_io import juliet_precios_claros_update

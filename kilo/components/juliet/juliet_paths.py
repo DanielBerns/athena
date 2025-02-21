@@ -1,7 +1,6 @@
 from pathlib import Path
 from components.helpers.helpers import get_directory, get_container
 
-
 class JulietPaths:
     """
     Manages file and directory paths for Juliet version.
@@ -10,12 +9,12 @@ class JulietPaths:
         mode (str, optional): The operating mode (e.g., 'live', 'test'). Defaults to 'live'.
     """
 
-    def __init__(self, library: str, mode: str = "live") -> None:
+    def __init__(self, mode: str) -> None:
         user_home = Path("~").expanduser()
         library = "athena"
         version = "juliet"
-        self._apps = get_directory(Path(user_home, "Apps", library, "juliet"))
-        self._info = get_directory(Path(user_home, "Info", library, "juliet", mode))
+        self._apps = get_directory(Path(user_home, "Apps", library, version))
+        self._info = get_directory(Path(user_home, "Info", library, version, mode))
         self._backup = get_container(self.info, "Backup")
         self._cli = get_container(self.info, "cli")
         self._commands = get_container(self.info, "Commands")
