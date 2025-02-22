@@ -1,8 +1,6 @@
-import pdb
 from components.precios_claros import create_juliet_to_kilo_precios_claros
 
 def main() -> None:
-    pdb.set_trace()
     actor = create_juliet_to_kilo_precios_claros("live")
     actor.update_storage()
 

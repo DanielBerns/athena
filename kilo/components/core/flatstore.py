@@ -5,7 +5,6 @@ from typing import Generator, List
 
 from components.helpers import get_container
 
-
 class FlatStore:
     """
     A class for managing a simple file-based storage system where data is organized
@@ -74,22 +73,6 @@ class FlatStore:
         sorted_paths = sorted(paths)
         return [Path(dd).stem for dd in sorted_paths]
 
-    def iterate(self) -> Generator[Path, None, None]:
-        """
-        Iterates over the samples directory within the FlatStore's home directory.
-
-        Yields:
-            Path:  A `Path` object representing each sample directory.
-                   Samples are sorted
-
-        Example:
-            ```python
-            for sample_path in store.iterate():
-                print(sample_path)  # Prints the Path to each sample directory.
-            ```
-        """
-        for dd in self.sorted_sample_keys():
-            yield Path(dd)
 
     def sample_home(self, key: str) -> Path:
         """
@@ -110,3 +93,20 @@ class FlatStore:
             ```
         """
         return get_container(self.home, key)
+
+    def iterate(self) -> Generator[Path, None, None]:
+        """
+        Iterates over the samples directory within the FlatStore's home directory.
+
+        Yields:
+            Path:  A `Path` object representing each sample directory.
+                   Samples are sorted
+
+        Example:
+            ```python
+            for sample_path in store.iterate():
+                print(sample_path)  # Prints the Path to each sample directory.
+            ```
+        """
+        for dd in self.sorted_sample_keys():
+            yield self.sample_home(dd)

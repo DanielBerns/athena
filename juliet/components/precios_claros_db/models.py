@@ -66,10 +66,6 @@ class PointOfSale(Base):
     gates: Mapped[List["Place"]] = relationship(back_populates="point_of_sale")
 
 
-
-
-
-
 class Timestamp(Base):
     __tablename__ = "timestamp"
     id: Mapped[int] = mapped_column(primary_key=True)

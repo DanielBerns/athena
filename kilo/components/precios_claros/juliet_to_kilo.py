@@ -2,6 +2,7 @@ from components.juliet.juliet_paths import JulietPaths
 from components.juliet.juliet_io import juliet_precios_claros_update
 from components.juliet.juliet_precios_claros_target import JulietPreciosClarosTarget
 from components.kilo.kilo_paths import KiloPaths
+from components.core.stats import Stats
 from components.precios_claros.juliet_to_kilo_precios_claros_target import JulietToKiloPreciosClarosTarget
 
 class JulietToKiloPreciosClaros:
@@ -21,6 +22,12 @@ class JulietToKiloPreciosClaros:
     def update_storage(self) -> None:
         target = JulietToKiloPreciosClarosTarget(self.kilo_paths)
         juliet_precios_claros_update(self.juliet_paths, target)
+        Stats.write_stats("points_of_sale", target.points_of_sale_stats, self.kilo_paths.reports)
+        Stats.write_stats("selected_points_of_sale", target.selected_points_of_sale_stats, self.kilo_paths.reports)
+        Stats.write_stats("articles_per_point_of_sale", target.articles_per_point_of_sale_stats, self.kilo_paths.reports)
+        print(f"Total counter             points_of_sale: {target.total_counter_points_of_sale:d}")
+        print(f"Total counter    selected_points_of_sale: {target.total_counter_selected_points_of_sale:d}")
+        print(f"Total counter articles_per_point_of_sale: {target.total_counter_articles_per_point_of_sale:d}")
 
 
 def create_juliet_to_kilo_precios_claros(mode: str) -> JulietToKiloPreciosClaros:
