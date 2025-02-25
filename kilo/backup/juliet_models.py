@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass
 from typing import Dict
 
@@ -31,7 +30,7 @@ def get_juliet_point_of_sale(
 
 def get_juliet_article_per_point_of_sale(
     json_from_scraper
-) -> JulietArticlePerPointOfSale
+) -> JulietArticlePerPointOfSale:
     try:
         article_per_point_of_sale = {
             "identifier": json_from_scraper["id"],

@@ -326,7 +326,7 @@ def erase_directory_contents(directory: Path) -> None:
             raise # re-raise exception. Good practice.
 
 
-def get_json_lines(home: Path, name: str, identifier) -> dict[str, str]:
+def get_json_lines(home: Path, name: str, identifier: str) -> dict[str, str]:
     container = get_container(home, name)
     resource = get_resource(container, identifier, ".jsonl")
     for a_line in read_text_lines(resource):

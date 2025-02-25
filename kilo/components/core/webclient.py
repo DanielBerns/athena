@@ -1,25 +1,46 @@
 import logging
 from contextlib import contextmanager
 from typing import Any, Dict, Generator
-
 from requests import Session
-
 from components.helpers import classname
 
-
 class WebClient:
+    """
+    WebClient is a class that handles HTTP GET requests using the requests library.
+    """
+
     def __init__(self) -> None:
+        """
+        Initialize the WebClient with a new requests Session.
+        """
         self._session: Session = Session()
 
     def start(self) -> None:
+        """
+        Start the WebClient session and log the action.
+        """
         logging.info(f"{classname(self):s}.start()")
 
     def stop(self) -> None:
-        # https://stackoverflow.com/questions/49253246/how-to-close-requests-session
+        """
+        Close the WebClient session and log the action.
+        """
+        # Close the session to release resources
+        # See https://stackoverflow.com/questions/49253246/how-to-close-requests-session
         self._session.close()
         logging.info(f"{classname(self):s}.stop()")
 
     def get(self, url: str) -> Dict[Any, Any]:
+        """
+        Perform a GET request to the specified URL.
+
+        Args:
+            url (str): The URL to send the GET request to.
+
+        Returns:
+            Dict[Any, Any]: The response JSON if the request was successful,
+                            otherwise a dictionary with an error message.
+        """
         logging.info(f"{classname(self):s}.get({url:s}) 1")
         try:
             response = self._session.get(url, headers={"User-Agent": "Mozilla/5.0"})
@@ -49,6 +70,12 @@ class WebClient:
 
 @contextmanager
 def open_webclient() -> Generator[WebClient, None, None]:
+    """
+    Context manager to handle the lifecycle of a WebClient.
+
+    Yields:
+        Generator[WebClient, None, None]: An instance of WebClient.
+    """
     try:
         webclient = WebClient()
         webclient.start()

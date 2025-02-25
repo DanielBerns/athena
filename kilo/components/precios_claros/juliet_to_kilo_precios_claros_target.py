@@ -1,129 +1,134 @@
 from pathlib import Path
 from collections import defaultdict, Counter
-from typing import DefaultDict
+from collections import contextmanager
+from typing import DefaultDict, TextIO
 
 from components.kilo.kilo_paths import KiloPaths
-from components.precios_claros.processors_from_juliet import KiloProcessorFromJuliet
+from components.precios_claros.kilo_processors_from_juliet import KiloProcessorFromJuliet
+
 from components.core.stats import Stats
+
+
+# Comment and modify if needed
+@contextmanager
+def create_target_file(resource: Path) -> Generator[TextIO, None, None]:
+    target_file = None  # Initialize target_file to None
+    try:
+         target_file = open(resource, "w", encoding="utf-8")
+         yield target_file
+    except Exception as message:
+        logging.error(f"Error creating/using file: {message})
+    finally:
+        if target_file:
+            target_file.close()
 
 
 class JulietToKiloPreciosClarosTarget:
     def __init__(self, kilo_paths: KiloPaths) -> None:
         self._kilo_paths = kilo_paths
-        self._counter_points_of_sale: int = 0
-        self._counter_selected_points_of_sale: int = 0
-        self._counter_articles_per_point_of_sale: int = 0
-
-        self._total_counter_points_of_sale: int = 0
-        self._total_counter_selected_points_of_sale: int = 0
-        self._total_counter_articles_per_point_of_sale: int = 0
+        kilo_precios_claros = get_container(kilo_paths.storage, "precios_claros")
+        self._kilo_treestore = Treestore(kilo_precios_claros, "treestore")
 
         # Initialization and type hinting
+        self._dataset_stats: DefaultDict[str, Counter[str]] = Stats.create_stats()
         self._points_of_sale_stats: DefaultDict[str, Counter[str]] = Stats.create_stats()
         self._selected_points_of_sale_stats: DefaultDict[str, Counter[str]] = Stats.create_stats()
-        self._articles_per_point_of_sale_stats: DefaultDict[str, Counter[str]] = Stats.create_stats()
+        self._article_per_point_of_sale_stats: DefaultDict[str, Counter[str]] = Stats.create_stats()
 
         self._processor = KiloProcessorFromJuliet()
+
+        self._current_sample_key: str ! None = None
+        self._kilo_sample_home: Path | None = None
+        self._points_of_sale: Target | None = None
+        self._selected_points_of_sale: Target | None = None
+        self._article_per_point_of_sale: Target | None = None
+
+    @property
+    def current_sample_key(self) -> str | None:
+        return self._current_sample_key
+
+    @current_sample_key.setter
+    def current_sample_key(self, value: str) -> None:
+        self._current_sample_key = value
+
+    @property
+    def kilo_sample_home(self) -> Path | None:
+        return self._kilo_sample_home
+
+    @kilo_sample_home.setter
+    def kilo_sample_home(self, value: Path) -> None:
+        self._kilo_sample_home = value
+
+    @property
+    def dataset_stats(self) -> DefaultDict[str, Counter[str]]:
+        return self._dataset_stats
 
     @property
     def points_of_sale_stats(self) -> DefaultDict[str, Counter[str]]:
         return self._points_of_sale_stats
 
     @property
+    def points_of_sale(self) -> Target | None:
+        return self._points_of_sale
+
+    @property
     def selected_points_of_sale_stats(self) -> DefaultDict[str, Counter[str]]:
         return self._selected_points_of_sale_stats
 
     @property
-    def articles_per_point_of_sale_stats(self) -> DefaultDict[str, Counter[str]]:
-        return self._articles_per_point_of_sale_stats
+    def selected_points_of_sale(self) -> Target | None:
+        return self._selected_points_of_sale
+
+    @property
+    def article_per_point_of_sale_stats(self) -> DefaultDict[str, Counter[str]]:
+        return self._article_per_point_of_sale_stats
+
+    @property
+    def article_per_point_of_sale(self) -> Target | None:
+        return self._article_per_point_of_sale
 
     @property
     def kilo_paths(self) -> KiloPaths:
         return self._kilo_paths
 
-    @property
-    def counter_points_of_sale(self) -> int:
-        return self._counter_points_of_sale
-
-    @counter_points_of_sale.setter
-    def counter_points_of_sale(self, value: int) -> None:
-        self._counter_points_of_sale = value
-
-    @property
-    def counter_selected_points_of_sale(self) -> int:
-        return self._counter_selected_points_of_sale
-
-    @counter_selected_points_of_sale.setter
-    def counter_selected_points_of_sale(self, value: int) -> None:
-        self._counter_selected_points_of_sale = value
-
-    @property
-    def counter_articles_per_point_of_sale(self) -> int:
-        return self._counter_articles_per_point_of_sale
-
-    @counter_articles_per_point_of_sale.setter
-    def counter_articles_per_point_of_sale(self, value: int) -> int:
-        self._counter_articles_per_point_of_sale = value
-
-    @property
-    def total_counter_points_of_sale(self) -> int:
-        return self._total_counter_points_of_sale
-
-    @total_counter_points_of_sale.setter
-    def total_counter_points_of_sale(self, value: int) -> None:
-        self._total_counter_points_of_sale = value
-
-    @property
-    def total_counter_selected_points_of_sale(self) -> int:
-        return self._total_counter_selected_points_of_sale
-
-    @total_counter_selected_points_of_sale.setter
-    def total_counter_selected_points_of_sale(self, value: int) -> None:
-        self._total_counter_selected_points_of_sale = value
-
-    @property
-    def total_counter_articles_per_point_of_sale(self) -> int:
-        return self._total_counter_articles_per_point_of_sale
-
-    @total_counter_articles_per_point_of_sale.setter
-    def total_counter_articles_per_point_of_sale(self, value: int) -> int:
-        self._total_counter_articles_per_point_of_sale = value
+    def create_kilo_sample(self) -> None:
+        self.kilo_sample_home = self.treestore.create_sample_home()
 
     def juliet_sample_home(self, juliet_sample_home: Path) -> None:
         print(f"{str(juliet_sample_home):s}")
+        self.current_sample_key = juliet_sample_home.stem
+        self.create_kilo_sample()
 
-    def juliet_point_of_sale_start(self) -> None:
-        self.counter_points_of_sale = 0
+    def juliet_points_of_sale(
+        self,
+        juliet_points_of_sale_itera: Callable[[Path], Generator[Path, None, None]]
+    ) -> None:
+        self.dataset_stats[self.current_sample_key]["point_of_sale"] += 1
+        points_of_sale_resource = get_resource(self.kilo_sample_home, "points_of_sale", ".jsonl")
+        with create_target_file(points_of_sale_resource) as points_of_sale:
+             for juliet_json in juliet_points_of_sale_itera(self.current_juliet_sample_home)
+                 for key, value in juliet_json.items():
+                      self.points_of_sale_stats[key][value] += 1
+                 kilo_point_of_sale = self.processor.get_point_of_sale(juliet_json)
+                 points_of_sale.write(json.dumps(kilo_point_of_sale))
 
-    def juliet_point_of_sale(self, a_json_line: dict[str, str]) -> None:
-        self.counter_points_of_sale += 1
-        for key, value in a_json_line.items():
-            self.points_of_sale_stats[key][value] += 1
+    def juliet_selected_point_of_sale(self, juliet_json: dict[str, str]) -> None:
+        self.dataset_stats[self.current_sample_key]["selected_point_of_sale"] += 1
+        selected_points_of_sale_resource = get_resource(self.kilo_sample_home, "selected_points_of_sale", ".jsonl")
+        with create_target_file(selected_points_of_sale_resource) as selected_points_of_sale:
+             for juliet_json in juliet_points_of_sale_itera(self.current_juliet_sample_home)
+                 for key, value in juliet_json.items():
+                      self.selected_points_of_sale_stats[key][value] += 1
+                 kilo_selected_point_of_sale = self.processor.get_selected_point_of_sale(juliet_json)
+                 selected_points_of_sale.write(json.dumps(kilo_selected_point_of_sale))
 
-    def juliet_point_of_sale_stop(self) -> None:
-        print(f"Points of sale: {self.counter_points_of_sale:d}")
-        self.total_counter_points_of_sale += self.counter_points_of_sale
 
-    def juliet_selected_point_of_sale_start(self) -> None:
-        self.counter_selected_points_of_sale = 0
-
-    def juliet_selected_point_of_sale(self, a_json_line: dict[str, str]) -> None:
-        self.counter_selected_points_of_sale += 1
-        for key, value in a_json_line.items():
-            self.selected_points_of_sale_stats[key][value] += 1
-
-    def juliet_selected_point_of_sale_stop(self) -> None:
-        print(f"Selected points of sale: {self.counter_selected_points_of_sale:d}")
-        self.total_counter_selected_points_of_sale += self.counter_selected_points_of_sale
-
-    def juliet_articles_per_point_of_sale_start(self) -> None:
-        self.counter_articles_per_point_of_sale = 0
-
-    def juliet_articles_per_point_of_sale(self, a_json_line: dict[str, str]) -> None:
-        self.counter_articles_per_point_of_sale += 1
-        for key, value in a_json_line.items():
-            self.articles_per_point_of_sale_stats[key][value] += 1
-
-    def juliet_articles_per_point_of_sale_stop(self) -> None:
-        print(f"Articles per point of sale: {self.counter_articles_per_point_of_sale:d}")
-        self._total_counter_articles_per_point_of_sale += self.counter_articles_per_point_of_sale
+    def juliet_article_per_point_of_sale(self, juliet_json: dict[str, str]) -> None:
+        self.dataset_stats[self.current_sample_key]["article_per_point_of_sale"] += 1
+        article_per_point_of_sale_resource = get_resource(self.kilo_sample_home, "article_per_point_of_sale", ".jsonl")
+        with create_target_file(article_per_point_of_sale_resource) as article_per_point_of_sale:
+             for juliet_json in juliet_points_of_sale_itera(self.current_juliet_sample_home)
+                 for key, value in juliet_json.items():
+                      self.article_per_point_of_sale_stats[key][value] += 1
+                 kilo_article_per_point_of_sale = self.processor.get_article_per_point_of_sale(juliet_json)
+                 article_per_point_of_sale.write(json.dumps(kilo_article_per_point_of_sale))

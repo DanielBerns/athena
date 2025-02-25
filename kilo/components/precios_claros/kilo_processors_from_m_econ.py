@@ -1,30 +1,30 @@
-from components.precios_claros.processors import get_price, KiloPointOfSale, KiloArticlePerPointOfSale
+from components.precios_claros.kilo_processors import KiloPreciosClarosProcessor, get_price_in_cents
 
-
-class KiloPreciosClarosFromJuliet:
+class KiloPreciosClarosFromMEcon:
     def __init__(self):
         pass
 
     def get_point_of_sale(
         event: dict[str, str]
-    ) -> KiloPointOfSale:
+    ) -> dict[str, str] | None:
         try:
             point_of_sale = {
-                "point_of_sale_key": event["identifier"],
+                "point_of_sale_key": event["id"],
                 "state": (event["provincia"]).lower(),
                 "city": (event["localidad"]).lower(),
                 "address": (event["direccion"]).lower(),
-                "flag": (event["bandera"]).lower(),
-                "business": (event["comercio"]).lower(),
-                "branch": (event["sucursal"]).lower(),
+                "flag": (event["banderaDescripcion"]).lower(),
+                "business": (event["comercioRazonSocial"]).lower(),
+                "branch": (event["sucursalNombre"]).lower(),
             }
-            return KiloPointOfSale(point_of_sale, True)
+            return point_of_sale
         except Exception as message:
-            return KiloPointOfSale(EMPTY_DICT, False)
+            return None
+
 
     def get_article_per_point_of_sale(
-        event
-    ) -> KiloArticlePerPointOfSale
+        event: dict[str, str]
+    ) -> dict[str, str] | None
         try:
             article_per_point_of_sale = {
                 "article_key": event["id"],
@@ -36,4 +36,4 @@ class KiloPreciosClarosFromJuliet:
             }
             return KiloArticlePerPointOfSale(article_per_point_of_sale, True)
         except Exception as message:
-            return KiloArticlePerPointOfSale(None, False)
+            return dict[str, str] | None
