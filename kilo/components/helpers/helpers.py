@@ -331,3 +331,7 @@ def get_json_lines(home: Path, name: str, identifier: str) -> dict[str, str]:
     resource = get_resource(container, identifier, ".jsonl")
     for a_line in read_text_lines(resource):
         yield json.loads(a_line)
+
+
+def as_jsonl(event: dict[str, str]) -> str:
+    return json.dumps(event) + '\n' if event else "\n"

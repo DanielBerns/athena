@@ -1,3 +1,4 @@
+import logging
 from components.precios_claros.kilo_processors import KiloPreciosClarosProcessor, get_price_in_cents
 
 class KiloPreciosClarosFromMEcon:
@@ -5,6 +6,7 @@ class KiloPreciosClarosFromMEcon:
         pass
 
     def get_point_of_sale(
+        self,
         event: dict[str, str]
     ) -> dict[str, str] | None:
         try:
@@ -19,21 +21,26 @@ class KiloPreciosClarosFromMEcon:
             }
             return point_of_sale
         except Exception as message:
+            logging.error(f"KiloPreciosClarosFromJuliet.get_point_of_sale {message}\n")
+            logging.error(f"  {as_jsonl(event):s}\n")
             return None
 
 
     def get_article_per_point_of_sale(
+        self,
         event: dict[str, str]
-    ) -> dict[str, str] | None
+    ) -> dict[str, str] | None:
         try:
             article_per_point_of_sale = {
                 "article_key": event["id"],
                 "brand": (event["marca"]).lower(),
                 "name": (event["nombre"]).lower(),
                 "package": (event["presentacion"]).lower(),
-                "price": get_price(event["precio"]),
+                "price": get_price_in_cents(event["precio"]),
                 "point_of_sale_key": event["point_of_sale"],
             }
-            return KiloArticlePerPointOfSale(article_per_point_of_sale, True)
+            return article_per_point_of_sale
         except Exception as message:
-            return dict[str, str] | None
+            logging.error(f"KiloPreciosClarosFromMEcon.get_article_per_point_of_sale {message}\n")
+            logging.error(f"  {as_jsonl(event):s}\n")
+            return None

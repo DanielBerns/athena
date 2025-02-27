@@ -17,4 +17,5 @@ from components.helpers.helpers import (
     remove_directory,
     get_environment_variable,
     erase_directory_contents,
+    as_jsonl
 )

@@ -1,5 +1,5 @@
 from typing import Protocol
-
+import json
 
 class KiloPreciosClarosProcessor(Protocol):
     def get_point_of_sale(
@@ -14,7 +14,6 @@ class KiloPreciosClarosProcessor(Protocol):
     ) -> dict[str, str] | None:
         ...
 
-
-def get_price_in_cents(scraped_price: str) -> str:
-    return str(int(float(price_str) * 100))
+def get_price_in_cents(price: str) -> str:
+    return str(int(float(price) * 100))
 
