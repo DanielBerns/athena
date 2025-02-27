@@ -7,6 +7,30 @@ class KiloPreciosClarosFromJuliet:
     def __init__(self):
         pass
 
+    def get_juliet_version(self, event: dict[str, str]) -> dict[str, str] | None:
+        point_of_sale = {
+            "point_of_sale_key": event["identifier"],
+            "state": (event["provincia"]).lower(),
+            "city": (event["localidad"]).lower(),
+            "address": (event["direccion"]).lower(),
+            "flag": (event["bandera"]).lower(),
+            "business": (event["comercio"]).lower(),
+            "branch": (event["sucursal"]).lower(),
+        }
+        return point_of_sale
+
+    def get_older_version(self, event: dict[str, str]) -> dict[str, str] | None:
+        point_of_sale = {
+          "point_of_sale_key": event["id"],
+          "state": (event["provincia"]).lower(),
+          "city": (event["localidad"]).lower(),
+          "address": (event["direccion"]).lower(),
+          "flag": (event["banderaDescripcion"]).lower(),
+          "business": (event["comercioRazonSocial"]).lower(),
+          "branch": (event["sucursalNombre"]).lower(),
+        }
+        return point_of_sale
+
     def get_point_of_sale(
         self,
         event: dict[str, str]
@@ -15,22 +39,15 @@ class KiloPreciosClarosFromJuliet:
             logging.error("KiloPreciosClarosFromJuliet.get_point_of_sale: event is None")
             return None
         try:
-            point_of_sale = {
-                "point_of_sale_key": event["identifier"],
-                "state": (event["provincia"]).lower(),
-                "city": (event["localidad"]).lower(),
-                "address": (event["direccion"]).lower(),
-                "flag": (event["bandera"]).lower(),
-                "business": (event["comercio"]).lower(),
-                "branch": (event["sucursal"]).lower(),
-            }
-            return point_of_sale
-        except KeyError:
-        except Exception
-            logging.error(f"KiloPreciosClarosFromJuliet.get_point_of_sale {message}\n")
-            if event:
-                logging.error(f"  {as_jsonl(event):s}\n")
-            return None
+            return self.get_juliet_version(event)
+        except Exception:
+           try:
+               return self.get_older_version(event)
+           except Exception as message:
+               logging.error(f"KiloPreciosClarosFromJuliet.get_point_of_sale {message}\n")
+               if event:
+                    logging.error(f"  {as_jsonl(event):s}\n")
+        return None
 
     def get_article_per_point_of_sale(
         self,
