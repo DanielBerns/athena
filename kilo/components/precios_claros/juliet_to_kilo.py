@@ -8,12 +8,14 @@ from components.kilo.kilo_paths import KiloPaths
 from components.core.stats import Stats
 from components.helpers import get_container
 
+import pdb
 
 def juliet_to_kilo_precios_claros_process_storage(juliet_paths: JulietPaths, kilo_paths: KiloPaths) -> None:
     target = JulietToKiloPreciosClarosTarget(kilo_paths)
     juliet_precios_claros = get_container(juliet_paths.storage, "precios_claros")
     juliet_precios_claros_flatstore = get_container(juliet_precios_claros, "flatstore")
     for juliet_sample_home in JulietPreciosClarosReader.read_sample_home(juliet_precios_claros_flatstore):
+        pdb.set_trace()
         try:
             target.current_sample_home(juliet_sample_home)
             target.juliet_points_of_sale(JulietPreciosClarosReader.read_points_of_sale)
