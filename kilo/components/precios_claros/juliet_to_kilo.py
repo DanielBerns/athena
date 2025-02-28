@@ -1,6 +1,6 @@
 import logging
 from components.juliet.juliet_paths import JulietPaths
-from components.precios_claros.juliet_precios_claros_iterator import JulietPreciosClarosIterator
+from components.precios_claros.juliet_precios_claros_reader import JulietPreciosClarosReader
 from components.precios_claros.juliet_precios_claros_target import JulietPreciosClarosTarget
 from components.precios_claros.juliet_to_kilo_precios_claros_target import JulietToKiloPreciosClarosTarget
 
@@ -13,12 +13,12 @@ def juliet_to_kilo_precios_claros_process_storage(juliet_paths: JulietPaths, kil
     target = JulietToKiloPreciosClarosTarget(kilo_paths)
     juliet_precios_claros = get_container(juliet_paths.storage, "precios_claros")
     juliet_precios_claros_flatstore = get_container(juliet_precios_claros, "flatstore")
-    for juliet_sample_home in JulietPreciosClarosIterator.get_sample_home(juliet_precios_claros_flatstore):
+    for juliet_sample_home in JulietPreciosClarosReader.read_sample_home(juliet_precios_claros_flatstore):
         try:
             target.current_sample_home(juliet_sample_home)
-            target.juliet_points_of_sale(JulietPreciosClarosIterator.get_points_of_sale)
-            target.juliet_selected_point_of_sale(JulietPreciosClarosIterator.get_selected_points_of_sale)
-            target.juliet_articles_per_point_of_sale(JulietPreciosClarosIterator.get_articles_per_point_of_sale)
+            target.juliet_points_of_sale(JulietPreciosClarosReader.read_points_of_sale)
+            target.juliet_selected_points_of_sale(JulietPreciosClarosReader.read_selected_points_of_sale)
+            target.juliet_articles_per_point_of_sale(JulietPreciosClarosReader.read_articles_per_point_of_sale)
         except Exception as message:
             logging.error(f"*** Error: {str(message):s}")
         # break

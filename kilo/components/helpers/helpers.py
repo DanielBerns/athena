@@ -92,7 +92,7 @@ def get_timestamp(separator: str = "", offset: timedelta = ARG) -> str:
     return timestamp
 
 
-def read_json(data_json: Path) -> Dict[str, str]:
+def read_json(data_json: Path) -> Dict[str, str] | None:
     """Reads a JSON file and returns its contents as a dictionary.
 
     Args:

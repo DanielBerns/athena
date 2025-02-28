@@ -3,9 +3,9 @@ from typing import Generator
 from components.core.flat_store import FlatStore
 from components.helpers import get_json_lines, get_container
 
-class JulietPreciosClarosIterator:
+class JulietPreciosClarosReader:
     @staticmethod
-    def get_sample_home(precios_claros_flatstore: Path) -> Generator[Path, None, None]:
+    def read_sample_home(precios_claros_flatstore: Path) -> Generator[Path, None, None]:
         flatstore = FlatStore(precios_claros_flatstore, "samples")
         for juliet_sample_home in flatstore.iterate():
             yield juliet_sample_home
