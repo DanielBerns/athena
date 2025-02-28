@@ -92,7 +92,7 @@ class JulietToKiloPreciosClarosTarget:
         logging.info(f"{str(juliet_sample_home):s} -> {str(self.kilo_sample_home):s}")
         sample_key = self.sample_key
         if sample_key:
-            metadata_resource = get_resource(self.kilo_sample_home, "metadata", ".jsonl")
+            metadata_resource = get_resource(self.kilo_sample_home, "metadata", ".json")
             with create_text_file(metadata_resource) as metadata:
                 metadata.write(as_jsonl({"sample_key": sample_key}))
         else:
