@@ -8,7 +8,6 @@ from components.kilo.kilo_paths import KiloPaths
 from components.core.stats import Stats
 from components.helpers import get_container
 
-import pdb
 
 def juliet_to_kilo_precios_claros_process_storage(juliet_paths: JulietPaths, kilo_paths: KiloPaths) -> None:
     target = JulietToKiloPreciosClarosTarget(kilo_paths)

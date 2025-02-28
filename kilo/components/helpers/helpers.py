@@ -18,7 +18,7 @@ from datetime import datetime, timezone, timedelta
 import os
 import json
 from pathlib import Path
-from typing import Dict, Any, Generator
+from typing import Dict, Any, Generator, TextIO
 from shutil import rmtree
 
 
@@ -335,3 +335,21 @@ def get_json_lines(home: Path, name: str, identifier: str) -> dict[str, str]:
 
 def as_jsonl(event: dict[str, str]) -> str:
     return json.dumps(event) + '\n' if event else "\n"
+
+
+@contextmanager
+def create_text_file(resource: Path) -> Generator[TextIO, None, None]:
+    try:
+        with open(resource, "w", encoding="utf-8") as target_file:
+             yield target_file
+    except Exception as message:
+        logging.error(f"Error with text file {str(resource):s}: {str(message):s}")
+
+@contextmanager
+def read_text_file(resource: Path) -> Generator[TextIO, None, None]:
+    try:
+        with open(resource, "r", encoding="utf-8") as text_file:
+             yield text_file
+    except Exception as message:
+        logging.error(f"Error with text file {str(resource):s}: {str(message):s}")
+
