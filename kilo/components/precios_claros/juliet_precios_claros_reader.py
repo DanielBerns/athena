@@ -11,17 +11,17 @@ class JulietPreciosClarosReader:
             yield juliet_sample_home
 
     @staticmethod
-    def get_points_of_sale(juliet_sample_home: Path) -> Generator[dict[str, str], None, None]:
+    def read_points_of_sale(juliet_sample_home: Path) -> Generator[dict[str, str], None, None]:
         for juliet_json in get_json_lines(juliet_sample_home, "points_of_sale", "messages"):
             yield juliet_json
 
     @staticmethod
-    def get_selected_points_of_sale(juliet_sample_home: Path) -> Generator[dict[str, str], None, None]:
+    def read_selected_points_of_sale(juliet_sample_home: Path) -> Generator[dict[str, str], None, None]:
         for juliet_json in get_json_lines(juliet_sample_home, "selected_points_of_sale", "messages"):
             yield juliet_json
 
     @staticmethod
-    def get_articles_per_point_of_sale(juliet_sample_home: Path) -> Generator[dict[str, str], None, None]:
+    def read_articles_per_point_of_sale(juliet_sample_home: Path) -> Generator[dict[str, str], None, None]:
         for juliet_json in get_json_lines(juliet_sample_home, "articles_per_point_of_sale", "messages"):
             yield juliet_json
 
