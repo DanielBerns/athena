@@ -2,11 +2,11 @@ import logging
 from pathlib import Path
 from collections import defaultdict, Counter
 from collections.abc import Callable
-from contextlib import contextmanager
+# from contextlib import contextmanager
 from typing import DefaultDict, TextIO, Generator
 
 from components.kilo.kilo_paths import KiloPaths
-from components.precios_claros.juliet_precios_claros_iterator import JulietPreciosClarosIterator
+# from components.precios_claros.juliet_precios_claros_reader import JulietPreciosClarosReader
 from components.precios_claros.kilo_processors_from_juliet import KiloPreciosClarosFromJuliet
 
 from components.core.stats import Stats
