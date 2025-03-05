@@ -1,8 +1,10 @@
 import logging
 
-from components.precios_claros import juliet_to_kilo_precios_claros_process_storage
+from components.precios_claros import juliet_precios_claros_process_storage
 from components.juliet import JulietPaths
 from components.kilo import KiloPaths
+from components.precios_claros.juliet_to_kilo_precios_claros_target import JulietToKiloPreciosClarosTarget
+
 from components.helpers import get_resource
 
 
@@ -36,7 +38,8 @@ def main() -> None:
     )
     logging.info("start")
 
-    juliet_to_kilo_precios_claros_process_storage(juliet_paths, kilo_paths)
+    target = JulietToKiloPreciosClarosTarget(kilo_paths)
+    juliet_precios_claros_process_storage(juliet_paths, target)
 
 if __name__ == "__main__":
     main()

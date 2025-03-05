@@ -17,13 +17,13 @@ class KiloToSqlitePreciosClarosException(Exception):
         super().__init__(message)
         logging.error(message)
 
+class KiloSample:
 
 class KiloToSqlitePreciosClarosTarget:
     def __init__(self, kilo_paths: KiloPaths) -> None:
         self._kilo_paths = kilo_paths
         kilo_precios_claros = get_container(kilo_paths.storage, "precios_claros")
 
-        # Initialization and type hinting
         self._dataset_stats: DefaultDict[str, Counter[str]] = Stats.create_stats()
         self._points_of_sale_stats: DefaultDict[str, Counter[str]] = Stats.create_stats()
         self._selected_points_of_sale_stats: DefaultDict[str, Counter[str]] = Stats.create_stats()
@@ -73,28 +73,27 @@ class KiloToSqlitePreciosClarosTarget:
     def kilo_paths(self) -> KiloPaths:
         return self._kilo_paths
 
+    # @property
+    # def current_sample_metadata(self) -> dict[str, str] | None:
+    #     return self._current_sample_metadata
+    #
+    # @current_sample_metadata.setter
+    # def current_sample_metadata(self, value: dict[str, str] | None) -> None:
+    #     self._current_sample_metadata = value
+
     def current_sample_home(self, kilo_sample_home: Path) -> None:
         self.kilo_sample_home = kilo_sample_home
         logging.info(f"{str(self.kilo_sample_home):s} -> sqlite")
-        sample_key = self.sample_key
-        if sample_key:
-            metadata_resource = get_resource(self.kilo_sample_home, "metadata", ".jsonl")
-            with read_text_file(metadata_resource) as metadata:
-                metadata.write(as_jsonl({"sample_key": sample_key}))
-        else:
-            message = f"KiloToSqlitePreciosClarosTarget.current_sample_home: null sample_key\n" \
-                      f"  at {str(juliet_sample_home):s}"
-            raise KiloToSqlitePreciosClarosException(message)
+        # self.current_sample_metadata = KiloPreciosClarosReader.read_metadata(kilo_sample_home)
 
-    def juliet_points_of_sale(
+    def kilo_points_of_sale(
         self,
         get_points_of_sale: Callable[[Path], Generator[dict[str, str], None, None]]
     ) -> None:
         self.dataset_stats[self.sample_key]["point_of_sale"] += 1
         points_of_sale_resource = get_resource(self.kilo_sample_home, "points_of_sale", ".jsonl")
         with create_text_file(points_of_sale_resource) as points_of_sale:
-             for juliet_json in get_points_of_sale(self.juliet_sample_home):
-                 kilo_point_of_sale = self.processor.get_point_of_sale(juliet_json)
+             for kilo_point_of_sale in get_points_of_sale(self.juliet_sample_home):
                  if kilo_point_of_sale:
                      points_of_sale.write(as_jsonl(kilo_point_of_sale))
                      for key, value in kilo_point_of_sale.items():

@@ -1,6 +1,6 @@
 from components.precios_claros.juliet_precios_claros_reader import JulietPreciosClarosReader
 from components.precios_claros.juliet_to_kilo_precios_claros_target import JulietToKiloPreciosClarosTarget
-from components.precios_claros.juliet_to_kilo import juliet_to_kilo_precios_claros_process_storage
+from components.precios_claros.juliet_to_kilo_precios_claros_process_storage import juliet_precios_claros_process_storage
 
 from components.precios_claros.kilo_processors import (
     KiloPreciosClarosProcessor,

@@ -49,8 +49,10 @@ def get_sample_keys(reports_list: Path) -> Generator[Tuple[str, str, str], None,
                     parts[2]
                 )
 
+import pdb
 
 def main() -> None:
+    pdb.set_trace()
     application_name: str = "run_precios_claros_report_sample"
     arguments = get_arguments()
 

@@ -103,10 +103,9 @@ def read_json(data_json: Path) -> Dict[str, str] | None:
         A dictionary containing the data from the JSON file.
         Returns None if the file could not be read.
     """
-    data = None
-    with open(data_json, "r") as origin:
+    with read_text_file(data_json) as origin:
         data = json.load(origin)
-    return data
+        return data
 
 
 def write_json(data_json: Path, data: Dict) -> None:
@@ -116,7 +115,7 @@ def write_json(data_json: Path, data: Dict) -> None:
         data_json: The path to the JSON file.
         data: The dictionary to be written.
     """
-    with open(data_json, "w") as target:
+    with write_text_file(data_json) as target:
         json.dump(data, target)
 
 
