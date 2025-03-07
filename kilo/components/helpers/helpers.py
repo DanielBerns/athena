@@ -18,10 +18,10 @@ from datetime import datetime, timezone, timedelta
 import os
 import json
 from pathlib import Path
-from typing import Dict, Any, Generator, TextIO
+from typing import Any, Generator, TextIO
 from shutil import rmtree
 from contextlib import contextmanager
-
+import logging
 
 indentation = "    "  # Define an indentation constant.
 
@@ -93,73 +93,96 @@ def get_timestamp(separator: str = "", offset: timedelta = ARG) -> str:
     return timestamp
 
 
-def read_json(data_json: Path) -> Dict[str, str] | None:
+@contextmanager
+def create_text_file(resource: Path) -> Generator[TextIO, None, None]:
+    try:
+        with open(resource, "w", encoding="utf-8") as target_file:
+             yield target_file
+    except Exception as message:
+        logging.error(f"Error with text file {str(resource):s}: {str(message):s}")
+
+@contextmanager
+def read_text_file(resource: Path) -> Generator[TextIO, None, None]:
+    try:
+        with open(resource, "r", encoding="utf-8") as text_file:
+             yield text_file
+    except Exception as message:
+        logging.error(f"Error with text file {str(resource):s}: {str(message):s}")
+
+
+def read_json(resource: Path) -> dict[str, str] | None:
     """Reads a JSON file and returns its contents as a dictionary.
 
     Args:
-        data_json: The path to the JSON file.
+        resource: The path to the JSON file.
 
     Returns:
         A dictionary containing the data from the JSON file.
         Returns None if the file could not be read.
     """
-    with read_text_file(data_json) as origin:
-        data = json.load(origin)
-        return data
+    with read_text_file(resource) as origin:
+        return json.load(origin)
 
 
-def write_json(data_json: Path, data: Dict) -> None:
+def write_json(resource: Path, data: dict) -> None:
     """Writes a dictionary to a JSON file.
 
     Args:
-        data_json: The path to the JSON file.
+        resource: The path to the JSON file.
         data: The dictionary to be written.
     """
-    with write_text_file(data_json) as target:
+    with create_text_file(resource) as target:
         json.dump(data, target)
 
 
-def read_text(origin: Path) -> str:
+def read_text(resource: Path) -> str:
     """Reads the entire contents of a text file encoded in UTF-8.
 
     Args:
-        origin: The path to the text file.
+        resource: The path to the text file.
 
     Returns:
         The contents of the file as a string.
     """
     # get text from utf-8 encoded file
-    with open(origin, "r", encoding="utf-8") as f:
-        text = f.read()
-    return text
+    with read_text_file(resource) as origin:
+        return origin.read()
 
 
-def write_text(target: Path, text: str) -> None:
+def write_text(resource: Path, text: str) -> None:
     """Writes a string to a text file encoded in UTF-8.
 
     Args:
-        target: The path to the text file.
+        resource: The path to the text file.
         text: The string to be written.
     """
-    with open(target, "w", encoding="utf-8") as f:
-        f.write(text)
+    with create_text_file(resource) as target:
+        target.write(text)
 
 
-def read_text_lines(origin: Path) -> Generator[str, None, None]:
+def read_text_lines(resource: Path) -> Generator[str, None, None]:
     """Reads a text file line by line, yielding each line without the trailing
     newline character.  Uses UTF-8 encoding.
 
     Args:
-        origin: The path to the text file.
+        resource: The path to the text file.
 
     Yields:
         Each line of the file as a string, with the trailing newline removed.
     """
-    with open(origin, "r", encoding="utf-8") as f:
-        yield from (line[:-1] for line in f)
+    with read_text_file(resource) as origin:
+        yield from (line[:-1] for line in origin)
 
 
-def write_text_lines(target_name: Path) -> Generator[int, str, None]:
+def read_json_lines(resource: Path) -> dict[str, str]:
+    for a_line in read_text_lines(resource):
+        yield json.loads(a_line)
+
+
+def as_jsonl(event: dict[str, str]) -> str:
+    return json.dumps(event) + '\n' if event else "\n"
+
+def write_text_lines(resource: Path) -> Generator[int, str, None]:
     """A generator that writes lines of text to a file.  Uses UTF-8 encoding.
 
     The generator receives lines of text to write via its `send()` method.
@@ -168,7 +191,7 @@ def write_text_lines(target_name: Path) -> Generator[int, str, None]:
     should be closed by sending `None` after the last line has been sent.
 
     Args:
-        target_name: The path to the file to write to.
+        resource: The path to the file to write to.
 
     Yields:
         The number of lines written to the file (including the current line).
@@ -186,7 +209,7 @@ def write_text_lines(target_name: Path) -> Generator[int, str, None]:
         writer.send(None) # Close and terminate
     """
     number = 0
-    with open(target_name, "w", encoding="utf-8") as target:
+    with create_text_file(resource) as target:
         text_line = yield number  # Initial yield, returns 0
         if text_line:
             number += 1
@@ -197,7 +220,6 @@ def write_text_lines(target_name: Path) -> Generator[int, str, None]:
                     break
                 number += 1
                 target.write(text_line + "\n")
-
 
 
 def get_directory(base: Path) -> Path:
@@ -326,30 +348,5 @@ def erase_directory_contents(directory: Path) -> None:
             raise # re-raise exception. Good practice.
 
 
-def get_json_lines(home: Path, name: str, identifier: str) -> dict[str, str]:
-    container = get_container(home, name)
-    resource = get_resource(container, identifier, ".jsonl")
-    for a_line in read_text_lines(resource):
-        yield json.loads(a_line)
 
-
-def as_jsonl(event: dict[str, str]) -> str:
-    return json.dumps(event) + '\n' if event else "\n"
-
-
-@contextmanager
-def create_text_file(resource: Path) -> Generator[TextIO, None, None]:
-    try:
-        with open(resource, "w", encoding="utf-8") as target_file:
-             yield target_file
-    except Exception as message:
-        logging.error(f"Error with text file {str(resource):s}: {str(message):s}")
-
-@contextmanager
-def read_text_file(resource: Path) -> Generator[TextIO, None, None]:
-    try:
-        with open(resource, "r", encoding="utf-8") as text_file:
-             yield text_file
-    except Exception as message:
-        logging.error(f"Error with text file {str(resource):s}: {str(message):s}")
 

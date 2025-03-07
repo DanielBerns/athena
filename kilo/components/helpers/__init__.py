@@ -14,7 +14,7 @@ from components.helpers.helpers import (
     get_directory,
     get_container,
     get_resource,
-    get_json_lines,
+    read_json_lines,
     get_resource_with_timestamp,
     remove_directory,
     get_environment_variable,

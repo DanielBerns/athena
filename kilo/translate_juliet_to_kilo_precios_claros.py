@@ -1,11 +1,15 @@
 import logging
 
-from components.precios_claros import juliet_precios_claros_process_storage
 from components.juliet import JulietPaths
+from components.precios_claros.juliet_precios_claros_basic_reader import JulietPreciosClarosBasicReader
+from components.precios_claros.kilo_juliet_precios_claros_reader import KiloJulietPreciosClarosReader
+
+from components.precios_claros.juliet_precios_claros_processor import JulietPreciosClarosProcessor
 from components.kilo import KiloPaths
 from components.precios_claros.juliet_to_kilo_precios_claros_target import JulietToKiloPreciosClarosTarget
 
-from components.helpers import get_resource
+from components.core.stats import Stats
+from components.helpers.helpers import get_resource
 
 
 def main() -> None:
@@ -36,10 +40,22 @@ def main() -> None:
         level=log_level,
         format="%(levelname)s > %(message)s",
     )
+
     logging.info("start")
 
+    processor = JulietPreciosClarosProcessor(juliet_paths)
+    juliet_store_home = processor.juliet_store_home
+    juliet_reader = JulietPreciosClarosBasicReader(juliet_store_home)
+    kilo_juliet_reader = KiloJulietPreciosClarosReader(juliet_reader)
     target = JulietToKiloPreciosClarosTarget(kilo_paths)
-    juliet_precios_claros_process_storage(juliet_paths, target)
+    processor.execute(kilo_juliet_reader, target)
+
+    Stats.write("points_of_sale", target.points_of_sale_stats, kilo_paths.reports)
+    Stats.write("selected_points_of_sale", target.selected_points_of_sale_stats, kilo_paths.reports)
+    Stats.write("articles_per_point_of_sale", target.articles_per_point_of_sale_stats, kilo_paths.reports)
+    Stats.write("dataset", target.dataset_stats, kilo_paths.reports)
+
+    logging.info("stop")
 
 if __name__ == "__main__":
     main()

@@ -1,27 +1,32 @@
 from pathlib import Path
-from typing import Generator
-from components.core.flat_store import FlatStore
-from components.helpers import get_json_lines, get_container
+from typing import Generator, Protocol
 
-class JulietPreciosClarosReader:
-    @staticmethod
-    def read_sample_home(precios_claros_flatstore: Path) -> Generator[Path, None, None]:
-        flatstore = FlatStore(precios_claros_flatstore, "samples")
-        for juliet_sample_home in flatstore.iterate():
-            yield juliet_sample_home
 
-    @staticmethod
-    def read_points_of_sale(juliet_sample_home: Path) -> Generator[dict[str, str], None, None]:
-        for juliet_json in get_json_lines(juliet_sample_home, "points_of_sale", "messages"):
-            yield juliet_json
+class JulietPreciosClarosReader(Protocol):
 
-    @staticmethod
-    def read_selected_points_of_sale(juliet_sample_home: Path) -> Generator[dict[str, str], None, None]:
-        for juliet_json in get_json_lines(juliet_sample_home, "selected_points_of_sale", "messages"):
-            yield juliet_json
+    @property
+    def store_home(self) -> Path:
+        ...
 
-    @staticmethod
-    def read_articles_per_point_of_sale(juliet_sample_home: Path) -> Generator[dict[str, str], None, None]:
-        for juliet_json in get_json_lines(juliet_sample_home, "articles_per_point_of_sale", "messages"):
-            yield juliet_json
+    @property
+    def current_sample_home(self) -> Path | None:
+        ...
 
+    @current_sample_home.setter
+    def current_sample_home(self, value: Path) -> None:
+        ...
+
+    def read_sample_home(self) -> Generator[Path, None, None]:
+        ...
+
+    def read_json(self, sample_home: Path, name: str) -> Generator[dict[str, str], None, None]:
+        ...
+
+    def read_points_of_sale(self) -> Generator[dict[str, str], None, None]:
+        ...
+
+    def read_selected_points_of_sale(self) -> Generator[dict[str, str], None, None]:
+        ...
+
+    def read_articles_per_point_of_sale(self) -> Generator[dict[str, str], None, None]:
+        ...

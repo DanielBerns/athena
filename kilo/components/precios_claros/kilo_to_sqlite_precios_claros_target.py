@@ -1,15 +1,19 @@
 import logging
 from pathlib import Path
-from collections import defaultdict, Counter
 from collections.abc import Callable
-from contextlib import contextmanager
-from typing import DefaultDict, TextIO, Generator
+from typing import TextIO, Generator
 
 from components.kilo.kilo_paths import KiloPaths
 
 from components.core.stats import Stats
 from components.core.tree_store import TreeStore
-from components.helpers import get_container, get_resource, as_jsonl, create_text_file
+from components.helpers import (
+    get_container,
+    get_resource,
+    as_jsonl,
+    create_text_file,
+    classname,
+    read_json)
 
 
 class KiloToSqlitePreciosClarosException(Exception):
@@ -17,125 +21,81 @@ class KiloToSqlitePreciosClarosException(Exception):
         super().__init__(message)
         logging.error(message)
 
-class KiloSample:
 
 class KiloToSqlitePreciosClarosTarget:
     def __init__(self, kilo_paths: KiloPaths) -> None:
         self._kilo_paths = kilo_paths
         kilo_precios_claros = get_container(kilo_paths.storage, "precios_claros")
-
-        self._dataset_stats: DefaultDict[str, Counter[str]] = Stats.create_stats()
-        self._points_of_sale_stats: DefaultDict[str, Counter[str]] = Stats.create_stats()
-        self._selected_points_of_sale_stats: DefaultDict[str, Counter[str]] = Stats.create_stats()
-        self._articles_per_point_of_sale_stats: DefaultDict[str, Counter[str]] = Stats.create_stats()
-
-        self._treestore = TreeStore(kilo_precios_claros, "treestore")
-        self._processor = KiloPreciosClarosFromJuliet()
-        self._kilo_sample_home: Path | None = None
+        self._kilo_precios_claros_db = get_container(kilo_precios_claros, "sqlite")
+        self._current_sample_home: Path | None = None
+        self._skip_sample = False
 
     @property
-    def treestore(self) -> TreeStore:
-        return self._treestore
+    def skip_sample(self) -> bool:
+        return self._skip_sample
 
-    @property
-    def processor(self) -> KiloPreciosClarosFromJuliet:
-        return self._processor
-
-    @property
-    def sample_key(self) -> str | None:
-        return self.juliet_sample_home.stem
-
-    @property
-    def kilo_sample_home(self) -> Path | None:
-        return self._kilo_sample_home
-
-    @kilo_sample_home.setter
-    def kilo_sample_home(self, value: Path) -> None:
-        self._kilo_sample_home = value
-
-    @property
-    def dataset_stats(self) -> DefaultDict[str, Counter[str]]:
-        return self._dataset_stats
-
-    @property
-    def points_of_sale_stats(self) -> DefaultDict[str, Counter[str]]:
-        return self._points_of_sale_stats
-
-    @property
-    def selected_points_of_sale_stats(self) -> DefaultDict[str, Counter[str]]:
-        return self._selected_points_of_sale_stats
-
-    @property
-    def articles_per_point_of_sale_stats(self) -> DefaultDict[str, Counter[str]]:
-        return self._articles_per_point_of_sale_stats
+    @skip_sample.setter
+    def skip_sample(self, value: bool) -> None:
+        self._skip_sample = value
 
     @property
     def kilo_paths(self) -> KiloPaths:
         return self._kilo_paths
 
-    # @property
-    # def current_sample_metadata(self) -> dict[str, str] | None:
-    #     return self._current_sample_metadata
-    #
-    # @current_sample_metadata.setter
-    # def current_sample_metadata(self, value: dict[str, str] | None) -> None:
-    #     self._current_sample_metadata = value
+    @property
+    def kilo_precios_claros_sqlite(self) -> Path:
+        return self._kilo_precios_claros_db
 
-    def current_sample_home(self, kilo_sample_home: Path) -> None:
-        self.kilo_sample_home = kilo_sample_home
-        logging.info(f"{str(self.kilo_sample_home):s} -> sqlite")
-        # self.current_sample_metadata = KiloPreciosClarosReader.read_metadata(kilo_sample_home)
+    @property
+    def sample_key(self) -> str | None:
+        return self._sample_key
+
+    @sample_key.setter
+    def sample_key(self, value: str) -> None:
+        self._sample_key = value
+
+    @property
+    def current_sample_home(self) -> Path:
+        return self._current_sample_home
+
+    @current_sample_home.setter
+    def current_sample_home(self, value: Path) -> None:
+        self.skip_sample = False
+        self._current_sample_home = value
+        # pdb.set_trace()
+        try:
+            resource = get_resource(self.current_sample_home, "metadata", ".json")
+            metadata = read_json(resource)
+            self.sample_key = metadata["sample_key"]
+        except Exception as message:
+            logging.error(f"*** ERROR -{classname(self):s}.current_sample_home")
+            logging.error(f"    skipping sample: {str(value):s}")
+            self.skip_sample = True
 
     def kilo_points_of_sale(
         self,
-        get_points_of_sale: Callable[[Path], Generator[dict[str, str], None, None]]
+        get_points_of_sale: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
-        self.dataset_stats[self.sample_key]["point_of_sale"] += 1
-        points_of_sale_resource = get_resource(self.kilo_sample_home, "points_of_sale", ".jsonl")
-        with create_text_file(points_of_sale_resource) as points_of_sale:
-             for kilo_point_of_sale in get_points_of_sale(self.juliet_sample_home):
-                 if kilo_point_of_sale:
-                     points_of_sale.write(as_jsonl(kilo_point_of_sale))
-                     for key, value in kilo_point_of_sale.items():
-                         self.points_of_sale_stats[key][value] += 1
-                 else:
-                     logging.error("KiloToSqlitePreciosClarosTarget.juliet_points_of_sale: " \
-                                   "kilo_point_of_sale is None\n" \
-                                   f"  check {as_jsonl(juliet_json):s}")
+        if self.skip_sample:
+            print("skipped")
+        else:
+            print("done")
 
-    def juliet_selected_point_of_sale(
+    def kilo_selected_point_of_sale(
         self,
-        get_selected_points_of_sale: Callable[[Path], Generator[dict[str, str], None, None]]
+        get_selected_points_of_sale: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
-        self.dataset_stats[self.sample_key]["selected_point_of_sale"] += 1
-        selected_points_of_sale_resource = get_resource(self.kilo_sample_home, "selected_points_of_sale", ".jsonl")
-        with create_text_file(selected_points_of_sale_resource) as selected_points_of_sale:
-             for juliet_json in get_selected_points_of_sale(self.juliet_sample_home):
-                 kilo_selected_point_of_sale = self.processor.get_point_of_sale(juliet_json)
-                 if kilo_selected_point_of_sale:
-                     selected_points_of_sale.write(as_jsonl(kilo_selected_point_of_sale))
-                     for key, value in kilo_selected_point_of_sale.items():
-                         self.selected_points_of_sale_stats[key][value] += 1
-                 else:
-                     logging.error("KiloToSqlitePreciosClarosTarget.juliet_selected_points_of_sale: " \
-                                   "kilo_point_of_sale is None\n" \
-                                   f"  check {as_jsonl(juliet_json):s}")
+        if self.skip_sample:
+            print("skipped")
+        else:
+            print("done")
 
 
-    def juliet_articles_per_point_of_sale(
+    def kilo_articles_per_point_of_sale(
         self,
-        get_article_per_point_of_sale: Callable[[Path], Generator[dict[str, str], None, None]]
+        get_article_per_point_of_sale: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
-        self.dataset_stats[self.sample_key]["articles_per_point_of_sale"] += 1
-        articles_per_point_of_sale_resource = get_resource(self.kilo_sample_home, "articles_per_point_of_sale", ".jsonl")
-        with create_text_file(articles_per_point_of_sale_resource) as articles_per_point_of_sale:
-             for juliet_json in get_article_per_point_of_sale(self.juliet_sample_home):
-                 kilo_article_per_point_of_sale = self.processor.get_article_per_point_of_sale(juliet_json)
-                 if kilo_article_per_point_of_sale:
-                     articles_per_point_of_sale.write(as_jsonl(kilo_article_per_point_of_sale))
-                     for key, value in kilo_article_per_point_of_sale.items():
-                         self.articles_per_point_of_sale_stats[key][value] += 1
-                 else:
-                     logging.error("KiloToSqlitePreciosClarosTarget.juliet_articles_per_point_of_sale: " \
-                                   "kilo_article_per_point_of_sale is None\n" \
-                                   f"  check {as_jsonl(juliet_json):s}")
+        if self.skip_sample:
+            print("skipped")
+        else:
+            print("done")
