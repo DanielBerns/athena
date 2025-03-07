@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 from collections.abc import Callable
-
+from collections import Counter
 from typing import TextIO, Generator, DefaultDict
 
 from components.kilo.kilo_paths import KiloPaths
