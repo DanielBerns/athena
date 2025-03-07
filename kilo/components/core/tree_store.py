@@ -263,7 +263,7 @@ class TreeStore:
 
         for k in range(top):
             (alpha, bravo, charlie) = get_sample_identifier(k)
-            yield get_container(Path(self.samples, alpha, bravo, charlie))
+            yield get_directory(Path(self.samples, alpha, bravo, charlie))
 
     def get_sample_home(self, k: int) -> Path:
         """
