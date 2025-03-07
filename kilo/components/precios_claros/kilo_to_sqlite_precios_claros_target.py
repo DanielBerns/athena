@@ -76,7 +76,7 @@ class KiloToSqlitePreciosClarosTarget:
         return self._selected_points_of_sale_stats
 
     @property
-    def articles_per_point_of_sale(self) -> DefaultDict[str, Counter[str]]:
+    def articles_per_point_of_sale_stats(self) -> DefaultDict[str, Counter[str]]:
         return self._articles_per_point_of_sale_stats
 
     @current_sample_home.setter
@@ -136,7 +136,7 @@ class KiloToSqlitePreciosClarosTarget:
             try:
                 for event in read_articles_per_point_of_sale():
                     for key, value in event.items():
-                        self.articles_per_point_of_sale[key][value] += 1
+                        self.articles_per_point_of_sale_stats[key][value] += 1
                 logging.info("done")
             except Exception as message:
                 self.skip_sample = True
