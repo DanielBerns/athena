@@ -4,7 +4,7 @@ from shutil import rmtree
 import logging
 from typing import Tuple, Generator
 
-from components.helpers import get_container, get_resource, classname
+from components.helpers import get_container, get_directory, get_resource, classname
 
 import pdb
 
@@ -226,7 +226,7 @@ class TreeStore:
         """
         pdb.set_trace()
         (alpha, bravo, charlie) = get_sample_identifier(self.index.value)
-        new_sample_home = get_container(Path(self.samples, alpha, bravo, charlie))
+        new_sample_home = get_directory(Path(self.samples, alpha, bravo, charlie))
         self.index.value += 1
         return new_sample_home
 
