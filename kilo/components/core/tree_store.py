@@ -63,7 +63,7 @@ def base_10(first_digit: int, second_digit: int, third_digit: int) -> int:
     return (((first_digit << 8) + second_digit) << 8) + third_digit
 
 
-def get_sample_identifier(number: int) -> str:
+def get_sample_identifier(number: int) -> Tuple[str, str, str]:
     """
     Generates a zero-padded, 9-digit string identifier from an integer.
 
@@ -74,7 +74,7 @@ def get_sample_identifier(number: int) -> str:
         A 9-character string representing the identifier (e.g., "000000000", "001002003").
     """
     first_digit, second_digit, third_digit = base_256(number)
-    return f"{first_digit:03d}{second_digit:03d}{third_digit:03d}"
+    return f"{first_digit:03d}", f"{second_digit:03d}", f"{third_digit:03d}"
 
 
 class Index:
@@ -223,8 +223,8 @@ class TreeStore:
         Returns:
             Path: The path to the newly created sample directory.
         """
-        sample_identifier = get_sample_identifier(self.index.value)
-        new_sample_home = get_container(self.samples, sample_identifier)
+        a, b, c = get_sample_identifier(self.index.value)
+        new_sample_home = get_container(Path(self.samples, a, b, c))
         self.index.value += 1
         return new_sample_home
 

@@ -62,7 +62,6 @@ class KiloToSqlitePreciosClarosTarget:
     def current_sample_home(self, value: Path) -> None:
         self.skip_sample = False
         self._current_sample_home = value
-        # pdb.set_trace()
         try:
             resource = get_resource(self.current_sample_home, "metadata", ".json")
             metadata = read_json(resource)
