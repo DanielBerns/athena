@@ -73,16 +73,16 @@ class KiloToSqlitePreciosClarosTarget:
 
     def kilo_points_of_sale(
         self,
-        get_points_of_sale: Callable[[], Generator[dict[str, str], None, None]]
+        read_points_of_sale: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
         if self.skip_sample:
-            print("skipped")
+            logging.info("skipped")
         else:
             print("done")
 
     def kilo_selected_point_of_sale(
         self,
-        get_selected_points_of_sale: Callable[[], Generator[dict[str, str], None, None]]
+        read_selected_points_of_sale: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
         if self.skip_sample:
             print("skipped")
@@ -92,7 +92,7 @@ class KiloToSqlitePreciosClarosTarget:
 
     def kilo_articles_per_point_of_sale(
         self,
-        get_article_per_point_of_sale: Callable[[], Generator[dict[str, str], None, None]]
+        read_article_per_point_of_sale: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
         if self.skip_sample:
             print("skipped")
