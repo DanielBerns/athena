@@ -42,6 +42,11 @@ def main() -> None:
     target = KiloToSqlitePreciosClarosTarget(kilo_paths)
     processor.execute(kilo_reader, target)
 
+    Stats.write("points_of_sale", target.points_of_sale_stats, kilo_paths.reports)
+    Stats.write("selected_points_of_sale", target.selected_points_of_sale_stats, kilo_paths.reports)
+    Stats.write("articles_per_point_of_sale", target.articles_per_point_of_sale_stats, kilo_paths.reports)
+    Stats.write("dataset", target.dataset_stats, kilo_paths.reports)
+
     logging.info("stop")
 
 if __name__ == "__main__":
