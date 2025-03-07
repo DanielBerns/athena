@@ -6,7 +6,6 @@ from typing import Tuple, Generator
 
 from components.helpers import get_container, get_resource, classname
 
-import pdb
 
 class TreeStoreError(Exception):
     """
