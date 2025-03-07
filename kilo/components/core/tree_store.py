@@ -6,7 +6,6 @@ from typing import Tuple, Generator
 
 from components.helpers import get_container, get_directory, get_resource, classname
 
-import pdb
 
 class TreeStoreError(Exception):
     """
@@ -224,7 +223,6 @@ class TreeStore:
         Returns:
             Path: The path to the newly created sample directory.
         """
-        pdb.set_trace()
         (alpha, bravo, charlie) = get_sample_identifier(self.index.value)
         new_sample_home = get_directory(Path(self.samples, alpha, bravo, charlie))
         self.index.value += 1
