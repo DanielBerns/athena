@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from shutil import rmtree
 import logging
-from typing import Tuple, Dict, Generator
+from typing import Tuple, Generator
 
 from components.helpers import get_container, get_resource, classname
 
@@ -75,7 +75,7 @@ def get_sample_identifier(number: int) -> Tuple[str, str, str]:
         A 9-character string representing the identifier (e.g., "000000000", "001002003").
     """
     first_digit, second_digit, third_digit = base_256(number)
-    return f"{first_digit:03d}", f"{second_digit:03d}", f"{third_digit:03d}"
+    return (f"{first_digit:03d}", f"{second_digit:03d}", f"{third_digit:03d}")
 
 
 class Index:
@@ -142,12 +142,12 @@ class Index:
         with open(self.resource, "w") as target:
             json.dump(value, target)
 
-    def read(self) -> Dict[str, str]:
+    def read(self) -> dict[str, str]:
         """
         Reads the index value from the JSON file.
 
         Returns:
-            Dict[str, str]: A dictionary containing the index value (as a string).
+            dict[str, str]: A dictionary containing the index value (as a string).
         """
         with open(self.resource, "r") as source:
             values = json.load(source)
