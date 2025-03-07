@@ -6,6 +6,7 @@ from typing import Tuple, Generator
 
 from components.helpers import get_container, get_resource, classname
 
+import pdb
 
 class TreeStoreError(Exception):
     """
@@ -71,7 +72,7 @@ def get_sample_identifier(number: int) -> Tuple[str, str, str]:
         number: The integer to convert (must be between 0 and 16777215 inclusive).
 
     Returns:
-        A 9-character string representing the identifier (e.g., "000000000", "001002003").
+        Three 3-character strings representing the identifier (e.g., "000000000", "001002003").
     """
     first_digit, second_digit, third_digit = base_256(number)
     return (f"{first_digit:03d}", f"{second_digit:03d}", f"{third_digit:03d}")
