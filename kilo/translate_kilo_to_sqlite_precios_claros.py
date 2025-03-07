@@ -4,6 +4,7 @@ from components.precios_claros.kilo_precios_claros_basic_reader import KiloPreci
 from components.precios_claros.kilo_to_sqlite_precios_claros_target import KiloToSqlitePreciosClarosTarget
 from components.precios_claros.kilo_precios_claros_processor import KiloPreciosClarosProcessor
 
+from components.core.stats import Stats
 from components.helpers.helpers import get_container, get_resource
 
 def main() -> None:
