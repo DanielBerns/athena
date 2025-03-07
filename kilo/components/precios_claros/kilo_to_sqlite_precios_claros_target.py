@@ -99,10 +99,14 @@ class KiloToSqlitePreciosClarosTarget:
         if self.skip_sample:
             logging.info("skipped")
         else:
-            for event in read_points_of_sale():
-                for key, value in event.items():
-                    self.points_of_sale_stats[key][value] += 1
-            logging.info("done")
+            try:
+               for event in read_points_of_sale():
+                   for key, value in event.items():
+                       self.points_of_sale_stats[key][value] += 1
+               logging.info("done")
+            except Exception as message:
+                self.skip_sample = True
+                logging.error(f"{classname(self):s}.kilo_points_of_sale: {str(message):s}")
 
     def kilo_selected_point_of_sale(
         self,
@@ -111,10 +115,15 @@ class KiloToSqlitePreciosClarosTarget:
         if self.skip_sample:
             logging.info("skipped")
         else:
-            for event in read_points_of_sale():
-                for key, value in event.items():
-                    self.selected_points_of_sale_stats[key][value] += 1
-            logging.info("done")
+            try:
+                for event in read_points_of_sale():
+                    for key, value in event.items():
+                        self.selected_points_of_sale_stats[key][value] += 1
+                logging.info("done")
+            except Exception as message:
+                self.skip_sample = True
+                logging.error(f"{classname(self):s}.kilo_selected_point_of_sale: {str(message):s}")
+
 
     def kilo_articles_per_point_of_sale(
         self,
@@ -123,7 +132,12 @@ class KiloToSqlitePreciosClarosTarget:
         if self.skip_sample:
             logging.info("skipped")
         else:
-            for event in read_articles_per_point_of_sale():
-                for key, value in event.items():
-                    self.articles_per_points_of_sale_stats[key][value] += 1
-            logging.info("done")
+            try:
+                for event in read_articles_per_point_of_sale():
+                    for key, value in event.items():
+                        self.articles_per_points_of_sale_stats[key][value] += 1
+                logging.info("done")
+            except Exception as message:
+                self.skip_sample = True
+                logging.error(f"{classname(self):s}.kilo_articles_per_point_of_sale: {str(message):s}")
+
