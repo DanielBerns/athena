@@ -262,7 +262,8 @@ class TreeStore:
             raise TreeStoreError(explanation)
 
         for k in range(top):
-            yield get_container(self.samples, get_sample_identifier(k))
+            (alpha, bravo, charlie) = get_sample_identifier(k)
+            yield get_container(Path(self.samples, alpha, bravo, charlie))
 
     def get_sample_home(self, k: int) -> Path:
         """
