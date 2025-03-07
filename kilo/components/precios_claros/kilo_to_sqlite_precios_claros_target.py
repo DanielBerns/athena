@@ -32,7 +32,8 @@ class KiloToSqlitePreciosClarosTarget:
         self._skip_sample = False
         self._dataset_stats = Stats.create()
         self._points_of_sale_stats = Stats.create()
-        self._selected_points_of_sale_stats = Stats.create()        self._articles_per_point_of_sale_stats = Stats.create()
+        self._selected_points_of_sale_stats = Stats.create()
+        self._articles_per_point_of_sale_stats = Stats.create()
 
     @property
     def kilo_paths(self) -> KiloPaths:
