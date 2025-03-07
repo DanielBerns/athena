@@ -76,7 +76,7 @@ class KiloToSqlitePreciosClarosTarget:
         return self._selected_points_of_sale_stats
 
     @property
-    def articles_per_points_of_sale_stats(self) -> DefaultDict[str, Counter[str]]:
+    def articles_per_point_of_sale_stats(self) -> DefaultDict[str, Counter[str]]:
         return self._articles_per_point_of_sale_stats
 
     @current_sample_home.setter
