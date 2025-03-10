@@ -28,8 +28,3 @@ class KiloPreciosClarosProcessor:
                 target.kilo_articles_per_point_of_sale(reader.read_articles_per_point_of_sale)
             except Exception as message:
                 logging.error(f"*** Error: {str(message):s}")
-
-        # Stats.write("points_of_sale", target.points_of_sale_stats, kilo_paths.reports)
-        # Stats.write("selected_points_of_sale", target.selected_points_of_sale_stats, kilo_paths.reports)
-        # Stats.write("articles_per_point_of_sale", target.articles_per_point_of_sale_stats, kilo_paths.reports)
-        # Stats.write("dataset", target.dataset_stats, kilo_paths.reports)

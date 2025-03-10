@@ -84,3 +84,71 @@ class KiloPreciosClarosIO:
         for event in read_json_lines(resource):
             yield event
 
+    @staticmethod
+    def point_of_sale_juliet_to_kilo(
+        event: dict[str, str]
+    ) -> dict[str, str]:
+        point_of_sale = {
+            "point_of_sale_key": event["identifier"],
+            "state": (event["provincia"]).lower(),
+            "city": (event["localidad"]).lower(),
+            "address": (event["direccion"]).lower(),
+            "flag": (event["bandera"]).lower(),
+            "business": (event["comercio"]).lower(),
+            "branch": (event["sucursal"]).lower(),
+        }
+        return point_of_sale
+
+    @staticmethod
+    def point_of_sale_wrong_juliet_to_kilo(
+        event: dict[str, str]
+    ) -> dict[str, str]:
+        point_of_sale = {
+          "point_of_sale_key": event["id"],
+          "state": (event["provincia"]).lower(),
+          "city": (event["localidad"]).lower(),
+          "address": (event["direccion"]).lower(),
+          "flag": (event["banderaDescripcion"]).lower(),
+          "business": (event["comercioRazonSocial"]).lower(),
+          "branch": (event["sucursalNombre"]).lower(),
+        }
+        return point_of_sale
+
+    @staticmethod
+    def get_point_of_sale_juliet_to_kilo(
+        event: dict[str, str]
+    ) -> dict[str, str] | None:
+        try:
+            return KiloPreciosClarosIO.point_of_sale_juliet_to_kilo(event)
+        except Exception:
+           try:
+               return KiloPreciosClarosIO.point_of_sale_wrong_juliet_to_kilo(event)
+           except Exception as message:
+               logging.error(f"{classname(self)}.get_point_of_sale {message}\n")
+               logging.error(f"  {as_jsonl(event):s}\n")
+               return None
+
+    @staticmethod
+    def article_per_point_of_sale_juliet_to_kilo(
+        event
+    ) -> dict[str, str]:
+        article_per_point_of_sale = {
+                "article_key": event["identifier"],
+                "brand": (event["marca"]).lower(),
+                "description": (event["nombre"]).lower(),
+                "package": (event["presentacion"]).lower(),
+                "price": get_price_in_cents(event["precio"]),
+                "point_of_sale_key": event["point_of_sale"],
+            }
+        return article_per_point_of_sale
+
+    @staticmethod
+    def get_article_per_point_of_sale_juliet_to_kilo(
+        event: dict[str, str]
+    ) -> dict[str, str] | None:
+        try:
+            return KiloPreciosClarosIO.article_per_point_of_sale_juliet_to_kilo(event)
+        except Exception as message:
+            logging.error(f"{classname(self)}.get_article_per_point_of_sale {message}\n")
+            logging.error(f"  {as_jsonl(event):s}\n")
+            return None

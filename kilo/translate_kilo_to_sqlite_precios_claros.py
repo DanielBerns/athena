@@ -4,7 +4,6 @@ from components.precios_claros.kilo_precios_claros_basic_reader import KiloPreci
 from components.precios_claros.kilo_to_sqlite_precios_claros_target import KiloToSqlitePreciosClarosTarget
 from components.precios_claros.kilo_precios_claros_processor import KiloPreciosClarosProcessor
 
-from components.core.stats import Stats
 from components.helpers.helpers import get_container, get_resource
 
 def main() -> None:
@@ -38,15 +37,37 @@ def main() -> None:
     logging.info("start")
 
     processor = KiloPreciosClarosProcessor()
-    kilo_precios_claros = get_container(kilo_paths.storage, "precios_claros")
-    kilo_reader = KiloPreciosClarosBasicReader(kilo_precios_claros)
+    storage_precios_claros = get_container(kilo_paths.storage, "precios_claros")
+    results_precios_claros = get_container(kilo_paths.results, "precios_claros")
+
+    kilo_reader = KiloPreciosClarosBasicReader(storage_precios_claros)
     target = KiloToSqlitePreciosClarosTarget(kilo_paths)
     processor.execute(kilo_reader, target)
 
-    Stats.write("points_of_sale", target.points_of_sale_stats, kilo_paths.reports)
-    Stats.write("selected_points_of_sale", target.selected_points_of_sale_stats, kilo_paths.reports)
-    Stats.write("articles_per_point_of_sale", target.articles_per_point_of_sale_stats, kilo_paths.reports)
-    Stats.write("dataset", target.dataset_stats, kilo_paths.reports)
+    pdb.set_trace()
+    target.dirt_timestamps.write(results_precios_claros)
+    pdb.set_trace()
+
+    target.dirty_states.write(results_precios_claros)
+    pdb.set_trace()
+
+    target.dirty_cities.write(results_precios_claros)
+    pdb.set_trace()
+
+    target.dirty_places.write(results_precios_claros)
+    pdb.set_trace()
+
+    target.dirty_point_of_sale_codes.write(results_precios_claros)
+    pdb.set_trace()
+
+    target.dirty_point_of_sale_representations.write(results_precios_claros)
+    pdb.set_trace()
+
+    target.dirty_article_codes.write(results_precios_claros)
+    pdb.set_trace()
+
+    target.dirty_article_representations.write(results_precios_claros)
+    pdb.set_trace()
 
     logging.info("stop")
 

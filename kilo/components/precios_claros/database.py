@@ -22,13 +22,21 @@ class Base(DeclarativeBase):
       pass
 
 
-class Article(Base):
-    __tablename__ = "articles"
+class Timestamp(Base):
+    __tablename__ = "timestamp"
     id: Mapped[int] = mapped_column(primary_key=True)
-    code: Mapped[str] = mapped_column(sa.String(16), unique=True)
-    brand: Mapped[str] = mapped_column(sa.String(32))
-    description: Mapped[str] = mapped_column(sa.String(256))
-    packaging: Mapped[str] = mapped_column(sa.String(16))
+    year: Mapped[int] = mapped_column(nullable=False)
+    month: Mapped[int] = mapped_column(nullable=False)
+    day: Mapped[int] = mapped_column(nullable=False)
+    difference: Mapped[int] = mapped_column(nullable=False)
+    points_of_sale: Mapped[List["PointOfCodeRepresentation"]] = relationship(back_populates="timestamp")
+    prices: Mapped[List["Price"]] = relationship(back_populates="timestamp")
+
+
+class Tag(Base):
+    __tablename__ = "tags"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(sa.String(64), index=True)
 
 
 class State(Base):
@@ -55,36 +63,48 @@ class Place(Base):
     city_id: Mapped[int] = mapped_column(sa.ForeignKey("cities.id"))
     city: Mapped["City"] = relationship(back_populates="places")
     point_of_sale_id: Mapped[int] = mapped_column(sa.ForeignKey("points_of_sale.id"))
-    point_of_sale: Mapped["PointOfSale"] = relationship(back_populates="gates")
+    point_of_sale_code: Mapped["PointOfSaleCode"] = relationship(back_populates="gates")
 
 
-class PointOfSale(Base):
-    __tablename__ = "points_of_sale"
+class PointOfSaleCode(Base):
+    __tablename__ = "points_of_sale_codes"
     id: Mapped[int] = mapped_column(primary_key=True)
     code: Mapped[str] = mapped_column(sa.String(16))
-    name: Mapped[str] = mapped_column(sa.String(32))
     gates: Mapped[List["Place"]] = relationship(back_populates="point_of_sale")
+    representations: Mapped[List["PointOfSaleRepresentation"]] = relationship(back_populates="code")
 
 
-class Timestamp(Base):
-    __tablename__ = "timestamp"
+class PointOfSaleRepresentation(Base):
+    flag: Mapped[str] = mapped_column(sa.String(32))
+    business: Mapped[str] = mapped_column(sa.String(32))
+    branch: Mapped[str] = mapped_column(sa.String(32))
+    code_id: Mapped[int] = mapped_column(sa.ForeignKey("point_of_sale_code.id"))
+    code: Mapped["PointOfSaleCode"] = relationship(back_populates="representations")
+    timestamp_id: Mapped[int] = mapped_column(sa.ForeignKey("timestamp.id"))
+    timestamp: Mapped["Timestamp"] = relationship(back_populates="representations")
+
+
+class ArticleCode(Base):
+    __tablename__ = "article_codes"
     id: Mapped[int] = mapped_column(primary_key=True)
-    year: Mapped[int] = mapped_column(nullable=False)
-    month: Mapped[int] = mapped_column(nullable=False)
-    day: Mapped[int] = mapped_column(nullable=False)
-    difference: Mapped[int]
+    code: Mapped[str] = mapped_column(sa.String(32), unique=True)
+    representations: Mapped[List["ArticleRepresentation"]] = relationship(back_populates="code")
 
 
-class Tag(Base):
-    __tablename__ = "tags"
+class ArticleRepresentation(Base):
+    __tablename__ = "article_representations"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(sa.String(64), index=True)
+    brand: Mapped[str] = mapped_column(sa.String(32))
+    description: Mapped[str] = mapped_column(sa.String(256))
+    package: Mapped[str] = mapped_column(sa.String(16))
+    code_id: Mapped[int] = mapped_column(sa.ForeignKey("article_codes.id"))
+    code: Mapped["ArticleCode"] = relationship(back_populates="representations")
 
 
 class Price(Base):
     __tablename__ = "prices"
     id: Mapped[int] = mapped_column(primary_key=True)
-    value: Mapped[int] = mapped_column(nullable=False)
+    amount: Mapped[int] = mapped_column(nullable=False)
     timestamp_id: Mapped[int] = mapped_column(sa.ForeignKey("timestamp.id"))
     article_id: Mapped[int] = mapped_column(sa.ForeignKey("articles.id"))
     point_of_sale_id: Mapped[int] = mapped_column(sa.ForeignKey("points_of_sale.id"))
