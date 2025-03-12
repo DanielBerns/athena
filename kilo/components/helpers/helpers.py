@@ -25,6 +25,9 @@ import logging
 
 indentation = "    "  # Define an indentation constant.
 
+def get_stringy(sequence: list[str]) -> str:
+    return "{[" + "][".join(sequence) + "]}"
+
 
 def classname(thing: Any) -> str:
     """Returns the name of the class of an object.

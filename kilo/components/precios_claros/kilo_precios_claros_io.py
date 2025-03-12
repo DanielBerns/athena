@@ -89,7 +89,7 @@ class KiloPreciosClarosIO:
         event: dict[str, str]
     ) -> dict[str, str]:
         point_of_sale = {
-            "point_of_sale_key": event["identifier"],
+            "point_of_sale_code": event["identifier"],
             "state": (event["provincia"]).lower(),
             "city": (event["localidad"]).lower(),
             "address": (event["direccion"]).lower(),
@@ -104,7 +104,7 @@ class KiloPreciosClarosIO:
         event: dict[str, str]
     ) -> dict[str, str]:
         point_of_sale = {
-          "point_of_sale_key": event["id"],
+          "point_of_sale_code": event["id"],
           "state": (event["provincia"]).lower(),
           "city": (event["localidad"]).lower(),
           "address": (event["direccion"]).lower(),
@@ -133,12 +133,12 @@ class KiloPreciosClarosIO:
         event
     ) -> dict[str, str]:
         article_per_point_of_sale = {
-                "article_key": event["identifier"],
+                "article_code": event["identifier"],
                 "brand": (event["marca"]).lower(),
                 "description": (event["nombre"]).lower(),
                 "package": (event["presentacion"]).lower(),
                 "price": get_price_in_cents(event["precio"]),
-                "point_of_sale_key": event["point_of_sale"],
+                "point_of_sale_code": event["point_of_sale"],
             }
         return article_per_point_of_sale
 

@@ -5,38 +5,37 @@ from collections import Counter, defaultdict
 from components.helpers.helpers import get_resource, create_text_file
 
 
-def transform(key: str, event: dict[str, str]) -> Tuple[str, str]:
-    key_value = event[key]
-    dirty_event = "]-[".join(v for k, v in event.items() if k != key)
-    return (key_value, f"[{dirty_event:s}]")
-
 
 class DirtyEvents:
     def __init__(self, identifier: str):
         self._identifier: str = identifier
-        self._table: DefaultDict[str, Counter[str]] = defaultdict(Counter)
+        self._counters: Counter[str] = Counter()
+        self._table: DefaultDict[str, dict[str, str]] = defaultdict(dict)
 
     @property
-    def identifier(self) -> dict[str, str]:
+    def identifier(self) -> str:
         return self._identifier
 
     @property
-    def table(self) -> dict[str, str]:
+    def counters(self) -> Counter[str]:
+        return self._counters
+
+    @property
+    def table(self) -> DefaultDict[str, dict[str, str]]:
         return self._table
 
     def add(self, key: str, event: dict[str, str]) -> None:
-        (table_key, table_value) = transform(key, event)
-        self.table[table_key][table_value] += 1
+        value = event[key]
+        self.counters[value] += 1
+        if self.counters[value] == 1:
+            self.table[value] = event
 
     def write(self, container: Path) -> None:
         resource = get_resource(container, self.identifier, '.md')
         with create_text_file(resource) as target:
             target.write(f"# {self.identifier}\n")
-            for key, counter in self.table.items():
-                target.write(f"## {key:s}\n")
-                for number, (dirty_event, count) in enumerate(counter.items()):
-                    target.write(f"{number:d}. ({count:>3d}) :: {dirty_event:s}\n")
+            for key, event in self.table.items():
+                target.write(f"## {key:s}: {self.counters[key]:d}\n")
+                for kk, vv in event.items():
+                    target.write(f"    {kk:s}: {vv:s}\n")
             target.write("\n")
-
-
-

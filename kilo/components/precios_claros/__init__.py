@@ -12,3 +12,28 @@ from components.precios_claros.kilo_precios_claros_processor import KiloPreciosC
 
 from components.precios_claros.kilo_precios_claros_io import (get_price_in_cents, KiloPreciosClarosIO)
 
+from components.precios_claros.database import (
+    Timestamp,
+    Tag,
+    State,
+    City,
+    Place,
+    PointOfSaleCode,
+    PointOfSaleRepresentation,
+    ArticleCode,
+    ArticleRepresentation,
+    Price
+)
+
+from components.precios_claros.database_api import (
+    bulk_insert_timestamps,
+    bulk_insert_states,
+    bulk_insert_cities,
+    bulk_insert_places,
+    bulk_insert_point_of_sale_codes,
+    bulk_insert_point_of_sale_representations,
+    bulk_insert_article_codes,
+    bulk_insert_article_representations,
+    bulk_insert_prices,
+    create_sqlite_database
+)

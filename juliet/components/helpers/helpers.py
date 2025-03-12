@@ -21,6 +21,9 @@ indentation = "    "
 #     return wrapper
 
 
+def get_stringy(sequence: list[str]) -> str:
+    return "{[" + "][".join(sequence) + "]}"
+
 def classname(thing: Any) -> str:
     return thing.__class__.__name__
 

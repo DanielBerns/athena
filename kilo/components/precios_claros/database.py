@@ -1,3 +1,5 @@
+# Give me a python module for inserting states, cities and places in this database
+
 from typing import List, Optional, Generator
 from contextlib import contextmanager
 
@@ -12,12 +14,6 @@ from sqlalchemy.orm import (
 )
 
 
-# Uncomment and configure these lines if needed
-# db = sa.create_engine("sqlite+pysqlite:///:memory:", echo=True, future=True)
-# Session = sessionmaker(bind=db)
-# Base = declarative_base()
-
-
 class Base(DeclarativeBase):
       pass
 
@@ -28,9 +24,13 @@ class Timestamp(Base):
     year: Mapped[int] = mapped_column(nullable=False)
     month: Mapped[int] = mapped_column(nullable=False)
     day: Mapped[int] = mapped_column(nullable=False)
-    difference: Mapped[int] = mapped_column(nullable=False)
-    points_of_sale: Mapped[List["PointOfCodeRepresentation"]] = relationship(back_populates="timestamp")
+    hour: Mapped[int] = mapped_column(nullable=False)
+    minute: Mapped[int] = mapped_column(nullable=False)
+    second: Mapped[int] = mapped_column(nullable=False)
     prices: Mapped[List["Price"]] = relationship(back_populates="timestamp")
+
+    def __repr__(self) -> str:
+        return f"{self.year:4d}{self.month:>02d}{self.day:>02d}{self.hour:>02d}{self.minute:>02d}{self.second:>02d}"
 
 
 class Tag(Base):
@@ -42,7 +42,7 @@ class Tag(Base):
 class State(Base):
     __tablename__ = "states"
     id: Mapped[int] = mapped_column(primary_key=True)
-    code: Mapped[str] = mapped_column(sa.String(8))
+    code: Mapped[str] = mapped_column(sa.String(32))
     name: Mapped[str] = mapped_column(sa.String(32))
     cities: Mapped[List["City"]] = relationship(back_populates="state")
 
@@ -62,33 +62,35 @@ class Place(Base):
     address: Mapped[str] = mapped_column(sa.String(32))
     city_id: Mapped[int] = mapped_column(sa.ForeignKey("cities.id"))
     city: Mapped["City"] = relationship(back_populates="places")
-    point_of_sale_id: Mapped[int] = mapped_column(sa.ForeignKey("points_of_sale.id"))
-    point_of_sale_code: Mapped["PointOfSaleCode"] = relationship(back_populates="gates")
+    points_of_sale: Mapped[List["PointOfSaleRepresentation"]] = relationship(back_populates="place")
 
 
 class PointOfSaleCode(Base):
-    __tablename__ = "points_of_sale_codes"
+    __tablename__ = "point_of_sale_codes"
     id: Mapped[int] = mapped_column(primary_key=True)
-    code: Mapped[str] = mapped_column(sa.String(16))
-    gates: Mapped[List["Place"]] = relationship(back_populates="point_of_sale")
-    representations: Mapped[List["PointOfSaleRepresentation"]] = relationship(back_populates="code")
+    code: Mapped[str] = mapped_column(sa.String(16), index=True)
+    representations: Mapped[List["PointOfSaleRepresentation"]] = relationship(back_populates="point_of_sale_code")
+    prices: Mapped[List["Price"]] = relationship(back_populates="point_of_sale_code")
 
 
 class PointOfSaleRepresentation(Base):
+    __tablename__ = "point_of_sale_representations"
+    id: Mapped[int] = mapped_column(primary_key=True)
     flag: Mapped[str] = mapped_column(sa.String(32))
     business: Mapped[str] = mapped_column(sa.String(32))
     branch: Mapped[str] = mapped_column(sa.String(32))
-    code_id: Mapped[int] = mapped_column(sa.ForeignKey("point_of_sale_code.id"))
-    code: Mapped["PointOfSaleCode"] = relationship(back_populates="representations")
-    timestamp_id: Mapped[int] = mapped_column(sa.ForeignKey("timestamp.id"))
-    timestamp: Mapped["Timestamp"] = relationship(back_populates="representations")
+    point_of_sale_code_id: Mapped[int] = mapped_column(sa.ForeignKey("point_of_sale_codes.id"))
+    point_of_sale_code: Mapped["PointOfSaleCode"] = relationship(back_populates="representations")
+    place_id: Mapped[int] = mapped_column(sa.ForeignKey("places.id"))
+    place: Mapped["Place"] = relationship(back_populates="points_of_sale")
 
 
 class ArticleCode(Base):
     __tablename__ = "article_codes"
     id: Mapped[int] = mapped_column(primary_key=True)
     code: Mapped[str] = mapped_column(sa.String(32), unique=True)
-    representations: Mapped[List["ArticleRepresentation"]] = relationship(back_populates="code")
+    representations: Mapped[List["ArticleRepresentation"]] = relationship(back_populates="article_code")
+    prices: Mapped[List["Price"]] = relationship(back_populates="article_code")
 
 
 class ArticleRepresentation(Base):
@@ -97,8 +99,8 @@ class ArticleRepresentation(Base):
     brand: Mapped[str] = mapped_column(sa.String(32))
     description: Mapped[str] = mapped_column(sa.String(256))
     package: Mapped[str] = mapped_column(sa.String(16))
-    code_id: Mapped[int] = mapped_column(sa.ForeignKey("article_codes.id"))
-    code: Mapped["ArticleCode"] = relationship(back_populates="representations")
+    article_code_id: Mapped[int] = mapped_column(sa.ForeignKey("article_codes.id"))
+    article_code: Mapped["ArticleCode"] = relationship(back_populates="representations")
 
 
 class Price(Base):
@@ -106,22 +108,25 @@ class Price(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     amount: Mapped[int] = mapped_column(nullable=False)
     timestamp_id: Mapped[int] = mapped_column(sa.ForeignKey("timestamp.id"))
-    article_id: Mapped[int] = mapped_column(sa.ForeignKey("articles.id"))
-    point_of_sale_id: Mapped[int] = mapped_column(sa.ForeignKey("points_of_sale.id"))
+    timestamp: Mapped["Timestamp"] = relationship(back_populates="prices")
+    article_code_id: Mapped[int] = mapped_column(sa.ForeignKey("article_codes.id"))
+    article_code: Mapped["ArticleCode"] = relationship(back_populates="prices")
+    point_of_sale_code_id: Mapped[int] = mapped_column(sa.ForeignKey("point_of_sale_codes.id"))
+    point_of_sale_code: Mapped["PointOfSaleCode"] = relationship(back_populates="prices")
 
 
 class TaggedArticle(Base):
     __tablename__ = "tagged_articles"
     id: Mapped[int] = mapped_column(primary_key=True)
     tag_id: Mapped[int] = mapped_column(sa.ForeignKey("tags.id"))
-    article_id: Mapped[int] = mapped_column(sa.ForeignKey("articles.id"))
+    article_code_id: Mapped[int] = mapped_column(sa.ForeignKey("article_codes.id"))
 
 
 class TaggedPointOfSale(Base):
     __tablename__ = "tagged_point_of_sale"
     id: Mapped[int] = mapped_column(primary_key=True)
     tag_id: Mapped[int] = mapped_column(sa.ForeignKey("tags.id"))
-    point_of_sale_id: Mapped[int] = mapped_column(sa.ForeignKey("points_of_sale.id"))
+    point_of_sale_code_id: Mapped[int] = mapped_column(sa.ForeignKey("point_of_sale_codes.id"))
 
 
 @contextmanager
