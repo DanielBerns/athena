@@ -1,4 +1,5 @@
-# Give me a python module for inserting states, cities and places in this database
+# Give me a python module for inserting new info in this database.
+# Write an example for inserting new prices.
 
 from typing import List, Optional, Generator
 from contextlib import contextmanager

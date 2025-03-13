@@ -17,8 +17,10 @@ class KiloPreciosClarosProcessor:
     def execute(
         self,
         reader: KiloPreciosClarosReader,
-        target: KiloPreciosClarosTarget
+        target: KiloPreciosClarosTarget,
+        stop: int
     ) -> None:
+        count = 0
         for current_sample_home in reader.read_sample_home():
             try:
                 logging.info(f"{current_sample_home}")
@@ -28,3 +30,7 @@ class KiloPreciosClarosProcessor:
                 target.kilo_articles_per_point_of_sale(reader.read_articles_per_point_of_sale)
             except Exception as message:
                 logging.error(f"*** Error: {str(message):s}")
+            count += 1
+            if stop > 0:
+               if count > stop:
+                   break

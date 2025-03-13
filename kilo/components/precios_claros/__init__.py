@@ -25,7 +25,7 @@ from components.precios_claros.database import (
     Price
 )
 
-from components.precios_claros.database_api import (
+from components.precios_claros.database_create import (
     bulk_insert_timestamps,
     bulk_insert_states,
     bulk_insert_cities,
@@ -35,5 +35,5 @@ from components.precios_claros.database_api import (
     bulk_insert_article_codes,
     bulk_insert_article_representations,
     bulk_insert_prices,
-    create_sqlite_database
+    database_create_sqlite
 )

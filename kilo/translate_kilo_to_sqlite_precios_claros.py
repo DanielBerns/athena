@@ -3,7 +3,7 @@ from components.kilo.kilo_paths import KiloPaths
 from components.precios_claros.kilo_precios_claros_basic_reader import KiloPreciosClarosBasicReader
 from components.precios_claros.kilo_to_sqlite_precios_claros_target import KiloToSqlitePreciosClarosTarget
 from components.precios_claros.kilo_precios_claros_processor import KiloPreciosClarosProcessor
-from components.precios_claros.database_api import create_sqlite_database
+from components.precios_claros.database_create import database_create_sqlite
 
 from components.helpers.helpers import get_container, get_resource
 
@@ -44,7 +44,7 @@ def main() -> None:
 
     kilo_reader = KiloPreciosClarosBasicReader(storage_precios_claros)
     target = KiloToSqlitePreciosClarosTarget(kilo_paths)
-    processor.execute(kilo_reader, target)
+    processor.execute(kilo_reader, target, -1)
 
     target.dirty_timestamps.write(results_precios_claros)
     target.dirty_states.write(results_precios_claros)
@@ -56,7 +56,7 @@ def main() -> None:
     target.dirty_article_representations.write(results_precios_claros)
     target.dirty_prices.write(results_precios_claros)
 
-    create_sqlite_database(
+    database_create_sqlite(
         kilo_paths,
         target.dirty_timestamps,
         target.dirty_states,
