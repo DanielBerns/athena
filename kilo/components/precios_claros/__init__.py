@@ -37,3 +37,5 @@ from components.precios_claros.database_create import (
     bulk_insert_prices,
     database_create_sqlite
 )
+
+from components.precios_claros.database_queries import DBGet
