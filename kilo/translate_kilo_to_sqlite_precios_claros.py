@@ -44,16 +44,15 @@ def main() -> None:
 
     kilo_reader = KiloPreciosClarosBasicReader(storage_precios_claros)
     target = KiloToSqlitePreciosClarosTarget(kilo_paths)
-    processor.execute(kilo_reader, target, -1)
+    processor.execute(kilo_reader, target, 100, -1)
 
     target.dirty_timestamps.write(results_precios_claros)
     target.dirty_states.write(results_precios_claros)
     target.dirty_cities.write(results_precios_claros)
     target.dirty_places.write(results_precios_claros)
-    target.dirty_point_of_sale_codes.write(results_precios_claros)
-    target.dirty_point_of_sale_representations.write(results_precios_claros)
+    target.dirty_points_of_sale.write(results_precios_claros)
     target.dirty_article_codes.write(results_precios_claros)
-    target.dirty_article_representations.write(results_precios_claros)
+    target.dirty_article_cards.write(results_precios_claros)
     target.dirty_prices.write(results_precios_claros)
 
     database_create_sqlite(
@@ -62,10 +61,9 @@ def main() -> None:
         target.dirty_states,
         target.dirty_cities,
         target.dirty_places,
-        target.dirty_point_of_sale_codes,
-        target.dirty_point_of_sale_representations,
+        target.dirty_points_of_sale,
         target.dirty_article_codes,
-        target.dirty_article_representations,
+        target.dirty_article_cards,
         target.dirty_prices
     )
 

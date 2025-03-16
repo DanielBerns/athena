@@ -63,45 +63,37 @@ class Place(Base):
     address: Mapped[str] = mapped_column(sa.String(32))
     city_id: Mapped[int] = mapped_column(sa.ForeignKey("cities.id"))
     city: Mapped["City"] = relationship(back_populates="places")
-    points_of_sale: Mapped[List["PointOfSaleRepresentation"]] = relationship(back_populates="place")
+    points_of_sale: Mapped[List["PointOfSale"]] = relationship(back_populates="place")
 
 
-class PointOfSaleCode(Base):
-    __tablename__ = "point_of_sale_codes"
+class PointOfSale(Base):
+    __tablename__ = "points_of_sale"
     id: Mapped[int] = mapped_column(primary_key=True)
     code: Mapped[str] = mapped_column(sa.String(16), index=True)
-    representations: Mapped[List["PointOfSaleRepresentation"]] = relationship(back_populates="point_of_sale_code")
-    prices: Mapped[List["Price"]] = relationship(back_populates="point_of_sale_code")
-
-
-class PointOfSaleRepresentation(Base):
-    __tablename__ = "point_of_sale_representations"
-    id: Mapped[int] = mapped_column(primary_key=True)
     flag: Mapped[str] = mapped_column(sa.String(32))
     business: Mapped[str] = mapped_column(sa.String(32))
     branch: Mapped[str] = mapped_column(sa.String(32))
-    point_of_sale_code_id: Mapped[int] = mapped_column(sa.ForeignKey("point_of_sale_codes.id"))
-    point_of_sale_code: Mapped["PointOfSaleCode"] = relationship(back_populates="representations")
     place_id: Mapped[int] = mapped_column(sa.ForeignKey("places.id"))
     place: Mapped["Place"] = relationship(back_populates="points_of_sale")
+    prices: Mapped[List["Price"]] = relationship(back_populates="point_of_sale")
 
 
 class ArticleCode(Base):
     __tablename__ = "article_codes"
     id: Mapped[int] = mapped_column(primary_key=True)
     code: Mapped[str] = mapped_column(sa.String(32), unique=True)
-    representations: Mapped[List["ArticleRepresentation"]] = relationship(back_populates="article_code")
+    cards: Mapped[List["ArticleCard"]] = relationship(back_populates="article_code")
     prices: Mapped[List["Price"]] = relationship(back_populates="article_code")
 
 
-class ArticleRepresentation(Base):
-    __tablename__ = "article_representations"
+class ArticleCard(Base):
+    __tablename__ = "article_cards"
     id: Mapped[int] = mapped_column(primary_key=True)
     brand: Mapped[str] = mapped_column(sa.String(32))
     description: Mapped[str] = mapped_column(sa.String(256))
     package: Mapped[str] = mapped_column(sa.String(16))
     article_code_id: Mapped[int] = mapped_column(sa.ForeignKey("article_codes.id"))
-    article_code: Mapped["ArticleCode"] = relationship(back_populates="representations")
+    article_code: Mapped["ArticleCode"] = relationship(back_populates="cards")
 
 
 class Price(Base):
@@ -112,8 +104,8 @@ class Price(Base):
     timestamp: Mapped["Timestamp"] = relationship(back_populates="prices")
     article_code_id: Mapped[int] = mapped_column(sa.ForeignKey("article_codes.id"))
     article_code: Mapped["ArticleCode"] = relationship(back_populates="prices")
-    point_of_sale_code_id: Mapped[int] = mapped_column(sa.ForeignKey("point_of_sale_codes.id"))
-    point_of_sale_code: Mapped["PointOfSaleCode"] = relationship(back_populates="prices")
+    point_of_sale_id: Mapped[int] = mapped_column(sa.ForeignKey("points_of_sale.id"))
+    point_of_sale: Mapped["PointOfSale"] = relationship(back_populates="prices")
 
 
 class TaggedArticle(Base):
@@ -124,10 +116,10 @@ class TaggedArticle(Base):
 
 
 class TaggedPointOfSale(Base):
-    __tablename__ = "tagged_point_of_sale"
+    __tablename__ = "tagged_points_of_sale"
     id: Mapped[int] = mapped_column(primary_key=True)
     tag_id: Mapped[int] = mapped_column(sa.ForeignKey("tags.id"))
-    point_of_sale_code_id: Mapped[int] = mapped_column(sa.ForeignKey("point_of_sale_codes.id"))
+    point_of_sale_id: Mapped[int] = mapped_column(sa.ForeignKey("points_of_sale.id"))
 
 
 @contextmanager

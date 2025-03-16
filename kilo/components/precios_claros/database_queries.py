@@ -11,10 +11,9 @@ from components.precios_claros.database import (
     State,
     City,
     Place,
-    PointOfSaleCode,
-    PointOfSaleRepresentation,
+    PointOfSale,
     ArticleCode,
-    ArticleRepresentation,
+    ArticleCard,
     Price
 )
 
@@ -49,16 +48,10 @@ class DBGet:
             ): a_place for a_place in _all_the_places
         }
 
-    def all_the_point_of_sale_codes(self) -> dict[str, PointOfSaleCode]:
-        statement = select(PointOfSaleCode)
-        _all_the_point_of_sale_codes = list(self.session.scalars(statement).all())
-        return {pos.code: pos for pos in _all_the_point_of_sale_codes}
-
-    def all_the_point_of_sale_representations(self) -> dict[str, PointOfSaleRepresentation]:
-        statement = select(PointOfSaleRepresentation)
-        _all_the_point_of_sale_representations = list(self.session.scalars(statement).all())
-        return {posr.point_of_sale_code: posr
-                for posr in _all_the_point_of_sale_representations}
+    def all_the_points_of_sale(self) -> dict[str, PointOfSale]:
+        statement = select(PointOfSale)
+        _all_the_points_of_sale = list(self.session.scalars(statement).all())
+        return {pos.code: pos for pos in _all_the_points_of_sale}
 
     def all_the_timestamps(self) -> dict[str, Timestamp]:
         statement = select(Timestamp)
@@ -70,21 +63,21 @@ class DBGet:
         _all_the_article_codes = list(self.session.scalars(statement).all())
         return {ac.code: ac for ac in _all_the_article_codes}
 
-    def all_the_article_representations(self) -> dict[int, ArticleRepresentation]:
-        statement = select(ArticleRepresentation)
-        _all_the_article_representations = list(self.session.scalars(statement).all())
-        return {ar.article_code_id: ar for ar in _all_the_article_representations}
+    def all_the_article_cards(self) -> dict[int, ArticleCard]:
+        statement = select(ArticleCard)
+        _all_the_article_cards = list(self.session.scalars(statement).all())
+        return {ar.article_code_id: ar for ar in _all_the_article_cards}
 
     def all_the_prices(self) -> dict[int, Price]:
-        statement = select(ArticleRepresentation)
+        statement = select(Price)
         _all_the_prices = list(self.session.scalars(statement).all())
         return {pp.article_code_id: pp for pp in _all_the_prices}
 
 # def get_article_list(self) -> List[dict]:
 #     """Retrieves a list of articles with code, brand, description, and package."""
 #     articles = (
-#         session.query(ArticleCode, ArticleRepresentation)
-#         .join(ArticleRepresentation, ArticleCode.id == ArticleRepresentation.article_code_id)
+#         session.query(ArticleCode, ArticleCard)
+#         .join(ArticleCard, ArticleCode.id == ArticleCard.article_code_id)
 #         .all()
 #     )
 #     return [

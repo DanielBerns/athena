@@ -18,19 +18,22 @@ class KiloPreciosClarosProcessor:
         self,
         reader: KiloPreciosClarosReader,
         target: KiloPreciosClarosTarget,
+        start: int,
         stop: int
     ) -> None:
-        count = 0
-        for current_sample_home in reader.read_sample_home():
+        for count, current_sample_home in enumerate(reader.read_sample_home()):
+            if count < start:
+                logging.info(f"Skipped {str(current_sample_home):s}")
+                continue
             try:
-                logging.info(f"{current_sample_home}")
+                logging.info(f"Start {current_sample_home}")
                 target.current_sample_home = current_sample_home
                 target.kilo_points_of_sale(reader.read_points_of_sale)
                 target.kilo_selected_point_of_sale(reader.read_selected_points_of_sale)
                 target.kilo_articles_per_point_of_sale(reader.read_articles_per_point_of_sale)
+                logging.info(f"Done {current_sample_home}")
             except Exception as message:
                 logging.error(f"*** Error: {str(message):s}")
-            count += 1
             if stop > 0:
                if count > stop:
                    break

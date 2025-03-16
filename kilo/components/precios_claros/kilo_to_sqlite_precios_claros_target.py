@@ -1,5 +1,3 @@
-import pdb
-
 import logging
 from pathlib import Path
 from collections.abc import Callable
@@ -40,10 +38,9 @@ class KiloToSqlitePreciosClarosTarget:
         self._dirty_states = DirtyEvents("dirty_states")
         self._dirty_cities = DirtyEvents("dirty_cities")
         self._dirty_places = DirtyEvents("dirty_places")
-        self._dirty_point_of_sale_codes = DirtyEvents("dirty_point_of_sale_codes")
-        self._dirty_point_of_sale_representations = DirtyEvents("dirty_point_of_sale_representations")
+        self._dirty_points_of_sale = DirtyEvents("dirty_points_of_sale")
         self._dirty_article_codes = DirtyEvents("dirty_article_codes")
-        self._dirty_article_representations = DirtyEvents("dirty_article_representations")
+        self._dirty_article_cards = DirtyEvents("dirty_article_cards")
         self._dirty_prices = DirtyEvents("dirty_prices")
 
     @property
@@ -95,20 +92,16 @@ class KiloToSqlitePreciosClarosTarget:
         return self._dirty_places
 
     @property
-    def dirty_point_of_sale_codes(self) -> DirtyEvents:
-        return self._dirty_point_of_sale_codes
-
-    @property
-    def dirty_point_of_sale_representations(self) -> DirtyEvents:
-        return self._dirty_point_of_sale_representations
+    def dirty_points_of_sale(self) -> DirtyEvents:
+        return self._dirty_points_of_sale
 
     @property
     def dirty_article_codes(self) -> DirtyEvents:
         return self._dirty_article_codes
 
     @property
-    def dirty_article_representations(self) -> DirtyEvents:
-        return self._dirty_article_representations
+    def dirty_article_cards(self) -> DirtyEvents:
+        return self._dirty_article_cards
 
     @property
     def dirty_prices(self) -> DirtyEvents:
@@ -138,8 +131,7 @@ class KiloToSqlitePreciosClarosTarget:
             self.skip_sample = True
 
     def get_new_point_of_sale_code(self, point_of_sale_code: str, business: str) -> str:
-        self.points_of_sale[point_of_sale_code] = result = f"[{point_of_sale_code:s}]-- {business:s}"
-        return result
+        return f"[{point_of_sale_code:s}]--({business:s})"
 
     def kilo_points_of_sale(
         self,
@@ -160,37 +152,34 @@ class KiloToSqlitePreciosClarosTarget:
                    new_point_of_sale_code = self.get_new_point_of_sale_code(
                        point_of_sale_code, business
                    )
+                   # This is a table for loading prices of articles
                    self.points_of_sale[point_of_sale_code] = new_point_of_sale_code
                    stringy_city = get_stringy([state_code, city])
                    stringy_place = get_stringy([state_code, city, address])
                    stringy_representation = get_stringy([flag, business, branch, point_of_sale_code])
-                   dirty_state = {"state_code": state_code}
+                   dirty_state = {
+                       "state_code": state_code
+                   }
                    dirty_city = {
-                       "name": city,
+                       "city": city,
                        "state_code": state_code,
                        "stringy_city": stringy_city
                    }
                    dirty_place = {
-                       "city": city,
                        "address": address,
+                       "city": city,
                        "state_code": state_code,
                        "stringy_city": stringy_city,
                        "stringy_place": stringy_place
                    }
-                   dirty_point_of_sale_code = {
+                   dirty_points_of_sale = {
                        "point_of_sale_code": new_point_of_sale_code,
-                       "state_code": state_code,
-                       "stringy_city": stringy_city,
-                       "stringy_place": stringy_place
-                   }
-                   dirty_point_of_sale_representation = {
                        "flag": flag,
                        "business": business,
                        "branch": branch,
-                       "point_of_sale_code": new_point_of_sale_code,
-                       "timestamp": self.sample_key,
-                       "stringy_representation": stringy_representation,
-                       "stringy_place": stringy_place,
+                       "state_code": state_code,
+                       "stringy_city": stringy_city,
+                       "stringy_place": stringy_place
                    }
                    self.dirty_states.add(
                        "state_code",
@@ -201,9 +190,7 @@ class KiloToSqlitePreciosClarosTarget:
                        dirty_city
                    )
                    self.dirty_places.add("stringy_place", dirty_place)
-                   self.dirty_point_of_sale_codes.add("point_of_sale_code", dirty_point_of_sale_code)
-                   self.dirty_point_of_sale_representations.add("stringy_representation", dirty_point_of_sale_representation)
-
+                   self.dirty_points_of_sale.add("point_of_sale_code", dirty_points_of_sale)
                logging.info("done")
             except Exception as message:
                 self.skip_sample = True
@@ -237,21 +224,26 @@ class KiloToSqlitePreciosClarosTarget:
                     dirty_article_code = {
                         "article_code": event["article_code"]
                     }
-                    dirty_article_representation = {
+                    dirty_article_cards = {
                         "article_code": event["article_code"],
                         "brand": event["brand"],
                         "description": event["description"],
                         "package": event["package"]
                     }
+                    ts = self.sample_key
+                    ac = event["article_code"]
+                    posc = self.points_of_sale[event["point_of_sale_code"]]
+                    key = f"{ts}{ac}{posc}"
                     dirty_price = {
                         "amount": event["price"],
-                        "timestamp": self.sample_key,
-                        "article_code": event["article_code"],
-                        "point_of_sale_code": self.points_of_sale[event["point_of_sale_code"]]
+                        "timestamp": ts,
+                        "article_code": ac,
+                        "point_of_sale_code": posc,
+                        "key": key
                     }
                     self.dirty_article_codes.add("article_code", dirty_article_code)
-                    self.dirty_article_representations.add("article_code", dirty_article_representation)
-                    self.dirty_prices.add("article_code", dirty_price)
+                    self.dirty_article_cards.add("article_code", dirty_article_cards)
+                    self.dirty_prices.add("key", dirty_price)
                 logging.info(f"{self.sample_key:s}: articles_per_point_of_sale done")
             except Exception as message:
                 self.skip_sample = True

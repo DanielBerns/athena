@@ -18,10 +18,9 @@ from components.precios_claros.database import (
     State,
     City,
     Place,
-    PointOfSaleCode,
-    PointOfSaleRepresentation,
+    PointOfSale,
     ArticleCode,
-    ArticleRepresentation,
+    ArticleCard,
     Price
 )
 
@@ -30,10 +29,9 @@ from components.precios_claros.database_create import (
     bulk_insert_states,
     bulk_insert_cities,
     bulk_insert_places,
-    bulk_insert_point_of_sale_codes,
-    bulk_insert_point_of_sale_representations,
+    bulk_insert_points_of_sale,
     bulk_insert_article_codes,
-    bulk_insert_article_representations,
+    bulk_insert_article_cards,
     bulk_insert_prices,
     database_create_sqlite
 )
