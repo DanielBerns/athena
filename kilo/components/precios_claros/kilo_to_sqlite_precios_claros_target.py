@@ -53,7 +53,9 @@ class KiloToSqlitePreciosClarosTarget:
            for event in read_points_of_sale():
                self.db_target.kilo_points_of_sale(event)
         except Exception as panic:
-            message = f"{classname(self):s}.kilo_points_of_sale ({classname(panic)}): {str(panic):s}"
+            logging.error(f"*** Error")
+            logging.error(f"    event: {str(event)}")
+            message = f"*** Error {classname(self):s}.kilo_points_of_sale ({classname(panic)}): {str(panic):s}"
             raise KiloToSqlitePreciosClarosException(message)
         logging.info(f"{classname(self):s}.kilo_points_of_sale done")
 

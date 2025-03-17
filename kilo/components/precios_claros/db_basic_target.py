@@ -109,7 +109,6 @@ class DBBasicTarget:
         return self._all_the_article_cards
 
     def kilo_points_of_sale(self, event: dict[str, str]) -> None:
-        # pdb.set_trace()
         state_code = event["state"]
         city_name = event["city"]
         address = event["address"]
