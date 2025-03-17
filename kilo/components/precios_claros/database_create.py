@@ -22,12 +22,6 @@ from components.precios_claros.database import (
 )
 
 
-class DatabaseException(Exception):
-    def __init__(self, message: str) -> None:
-        super().__init__(message)
-        logging.error(message)
-
-
 def get_int(string: str) -> int:
     try:
         return int(string)

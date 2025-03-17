@@ -1,6 +1,7 @@
 # Give me a python module for inserting new info in this database.
 # Write an example for inserting new prices.
 
+import logging
 from typing import List, Optional, Generator
 from contextlib import contextmanager
 
@@ -14,6 +15,11 @@ from sqlalchemy.orm import (
     Session
 )
 
+
+class DatabaseException(Exception):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+        logging.error(message)
 
 class Base(DeclarativeBase):
       pass

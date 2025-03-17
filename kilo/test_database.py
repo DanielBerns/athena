@@ -8,26 +8,25 @@ from components.kilo.kilo_paths import KiloPaths
 from components.helpers.helpers import get_container, get_resource
 
 
-def database_make_some_queries(
+def make_some_queries(
     kilo_paths: KiloPaths
 ) -> None:
-    storage = kilo_paths.storage
-    results = kilo_paths.results
-    precios_claros = "precios_claros"
-    storage_precios_claros = get_container(storage, precios_claros)
-    results_precios_claros = get_container(results, precios_claros)
-    storage_precios_claros_sqlite = get_container(storage_precios_claros, "sqlite")
-    db_uri = str(Path(storage_precios_claros_sqlite, "mecon").with_suffix(".db"))
-    with db_open_session(db_uri) as session:
-        get = DBGet(session)
-        all_the_states = get.all_the_states()
-        all_the_cities = get.all_the_cities()
-        all_the_places = get.all_the_places()
-        all_the_timestamps = get.all_the_timestamps()
-        all_the_points_of_sale = get.all_the_points_of_sale()
-        all_the_article_codes = get.all_the_article_codes()
-        all_the_article_cards = get.all_the_article_cards()
-        all_the_prices = get.all_the_prices()
+    processor = KiloPreciosClarosProcessor()
+    storage_precios_claros = get_container(kilo_paths.storage, "precios_claros")
+    kilo_reader = KiloPreciosClarosBasicReader(storage_precios_claros)
+    with get_db_interface(storage_precios_claros) as db:
+        all_the_states = db.all_the_states()
+        all_the_cities = db.all_the_cities()
+        all_the_places = db.all_the_places()
+        all_the_timestamps = db.all_the_timestamps()
+        all_the_points_of_sale = db.all_the_points_of_sale()
+        all_the_article_codes = db.all_the_article_codes()
+        all_the_article_cards = db.all_the_article_cards()
+
+        logging.info("# Database tests")
+
+        logging.info("## How many rows?")
+
         logging.info(f"all_the_states: {len(all_the_states)}")
         logging.info(f"all_the_cities: {len(all_the_cities)}")
         logging.info(f"all_the_places: {len(all_the_places)}")
@@ -35,42 +34,40 @@ def database_make_some_queries(
         logging.info(f"all_the_point_of_sale: {len(all_the_points_of_sale)}")
         logging.info(f"all_the_article_codes: {len(all_the_article_codes)}")
         logging.info(f"all_the_article_cards: {len(all_the_article_cards)}")
-        logging.info(f"all_the_prices: {len(all_the_prices)}")
 
-        logging.info("# Database tests")
-
-        logging.info("## States and more")
+        tab = "  "
+        logging.info(f"## State ({len(all_the_states)})")
         for key, st in all_the_states.items():
-            logging.info(f"#1 {key:s} {st.code:s} {st.name:s}")
+            logging.info(f"state: {key:s} {st.code:s} {st.name:s}")
             for cc in st.cities:
-                logging.info(f"#2  {cc.name:s}")
+                logging.info(f"{tab:s}city: {cc.name:s}")
                 for pp in cc.places:
-                    logging.info(f"#3    {pp.address:s}")
+                    logging.info(f"{tab*2:s}place: {pp.address:s}")
                     for pos in pp.points_of_sale:
-                        logging.info(f"#4      {pos.flag:s} - {pos.business:s} - {pos.branch:s}")
+                        logging.info(f"{tab*3:s}{pos.code:s} -{pos.flag:s} - {pos.business:s} - {pos.branch:s}")
 
-        logging.info("## Points of sale")
+        logging.info(f"## PointOfSale ({len(all_the_points_of_sale)})")
         for key, pos in all_the_points_of_sale.items():
-            logging.info(f"#2   {key:s} {pos.code} - {pos.flag} - {pos.business:s} - {pos.branch}")
-            logging.info(f"#3     {pos.place.address:s} {pos.place.city.name:s}")
+            logging.info(f"point_of_sale: {key:s} {pos.code} - {pos.flag} - {pos.business:s} - {pos.branch}")
+            logging.info(f"{tab:s}{pos.place.address:s} {pos.place.city.name:s}")
 
         count = 0
-        logging.info(f"# ArticleCode ({len(all_the_article_codes)})")
+        logging.info(f"## ArticleCode ({len(all_the_article_codes)})")
         for key, article_code in all_the_article_codes.items():
-            logging.info(f"## article code: {article_code.code}")
-            logging.info(f"### cards")
+            logging.info(f"article_code: {article_code.code}")
+            logging.info(f"{tab*2:s}cards ({len(article_code.cards)})")
             for cc in article_code.cards:
-                logging.info(f"      ({cc.brand}) - ({cc.description}) ({cc.package})")
-            logging.info(f"### prices")
+                logging.info(f"{tab*4}({cc.brand}) - ({cc.description}) - ({cc.package})")
+            logging.info(f"{tab*2:s}prices ({len(article_code.prices)})")
             for pp in article_code.prices[:5]:
-                logging.info(f"      ({pp.timestamp}) - (${pp.amount/100:>6.2f}) ")
+                logging.info(f"{tab*:s}({pp.timestamp}) - (${pp.amount/100:>6.2f}) ")
             count += 1
             if count > 5000:
                 break
 
-        logging.info("# Timestamps")
+        logging.info(f"## Timestamp ({len(all_the_timestamps)})")
         for key, ts in all_the_timestamps.items():
-            logging.info(f"## {ts}")
+            logging.info(f"Timestamp {ts}")
             for a_price in ts.prices[:100]:
                 pos = a_price.point_of_sale
                 article_code = a_price.article_code

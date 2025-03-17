@@ -21,19 +21,11 @@ from components.precios_claros.database import (
     PointOfSale,
     ArticleCode,
     ArticleCard,
-    Price
+    Price,
+    DatabaseException
 )
 
-from components.precios_claros.database_create import (
-    bulk_insert_timestamps,
-    bulk_insert_states,
-    bulk_insert_cities,
-    bulk_insert_places,
-    bulk_insert_points_of_sale,
-    bulk_insert_article_codes,
-    bulk_insert_article_cards,
-    bulk_insert_prices,
-    database_create_sqlite
-)
+from components.precios_claros.db_interface import DBInterface, get_db_interface
+from components.precios_claros.db_target import DBTarget
 
-from components.precios_claros.database_queries import DBGet
+# from components.precios_claros.database_queries import DBGet
