@@ -339,7 +339,7 @@ class DBInterface:
                 point_of_sale=point_of_sale,
             )
             self.session.add(new_price)
-            self.session.insert()
+            self.session.commit()
             logging.info(f"{classname(self)}.insert_price stop")
             return new_price
         except Exception as panic:
