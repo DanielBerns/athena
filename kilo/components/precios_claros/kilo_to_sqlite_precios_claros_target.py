@@ -50,11 +50,14 @@ class KiloToSqlitePreciosClarosTarget:
     ) -> None:
         logging.info(f"{classname(self):s}.kilo_points_of_sale start")
         try:
-           for event in read_points_of_sale():
-               self.db_target.kilo_points_of_sale(event)
+            for number, event in enumerate(read_points_of_sale()):
+                self.db_target.kilo_points_of_sale(event)
+                if (number % 1000) == 0:
+                    logging.info(f"{classname(self):s}.kilo_points_of_sale {number} events")
         except Exception as panic:
             logging.error(f"*** Error")
-            logging.error(f"    event: {str(event)}")
+            for key, value in event.items():
+                logging.error(f"    key: {key} - value: {value}")
             message = f"*** Error {classname(self):s}.kilo_points_of_sale ({classname(panic)}): {str(panic):s}"
             raise KiloToSqlitePreciosClarosException(message)
         logging.info(f"{classname(self):s}.kilo_points_of_sale done")
@@ -80,10 +83,14 @@ class KiloToSqlitePreciosClarosTarget:
     ) -> None:
         logging.info(f"{classname(self):s}.kilo_articles_per_point_of_sale start")
         try:
-            for event in read_articles_per_point_of_sale():
+            for number, event in enumerate(read_articles_per_point_of_sale()):
                 self.db_target.kilo_articles_per_point_of_sale(event)
+                if (number % 1000) == 0:
+                    logging.info(f"{classname(self):s}.kilo_articles_per_point_of_sale {number} events")
         except Exception as panic:
-            self.skip_sample = True
+            logging.error(f"*** Error")
+            for key, value in event.items():
+                logging.error(f"    key: {key} - value: {value}")
             message = f"{classname(self):s}.kilo_articles_per_point_of_sale ({classname(panic):s}): {str(panic):s}"
             raise KiloToSqlitePreciosClarosException(message)
         logging.info(f"{classname(self):s}.kilo_articles_per_point_of_sale done")

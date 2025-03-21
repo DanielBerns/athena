@@ -22,10 +22,14 @@ from components.precios_claros.database import (
     ArticleCode,
     ArticleCard,
     Price,
-    DatabaseException
+    DatabaseException,
+    db_get_session
 )
 
-from components.precios_claros.db_interface import DBInterface, get_db_interface
+from components.precios_claros.db_interface import DBInterface, db_get_interface, CODES_AND_STATES
+from components.precios_claros.db_interface_with_cache import DBInterfaceWithCache
+from components.precios_claros.db_interface_with_test import DBInterfaceWithTest
+
 from components.precios_claros.db_target import DBTarget
 
 # from components.precios_claros.database_queries import DBGet

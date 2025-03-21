@@ -4,6 +4,7 @@
 import logging
 from typing import List, Optional, Generator
 from contextlib import contextmanager
+from pathlib import Path
 
 import sqlalchemy as sa
 from sqlalchemy.orm import (
@@ -20,6 +21,15 @@ class DatabaseException(Exception):
     def __init__(self, message: str) -> None:
         super().__init__(message)
         logging.error(message)
+
+def get_int(string: str) -> int:
+    try:
+        return int(string)
+    except Exception as panic:
+        logging.error(f"*** Error database.get_int")
+        logging.error(f"    string: {str(panic)}")
+        message = f"*** Error database.get_int ({classname(panic)}): {str(panic)}"
+        raise DatabaseException(message)
 
 class Base(DeclarativeBase):
       pass
@@ -128,41 +138,68 @@ class TaggedPointOfSale(Base):
     point_of_sale_id: Mapped[int] = mapped_column(sa.ForeignKey("points_of_sale.id"))
 
 
+# @contextmanager
+# def db_create_session(
+#     db_uri: Optional[str] = None
+# ) -> Generator[Session, None, None]:
+#     if db_uri is None:
+#         db_uri = ":memory:"
+#     db_home = "sqlite+pysqlite:///" + db_uri
+#     db = sa.create_engine(db_home, future=True)
+#     Base.metadata.create_all(db)
+#     SessionLocal = sessionmaker(bind=db)
+#     session = SessionLocal()
+#     try:
+#         yield session
+#         session.commit()
+#     except Exception as panic:
+#         print(str(panic))
+#         session.rollback()
+#     finally:
+#         session.close()
+#
+# @contextmanager
+# def db_open_session(
+#     db_uri: Optional[str] = None
+# ) -> Generator[Session, None, None]:
+#     if db_uri is None:
+#         db_uri = ":memory:"
+#     db_home = "sqlite+pysqlite:///" + db_uri
+#     db = sa.create_engine(db_home, future=True)
+#     SessionLocal = sessionmaker(bind=db)
+#     session = SessionLocal()
+#     try:
+#         yield session
+#         session.commit()
+#     except Exception as panic:
+#         print(str(panic))
+#         session.rollback()
+#     finally:
+#         session.close()
+#
+
 @contextmanager
-def db_create_session(
+def db_get_session(
     db_uri: Optional[str] = None
 ) -> Generator[Session, None, None]:
     if db_uri is None:
         db_uri = ":memory:"
+        create_db = True
+    else:
+        db_path = Path(db_uri)
+        create_db = not db_path.exists()
     db_home = "sqlite+pysqlite:///" + db_uri
     db = sa.create_engine(db_home, future=True)
-    Base.metadata.create_all(db)
+    if create_db:
+        Base.metadata.create_all(db)
     SessionLocal = sessionmaker(bind=db)
     session = SessionLocal()
     try:
         yield session
         session.commit()
     except Exception as panic:
-        print(str(panic))
+        logging.error(str(panic))
         session.rollback()
     finally:
         session.close()
 
-@contextmanager
-def db_open_session(
-    db_uri: Optional[str] = None
-) -> Generator[Session, None, None]:
-    if db_uri is None:
-        db_uri = ":memory:"
-    db_home = "sqlite+pysqlite:///" + db_uri
-    db = sa.create_engine(db_home, future=True)
-    SessionLocal = sessionmaker(bind=db)
-    session = SessionLocal()
-    try:
-        yield session
-        session.commit()
-    except Exception as panic:
-        print(str(panic))
-        session.rollback()
-    finally:
-        session.close()

@@ -1,20 +1,19 @@
 import logging
 from pathlib import Path
 
-from components.precios_claros.database import db_open_session
-from components.precios_claros.database_queries import DBGet
-
+from components.precios_claros.db_interface import db_get_interface
+from components.precios_claros.db_interface_with_test import DBInterfaceWithTest
 from components.kilo.kilo_paths import KiloPaths
+
 from components.helpers.helpers import get_container, get_resource
 
 
 def make_some_queries(
     kilo_paths: KiloPaths
 ) -> None:
-    processor = KiloPreciosClarosProcessor()
     storage_precios_claros = get_container(kilo_paths.storage, "precios_claros")
-    kilo_reader = KiloPreciosClarosBasicReader(storage_precios_claros)
-    with get_db_interface(storage_precios_claros) as db:
+    factory = lambda s: DBInterfaceWithTest(s)
+    with db_get_interface(storage_precios_claros, factory) as db:
         all_the_states = db.all_the_states()
         all_the_cities = db.all_the_cities()
         all_the_places = db.all_the_places()
@@ -60,7 +59,7 @@ def make_some_queries(
                 logging.info(f"{tab*4}({cc.brand}) - ({cc.description}) - ({cc.package})")
             logging.info(f"{tab*2:s}prices ({len(article_code.prices)})")
             for pp in article_code.prices[:5]:
-                logging.info(f"{tab*:s}({pp.timestamp}) - (${pp.amount/100:>6.2f}) ")
+                logging.info(f"{tab*4:s}({pp.timestamp}) - (${pp.amount/100:>6.2f}) ")
             count += 1
             if count > 5000:
                 break
@@ -129,7 +128,7 @@ def main() -> None:
     )
 
     logging.info("start")
-    database_make_some_queries(kilo_paths)
+    make_some_queries(kilo_paths)
 
 
 if __name__ == "__main__":

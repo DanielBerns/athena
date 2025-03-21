@@ -4,10 +4,13 @@ from components.precios_claros.kilo_precios_claros_basic_reader import KiloPreci
 from components.precios_claros.db_target import DBTarget
 from components.precios_claros.kilo_to_sqlite_precios_claros_target import KiloToSqlitePreciosClarosTarget
 from components.precios_claros.kilo_precios_claros_processor import KiloPreciosClarosProcessor
-from components.precios_claros.db_interface import get_db_interface
+from components.precios_claros.db_interface import db_get_interface
+from components.precios_claros.db_interface_with_test import DBInterfaceWithTest
 from components.precios_claros.db_basic_target import DBBasicTarget
 from components.helpers.helpers import get_container, get_resource
 
+FIRST = 196
+LAST = -1
 
 def main() -> None:
     # script identifier,
@@ -39,13 +42,14 @@ def main() -> None:
 
     logging.info("start")
 
-    processor = KiloPreciosClarosProcessor()
     storage_precios_claros = get_container(kilo_paths.storage, "precios_claros")
-    kilo_reader = KiloPreciosClarosBasicReader(storage_precios_claros)
-    with get_db_interface(storage_precios_claros) as db:
+    factory = lambda s: DBInterfaceWithTest(s)
+    with db_get_interface(storage_precios_claros, factory) as db:
         db_target = DBBasicTarget(db)
+        reader = KiloPreciosClarosBasicReader(storage_precios_claros)
         target = KiloToSqlitePreciosClarosTarget(db_target)
-        processor.execute(kilo_reader, target, 195, -1)
+        processor = KiloPreciosClarosProcessor()
+        processor.execute(reader, target, FIRST, LAST)
 
     logging.info("stop")
 
