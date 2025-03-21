@@ -25,30 +25,23 @@ class KiloToSqlitePreciosClarosException(Exception):
         logging.error(message)
 
 
-class KiloToSqlitePreciosClarosTarget:
+class KiloBulkInsertStates:
     def __init__(
         self,
-        db_target: DBTarget,
+        session: Session,
         ) -> None:
-        self._db_target = db_target
+        self._session = session
 
     @property
-    def db_target(self) -> DBTarget:
-        return self._db_target
-
-    @property
-    def current_sample_home(self) -> Path:
-        return self.db_target.current_sample_home
-
-    @current_sample_home.setter
-    def current_sample_home(self, value: Path) -> None:
-        self.db_target.current_sample_home = value
+    def session(self) -> Session:
+        return self._session
 
     def kilo_points_of_sale(
         self,
+        sample_key: str,
         read_points_of_sale: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
-        logging.info(f"{classname(self):s}.kilo_points_of_sale start")
+        logging.info(f"{classname(self):s}.kilo_points_of_sale({sample_key}) start")
         try:
             for number, event in enumerate(read_points_of_sale()):
                 self.db_target.kilo_points_of_sale(event)
