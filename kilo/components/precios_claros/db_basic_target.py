@@ -90,7 +90,7 @@ class DBBasicTarget:
             point_of_sale_code_string = event["point_of_sale_code"]
             article_code = self.db.get_article_code(article_code_string)
             article_card = self.db.get_article_card(brand, description, package, article_code)
-            point_of_sale_code_string = self.map_of_points_of_sale_code.get(point_of_sale_code, None)
+            point_of_sale_code_string = self.db.map_of_points_of_sale_code_string.get(point_of_sale_code, None)
             test_point_of_sale = \
                 self.db.all_the_points_of_sale.get(point_of_sale_code_string, None) if point_of_sale_code_string \
                 else None
@@ -104,7 +104,7 @@ class DBBasicTarget:
         if test_point_of_sale is None:
             logging.error(f"*** Error ({classname(self):s}).kilo_articles_per_point_of_sale")
             logging.error(f"    test_point_of_sale is None. article_code_string is {article_code_string:s}")
-            logging.error(f"*** Error ({classname(self):s}).kilo_articles_per_point_of_sale")
+            message = f"*** Error ({classname(self):s}).kilo_articles_per_point_of_sale"
             raise DatabaseException(message)
         point_of_sale = test_point_of_sale
         self.db.insert_price(amount, self.current_timestamp, article_code, point_of_sale)
