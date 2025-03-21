@@ -9,7 +9,7 @@ from components.precios_claros.db_interface_with_test import DBInterfaceWithTest
 from components.precios_claros.db_basic_target import DBBasicTarget
 from components.helpers.helpers import get_container, get_resource
 
-FIRST = 196
+FIRST = 202
 LAST = -1
 
 def main() -> None:
