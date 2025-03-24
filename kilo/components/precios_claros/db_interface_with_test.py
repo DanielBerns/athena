@@ -31,6 +31,12 @@ class DBInterfaceWithTest:
         self._session = session
         self._map_of_points_of_sale_code_string: dict[str, str] = dict()
         self._all_the_states: dict[str, State] = {}
+        self._all_the_timestamps: dict[str, Timestamp] = {}
+        self._all_the_cities: dict[str, City] = {}
+        self._all_the_places: dict[str, Place] = {}
+        self._all_the_article_codes: dict[str, ArticleCode] = {}
+        self._all_the_article_cards: dict[str, ArticleCard] = {}
+        self._all_the_points_of_sale: dict[str, PointOfSale] = {}
 
     @property
     def session(self) -> Session:
@@ -47,9 +53,39 @@ class DBInterfaceWithTest:
     def all_the_states(self) -> dict[str, State]:
         return self._all_the_states
 
+    @property
+    def all_the_cities(self) -> dict[str, City]:
+        return self._all_the_cities
+
+    @property
+    def all_the_places(self) -> dict[str, Place]:
+        return self._all_the_places
+
+    @property
+    def all_the_timestamps(self) -> dict[str, Timestamp]:
+        return self._all_the_timestamps
+
+    @property
+    def all_the_points_of_sale(self) -> dict[str, PointOfSale]:
+        return self._all_the_points_of_sale
+
+    @property
+    def all_the_article_codes(self) -> dict[str, ArticleCode]:
+        return self._all_the_article_codes
+
+    @property
+    def all_the_article_cards(self) -> dict[str, ArticleCard]:
+        return self._all_the_article_cards
+
     def update_cache(self) -> None:
         logging.info(f"{classname(self)}.update_cache start")
-        self.all_the_states.update(self.get_all_the_states())
+        self.get_all_the_states()
+        self.get_all_the_cities()
+        self.get_all_the_places()
+        self.get_all_the_points_of_sale()
+        self.get_all_the_timestamps()
+        self.get_all_the_article_codes()
+        self.get_all_the_article_cards()
         logging.info(f"{classname(self)}.update_cache stop")
 
     def get_timestamp(
@@ -110,14 +146,14 @@ class DBInterfaceWithTest:
             ]
             self.session.execute(insert(State), bulk)
             self.session.commit()
-            _ = self.get_all_the_states()
+            self.get_all_the_states()
+            logging.info(f"{classname(self):s}.insert_states stop")
         except Exception as panic:
             self.session.rollback()
-            logging.error( "*** Error State")
+            logging.error(f"*** Error {classname(self):s}.insert_states")
             logging.error(f"    states: {str(dict_of_states):s}")
             message = f"*** Error {classname(self):s}.insert_states ({classname(panic):s}): {str(panic):s}"
             raise DatabaseException(message)
-        logging.info(f"{classname(self):s}.insert_states stop")
 
     def get_state(
         self,
@@ -193,6 +229,24 @@ class DBInterfaceWithTest:
             logging.error(f"             city: {str(db_city)}")
 
             message = f"*** Error {classname(self):s}.get_place ({classname(panic):s}): {str(panic):s}"
+            raise DatabaseException(message)
+
+    def look_for_point_of_sale(
+        self,
+        code: str
+    ) -> PointOfSale | None:
+        logging.info(f"{classname(self)}.look_for_point_of_sale start")
+        try:
+            existing_point_of_sale = self.session.execute(
+                select(PointOfSale).filter_by(code=code)
+            ).scalar_one_or_none()
+            logging.info(f"{classname(self)}.look_for_point_of_sale stop")
+            return existing_point_of_sale
+        except Exception as panic:
+            self.session.rollback()
+            logging.error(f"*** Error {classname(self)}.look_for_point_of_sale")
+            logging.error(f"    code: {code}")
+            message = f"*** Error {classname(self):s}.look_for_point_of_sale ({classname(panic):s}): {str(panic):s}"
             raise DatabaseException(message)
 
     def get_point_of_sale(
@@ -321,46 +375,55 @@ class DBInterfaceWithTest:
             message = f"*** Error {classname(self):s}.insert_price ({classname(panic):s}): {str(panic):s}"
             raise DatabaseException(message)
 
-    def get_all_the_states(self) -> dict[str, State]:
+    def get_all_the_states(self) -> None:
         statement = select(State)
         _all_the_states = list(self.session.scalars(statement).all())
-        return {a_state.code: a_state for a_state in _all_the_states}
+        self.all_the_states.update({a_state.code: a_state for a_state in _all_the_states})
 
-    def get_all_the_cities(self) -> dict[str, City]:
+    def get_all_the_cities(self) -> None:
         statement = select(City)
         _all_the_cities = list(self.session.scalars(statement).all())
-        return {get_stringy([a_city.state.code, a_city.name]): a_city
-                for a_city in _all_the_cities}
+        self.all_the_cities.update({get_stringy([a_city.state.code, a_city.name]): a_city
+                for a_city in _all_the_cities})
 
-    def get_all_the_places(self) -> dict[str, Place]:
+    def get_all_the_places(self) -> None:
         statement = select(Place)
         _all_the_places = list(self.session.scalars(statement).all())
-        return {
+        self.all_the_places.update({
             get_stringy([
                 a_place.city.state.code,
                 a_place.city.name,
                 a_place.address]
             ): a_place for a_place in _all_the_places
-        }
+        })
 
-    def get_all_the_points_of_sale(self) -> dict[str, PointOfSale]:
+    def get_all_the_points_of_sale(self) -> None:
         statement = select(PointOfSale)
         _all_the_points_of_sale = list(self.session.scalars(statement).all())
-        return {pos.code: pos for pos in _all_the_points_of_sale}
+        self.all_the_points_of_sale.update(
+            {pos.code: pos for pos in _all_the_points_of_sale}
+        )
 
-    def get_all_the_timestamps(self) -> dict[str, Timestamp]:
+    def get_all_the_timestamps(self) -> None:
         statement = select(Timestamp)
         _all_the_timestamps = list(self.session.scalars(statement).all())
-        return {repr(ts): ts for ts in _all_the_timestamps}
+        self.all_the_timestamps.update(
+            {repr(ts): ts for ts in _all_the_timestamps}
+        )
 
-    def get_all_the_article_codes(self) -> dict[str, ArticleCode]:
+    def get_all_the_article_codes(self) -> None:
         statement = select(ArticleCode)
         _all_the_article_codes = list(self.session.scalars(statement).all())
-        return {ac.code: ac for ac in _all_the_article_codes}
+        self.all_the_article_codes.update(
+            {ac.code: ac for ac in _all_the_article_codes}
+        )
 
-    def get_all_the_article_cards(self) -> dict[int, ArticleCard]:
+    def get_all_the_article_cards(self) -> None:
         statement = select(ArticleCard)
         _all_the_article_cards = list(self.session.scalars(statement).all())
-        return {get_stringy([ac.article_code, ac.brand, ac.description, ac.package]): ac for ac in _all_the_article_cards}
+        self.all_the_article_cards.update(
+            {get_stringy([ac.article_code.code, ac.brand, ac.description, ac.package]): ac
+             for ac in _all_the_article_cards}
+        )
 
 

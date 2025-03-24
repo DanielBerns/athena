@@ -1,5 +1,5 @@
-# Give me a python module for inserting new info in this database.
-# Write an example for inserting new prices.
+# I want to remove the column prices in Timestamp.
+# However I don't want to remove the timestamp in Price. How can I modify the database?
 
 import logging
 from typing import List, Optional, Generator

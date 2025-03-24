@@ -7,9 +7,9 @@ from components.precios_claros.kilo_precios_claros_processor import KiloPreciosC
 from components.precios_claros.db_interface import db_get_interface
 from components.precios_claros.db_interface_with_test import DBInterfaceWithTest
 from components.precios_claros.db_basic_target import DBBasicTarget
-from components.helpers.helpers import get_container, get_resource
+from components.helpers.helpers import get_container, get_resource, measure_execution_time
 
-FIRST = 202
+FIRST = 197
 LAST = -1
 
 def main() -> None:
@@ -49,7 +49,11 @@ def main() -> None:
         reader = KiloPreciosClarosBasicReader(storage_precios_claros)
         target = KiloToSqlitePreciosClarosTarget(db_target)
         processor = KiloPreciosClarosProcessor()
-        processor.execute(reader, target, FIRST, LAST)
+        def task() -> int:
+            processor.execute(reader, target, FIRST, LAST)
+            return 0
+        (task_result, execution_time) = measure_execution_time(task)
+        logging.info(f"Execution time in seconds: {execution_time}")
 
     logging.info("stop")
 

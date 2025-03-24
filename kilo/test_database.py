@@ -1,3 +1,5 @@
+import pdb
+
 import logging
 from pathlib import Path
 
@@ -14,29 +16,14 @@ def make_some_queries(
     storage_precios_claros = get_container(kilo_paths.storage, "precios_claros")
     factory = lambda s: DBInterfaceWithTest(s)
     with db_get_interface(storage_precios_claros, factory) as db:
-        all_the_states = db.all_the_states()
-        all_the_cities = db.all_the_cities()
-        all_the_places = db.all_the_places()
-        all_the_timestamps = db.all_the_timestamps()
-        all_the_points_of_sale = db.all_the_points_of_sale()
-        all_the_article_codes = db.all_the_article_codes()
-        all_the_article_cards = db.all_the_article_cards()
 
         logging.info("# Database tests")
 
         logging.info("## How many rows?")
 
-        logging.info(f"all_the_states: {len(all_the_states)}")
-        logging.info(f"all_the_cities: {len(all_the_cities)}")
-        logging.info(f"all_the_places: {len(all_the_places)}")
-        logging.info(f"all_the_timestamps: {len(all_the_timestamps)}")
-        logging.info(f"all_the_point_of_sale: {len(all_the_points_of_sale)}")
-        logging.info(f"all_the_article_codes: {len(all_the_article_codes)}")
-        logging.info(f"all_the_article_cards: {len(all_the_article_cards)}")
-
         tab = "  "
-        logging.info(f"## State ({len(all_the_states)})")
-        for key, st in all_the_states.items():
+        logging.info(f"## State ({len(db.all_the_states):d})")
+        for key, st in db.all_the_states.items():
             logging.info(f"state: {key:s} {st.code:s} {st.name:s}")
             for cc in st.cities:
                 logging.info(f"{tab:s}city: {cc.name:s}")
@@ -45,14 +32,14 @@ def make_some_queries(
                     for pos in pp.points_of_sale:
                         logging.info(f"{tab*3:s}{pos.code:s} -{pos.flag:s} - {pos.business:s} - {pos.branch:s}")
 
-        logging.info(f"## PointOfSale ({len(all_the_points_of_sale)})")
-        for key, pos in all_the_points_of_sale.items():
+        logging.info(f"## PointOfSale ({len(db.all_the_points_of_sale):d})")
+        for key, pos in db.all_the_points_of_sale.items():
             logging.info(f"point_of_sale: {key:s} {pos.code} - {pos.flag} - {pos.business:s} - {pos.branch}")
             logging.info(f"{tab:s}{pos.place.address:s} {pos.place.city.name:s}")
 
         count = 0
-        logging.info(f"## ArticleCode ({len(all_the_article_codes)})")
-        for key, article_code in all_the_article_codes.items():
+        logging.info(f"## ArticleCode ({len(db.all_the_article_codes)})")
+        for key, article_code in db.all_the_article_codes.items():
             logging.info(f"article_code: {article_code.code}")
             logging.info(f"{tab*2:s}cards ({len(article_code.cards)})")
             for cc in article_code.cards:
@@ -64,38 +51,34 @@ def make_some_queries(
             if count > 5000:
                 break
 
-        logging.info(f"## Timestamp ({len(all_the_timestamps)})")
-        for key, ts in all_the_timestamps.items():
+        logging.info(f"## Timestamp ({len(db.all_the_timestamps)})")
+        for key, ts in db.all_the_timestamps.items():
             logging.info(f"Timestamp {ts}")
-            for a_price in ts.prices[:100]:
+            count = 0
+            logging.info(f"### Prices ({len(ts.prices)})")
+            for a_price in ts.prices:
                 pos = a_price.point_of_sale
                 article_code = a_price.article_code
                 article_card = article_code.cards[0]
-                logging.info(f"   {pos.flag:s} - {article_code.code} - {article_card.brand} - {article_card.description} - ${a_price.amount/100:>6.2f}")
-
-        count = 0
-        logging.info("# Price")
-        for key, price in all_the_prices.items():
-            ac = price.article_code
-            ar = ac.cards[0]
-            logging.info(f"# {key} {ac.code:s} {ar.brand} {ar.description:s} {ar.package:s}")
-            ts = price.timestamp
-            logging.info(f"   timestamp: {str(ts):s} - ${price.amount/100:>6.2f}")
-            pos = price.point_of_sale
-            logging.info(f"   points_of_sale: {pos.flag:s} - {pos.business:s} - {pos.branch:s} - {pos.place.address:s}")
-            count += 1
-            if count > 100:
-               break
+                logging.info(f"   {count:>3d} - {pos.flag:s} - {article_code.code} - {article_card.brand} - {article_card.description} - ${a_price.amount/100:>6.2f}")
+                count += 1
+                if count > 60:
+                    break
 
         count = 0
         logging.info("# ArticleCode")
-        for key, article_code in all_the_article_codes.items():
+        for key, article_code in db.all_the_article_codes.items():
+            if len(article_code.cards) == 0:
+                logging.error(f"*** Error: article_code: {article_code.code} with no card.")
+                continue
             ac = article_code.cards[0]
             logging.info(f"## {article_code.code:s} - {ac.brand} - {ac.description}")
-            for a_price in article_code.prices[:10]:
+            for a_price in article_code.prices:
                 ts = a_price.timestamp
                 pos = a_price.point_of_sale
-                logging.info(f"   timestamp: {str(ts):s} - {pos.flag:s} - ${a_price.amount/100:>6.2f}")
+                logging.info(
+                    f"   {str(ts):s} - {pos.flag:s} - {pos.place.city.name} - {pos.place.address} - ${a_price.amount/100:>6.2f}"
+                )
             count += 1
             if count > 100:
                break

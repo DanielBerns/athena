@@ -15,10 +15,12 @@ also includes type hints for improved code clarity and maintainability.
 """
 
 from datetime import datetime, timezone, timedelta
+import time
 import os
 import json
 from pathlib import Path
-from typing import Any, Generator, TextIO
+from typing import Any, Generator, TextIO, Tuple
+from collections.abc import Callable
 from shutil import rmtree
 from contextlib import contextmanager
 import logging
@@ -350,6 +352,22 @@ def erase_directory_contents(directory: Path) -> None:
             print(f"Error deleting {item}: {e}")
             raise # re-raise exception. Good practice.
 
+
+def measure_execution_time(long_running_task: Callable[[], int]) -> Tuple[int, float]:
+    """
+    Measures the execution time of a function.
+
+    Args:
+        long_running_task: The function to measure.
+
+    Returns:
+        A tuple containing the return value of the function and the execution time in seconds.
+    """
+    start_time = time.time()
+    result = long_running_task()
+    end_time = time.time()
+    execution_time = end_time - start_time
+    return result, execution_time
 
 
 

@@ -1,5 +1,3 @@
-# import pdb
-
 import logging
 from contextlib import contextmanager
 from pathlib import Path
@@ -21,7 +19,7 @@ from components.precios_claros.database import (
     db_get_session
 )
 
-from components.helpers.helpers import get_container
+from components.helpers.helpers import get_container, classname
 
 CODES_AND_STATES = {
   "ar-a": "Salta",
@@ -158,25 +156,25 @@ class DBInterface:
     ) -> None:
         ...
 
-    def get_all_the_states(self) -> dict[str, State]:
+    def get_all_the_states(self) -> None:
         ...
 
-    def get_all_the_cities(self) -> dict[str, City]:
+    def get_all_the_cities(self) -> None:
         ...
 
-    def get_all_the_places(self) -> dict[str, Place]:
+    def get_all_the_places(self) -> None:
         ...
 
-    def get_all_the_points_of_sale(self) -> dict[str, PointOfSale]:
+    def get_all_the_points_of_sale(self) -> None:
         ...
 
-    def get_all_the_timestamps(self) -> dict[str, Timestamp]:
+    def get_all_the_timestamps(self) -> None:
         ...
 
-    def get_all_the_article_codes(self) -> dict[str, ArticleCode]:
+    def get_all_the_article_codes(self) -> None:
         ...
 
-    def get_all_the_article_cards(self) -> dict[int, ArticleCard]:
+    def get_all_the_article_cards(self) -> None:
         ...
 
 
@@ -196,7 +194,6 @@ def db_get_interface(
             db_interface.update_cache()
             yield db_interface
         except Exception as panic:
-            logging.error(f"*** Error db_interface.db_get_interface {str(panic):s}")
-            message = "*** Error db_get_interface: rollback and close!"
+            message = f"*** Error db_interface.db_get_interface ({classname(panic)}) {str(panic):s}"
             raise DatabaseException(message)
 
