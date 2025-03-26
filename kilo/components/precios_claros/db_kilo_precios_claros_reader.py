@@ -1,3 +1,5 @@
+import pdb
+
 from typing import Generator
 from pathlib import Path
 import logging
@@ -157,9 +159,9 @@ class DBCitiesGenerator:
 
 
 class DBPlacesGenerator:
-    def __init__(self, reader: DBKiloPreciosClarosReader, stringy_cities: dict[str, bool]) -> None:
+    def __init__(self, reader: DBKiloPreciosClarosReader, known_cities: dict[str, bool]) -> None:
         self._reader = reader
-        self._stringy_cities: dict[str, bool] = stringy_cities
+        self._known_cities: dict[str, bool] = known_cities
         self._table: dict[str, bool] = {}
 
     @property
@@ -167,43 +169,44 @@ class DBPlacesGenerator:
         return self._reader
 
     @property
-    def stringy_cities(self) -> dict[str, bool]:
-        self._stringy_cities
+    def known_cities(self) -> dict[str, bool]:
+        return self._known_cities
 
     @property
     def table(self) -> dict[str, bool]:
         return self._table
 
-    def generate_places() -> Generator[dict[str, str], None, None]:
-        logging.info(f"{classname(self)}.generate_places start")
+    def iterate(self) -> Generator[dict[str, str], None, None]:
+        logging.info(f"{classname(self)}.iterate start")
         for count, record in enumerate(self.reader.points_of_sale_generator()):
             a_stringy_city = get_stringy([record["state"], record["city"]])
-            if self.stringy_cities.get(a_stringy_city, False):
-                stringy_place = get_stringy([record["state"], record["city"], record["address"]])
-                existing_place = self.table.get(stringy_place, False)
+            if self.known_cities.get(a_stringy_city, False):
+                a_stringy_place = get_stringy([record["state"], record["city"], record["address"]])
+                existing_place = self.table.get(a_stringy_place, False)
                 if existing_place:
                     continue
                 else:
-                    self.table[stringy_place] = True
-                    record["stringy_city"] = stringy_city
-                    record["stringy_place"] = stringy_place
+                    self.table[a_stringy_place] = True
+                    record["stringy_city"] = a_stringy_city
+                    record["stringy_place"] = a_stringy_place
                     yield record
             else:
-                logging.error(f"*** Error {classname(self)}.generate_places: {a_stringy_city} unknown at ({count}) record")
+                logging.error(f"*** Error {classname(self)}.iterate")
+                logging.error(f"{a_stringy_place} - {a_stringy_city} unknown at ({count}) record")
                 for key, value in record.items():
                     logging.error(f"    {key}: {value}")
-                logging.error(f"*** Error {classname(self)}.generate_places")
-        logging.info(f"{classname(self)}.generate_places stop")
+                logging.error(f"*** Error {classname(self)}.iterate")
+        logging.info(f"{classname(self)}.iterate stop")
 
 
-class DBPointOfSalesGenerator:
+class DBPointsOfSalesGenerator:
     def __init__(
         self,
         reader: DBKiloPreciosClarosReader,
-        stringy_places: dict[str, bool]
+        known_places: dict[str, bool]
     ) -> None:
         self._reader = reader
-        self._stringy_places: dict[str, bool] = stringy_places
+        self._known_places: dict[str, bool] = known_places
         self._table: dict[str, bool] = {}
 
     @property
@@ -211,19 +214,19 @@ class DBPointOfSalesGenerator:
         return self._reader
 
     @property
-    def stringy_places(self) -> dict[str, bool]:
-        self._stringy_places
+    def known_places(self) -> dict[str, bool]:
+        return self._known_places
 
     @property
     def table(self) -> dict[str, bool]:
         return self._table
 
-    def generate_points_of_sale() -> Generator[dict[str, str], None, None]:
+    def iterate(self) -> Generator[dict[str, str], None, None]:
         logging.info(f"{classname(self)}.generate_points_of_sale start")
         for count, record in enumerate(self.reader.points_of_sale_generator()):
             a_stringy_place = get_stringy([record["state"], record["city"], record["address"]])
-            if self.stringy_places.get(a_stringy_place, False):
-                new_point_of_sale_code_string = get_stringy([record["point_of_sale_code"]], record["business"])
+            if self.known_places.get(a_stringy_place, False):
+                new_point_of_sale_code_string = get_stringy([record["point_of_sale_code"], record["business"]])
                 existing_point_of_sale = self.table.get(new_point_of_sale_code_string, False)
                 if existing_point_of_sale:
                     continue

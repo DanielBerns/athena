@@ -31,8 +31,13 @@ from components.precios_claros.db_interface_with_cache import DBInterfaceWithCac
 from components.precios_claros.db_interface_with_query import DBInterfaceWithQuery
 
 from components.precios_claros.db_new_interface import DBNewInterface, db_get_new_interface
-from components.precios_claros.db_interface_with_cache import DBInterfaceWithCache
-from components.precios_claros.db_interface_with_query import DBInterfaceWithQuery
+from components.precios_claros.db_kilo_precios_claros_reader import (
+    DBKiloPreciosClarosReader,
+    DBStatesGenerator,
+    DBCitiesGenerator,
+    DBPlacesGenerator,
+    DBPointsOfSalesGenerator,
+)
 
 
 from components.precios_claros.db_target import DBTarget

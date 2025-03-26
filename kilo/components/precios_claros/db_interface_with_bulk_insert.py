@@ -1,5 +1,3 @@
-# What is wrong with DBCitiesGenerator?
-
 import pdb
 
 import logging
@@ -236,9 +234,8 @@ class DBInterfaceWithBulkInsert:
         try:
             bulk = [
                 {"name": record["city"],
-                 "state": self.query_state(record["state"])
+                 "state_id": self.query_state(record["state"]).id
                 } for record in cities_generator()]
-            pdb.set_trace()
             self.session.execute(insert(City), bulk)
             self.session.commit()
             self.get_all_the_cities()
@@ -295,6 +292,14 @@ class DBInterfaceWithBulkInsert:
             message = f"*** Error {classname(self):s}.get_city ({classname(panic):s}): {str(panic):s}"
             raise DatabaseException(message)
 
+    def look_for_city_id(self, stringy_city: str) -> int:
+        existing_city = self.all_the_cities[stringy_city]
+        if existing_city:
+            return existing_city.id
+        else:
+            message = f"*** Error {classname(self)}.look_for_city: {stringy_city}"
+            raise DatabaseException(message)
+
     def insert_places(
         self,
         places_generator: Callable[[], Generator[dict[str, str], None, None]]
@@ -303,18 +308,18 @@ class DBInterfaceWithBulkInsert:
         try:
             bulk = [
                 {"address": record["address"],
-                 "city": self.look_for_a_city(record["stringy_city"])
-                } for record in cities_generator()
+                 "city_id": self.look_for_city_id(record["stringy_city"])
+                } for record in places_generator()
             ]
             self.session.execute(insert(Place), bulk)
             self.session.commit()
             self.get_all_the_places()
-            logging.info(f"{classname(self):s}.insert_cities ({len(self.all_the_cities)}) stop")
+            logging.info(f"{classname(self):s}.insert_places ({len(self.all_the_places)}) stop")
         except Exception as panic:
             self.session.rollback()
-            message = f"*** Error {classname(self):s}.insert_cities ({classname(panic):s}): {str(panic):s}"
+            message = f"*** Error {classname(self):s}.insert_places ({classname(panic):s}): {str(panic):s}"
             raise DatabaseException(message)
-        logging.info(f"{classname(self):s}.insert_cities done")
+        logging.info(f"{classname(self):s}.insert_places done")
 
     def query_place(
         self,
@@ -361,6 +366,14 @@ class DBInterfaceWithBulkInsert:
             message = f"*** Error {classname(self):s}.insert_one_place ({classname(panic):s}): {str(panic):s}"
             raise DatabaseException(message)
 
+    def look_for_place_id(self, stringy_place: str) -> int:
+        existing_place = self.all_the_places[stringy_place]
+        if existing_place:
+            return existing_place.id
+        else:
+            message = f"*** Error {classname(self)}.look_for_place: {stringy_place}"
+            raise DatabaseException(message)
+
     def insert_points_of_sale(
         self,
         points_of_sale_generator: Callable[[], Generator[dict[str, str], None, None]]
@@ -368,12 +381,12 @@ class DBInterfaceWithBulkInsert:
         logging.info(f"{classname(self):s}.insert_points_of_sale start")
         try:
             bulk = [
-                {"code": code,
-                 "flag": flag,
-                 "business": business,
-                 "branch": branch,
-                 "place": self.look_for_a_place(stringy_place)
-                } for code, flag, business, branch, stringy_place in points_of_sale_generator()
+                {"code": record["new_point_of_sale_code"],
+                 "flag": record["flag"],
+                 "business": record["business"],
+                 "branch": record["branch"],
+                 "place_id": self.look_for_place_id(record["stringy_place"])
+                } for record in points_of_sale_generator()
             ]
             self.session.execute(insert(PointOfSale), bulk)
             self.session.commit()
@@ -438,8 +451,8 @@ class DBInterfaceWithBulkInsert:
     ) -> None:
         try:
             bulk = [
-                {"code": code
-                } for code in article_code_generator()
+                {"code": record["code"]
+                } for record in article_code_generator()
             ]
             self.session.execute(insert(ArticleCode), bulk)
             self.session.commit()

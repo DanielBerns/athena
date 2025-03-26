@@ -1,5 +1,4 @@
-# I want to remove the column prices in Timestamp.
-# However I don't want to remove the timestamp in Price. How can I modify the database?
+# Please write some functions for bulk insert States and Cities
 
 
 import logging

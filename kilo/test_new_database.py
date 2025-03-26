@@ -3,7 +3,11 @@ import os
 from pathlib import Path
 from components.kilo.kilo_paths import KiloPaths
 from components.precios_claros.kilo_precios_claros_basic_reader import KiloPreciosClarosBasicReader
-from components.precios_claros.db_kilo_precios_claros_reader import DBKiloPreciosClarosReader, DBStatesGenerator
+from components.precios_claros.db_kilo_precios_claros_reader import (
+    DBKiloPreciosClarosReader,
+    DBStatesGenerator,
+    DBCitiesGenerator
+)
 
 from components.precios_claros.db_new_interface import db_get_new_interface
 from components.precios_claros.db_interface_with_bulk_insert import DBInterfaceWithBulkInsert
@@ -12,7 +16,11 @@ from components.helpers.helpers import get_container, get_resource, measure_exec
 FIRST_SAMPLE = os.environ.get("FIRST_SAMPLE", "-1")
 LAST_SAMPLE = os.environ.get("LAST_SAMPLE", "-1")
 
-import pdb
+# import pdb
+
+def get_reader(storage_precios_claros: Path) -> DBKiloPreciosClarosReader:
+    _reader = KiloPreciosClarosBasicReader(storage_precios_claros)
+    return DBKiloPreciosClarosReader(_reader)
 
 def main() -> None:
     # script identifier,
@@ -56,16 +64,16 @@ def main() -> None:
     factory = lambda s: DBInterfaceWithBulkInsert(s)
     with db_get_new_interface(storage_precios_claros, factory) as db:
         db.get_all_the_states()
-        _reader = KiloPreciosClarosBasicReader(storage_precios_claros)
-        reader = DBKiloPreciosClarosReader(_reader)
-        states = DBStatesGenerator(reader)
-        pdb.set_trace()
+        states = DBStatesGenerator(get_reader(storage_precios_claros))
         for a_state in states.iterate():
             db_state = db.query_state(a_state["code"])
             if db_state:
                 logging.info(f"{db_state.code} - {db_state.name}")
             else:
                 logging.info(f"None db_state for {str(a_state)}")
+        db.get_all_the_cities()
+        for a_key, a_city in db.all_the_cities.items():
+            logging.info(f"    {a_key} :: {a_city.name} at {a_city.state.name} - {a_city.state.code}")
     logging.info(f"{identifier} stop")
 
 if __name__ == "__main__":

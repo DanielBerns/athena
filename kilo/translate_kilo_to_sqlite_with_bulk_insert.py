@@ -7,7 +7,9 @@ from components.precios_claros.kilo_precios_claros_basic_reader import KiloPreci
 from components.precios_claros.db_kilo_precios_claros_reader import (
     DBKiloPreciosClarosReader,
     DBStatesGenerator,
-    DBCitiesGenerator
+    DBCitiesGenerator,
+    DBPlacesGenerator,
+    DBPointsOfSalesGenerator,
 )
 
 from components.precios_claros.db_new_interface import db_get_new_interface
@@ -63,6 +65,10 @@ def main() -> None:
         db.insert_states(db_states.iterate)
         db_cities = DBCitiesGenerator(reader, db_states.table)
         db.insert_cities(db_cities.iterate)
+        db_places = DBPlacesGenerator(reader, db_cities.table)
+        db.insert_places(db_places.iterate)
+        db_points_of_sale = DBPointsOfSalesGenerator(reader, db_places.table)
+        db.insert_points_of_sale(db_points_of_sale.iterate)
     logging.info(f"{identifier} stop")
 
 if __name__ == "__main__":
