@@ -1,6 +1,7 @@
 # I want to remove the column prices in Timestamp.
 # However I don't want to remove the timestamp in Price. How can I modify the database?
 
+
 import logging
 from typing import List, Optional, Generator
 from contextlib import contextmanager
@@ -12,6 +13,7 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
     Mapped,
+    WriteOnlyMapped,
     sessionmaker,
     Session
 )
@@ -44,7 +46,10 @@ class Timestamp(Base):
     hour: Mapped[int] = mapped_column(nullable=False)
     minute: Mapped[int] = mapped_column(nullable=False)
     second: Mapped[int] = mapped_column(nullable=False)
-    prices: Mapped[List["Price"]] = relationship(back_populates="timestamp")
+    prices: WriteOnlyMapped["Price"] = relationship(
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
     def __repr__(self) -> str:
         return f"{self.year:4d}{self.month:>02d}{self.day:>02d}{self.hour:>02d}{self.minute:>02d}{self.second:>02d}"
@@ -91,7 +96,10 @@ class PointOfSale(Base):
     branch: Mapped[str] = mapped_column(sa.String(32))
     place_id: Mapped[int] = mapped_column(sa.ForeignKey("places.id"))
     place: Mapped["Place"] = relationship(back_populates="points_of_sale")
-    prices: Mapped[List["Price"]] = relationship(back_populates="point_of_sale")
+    prices: WriteOnlyMapped["Price"] = relationship(
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
 
 class ArticleCode(Base):
@@ -99,7 +107,10 @@ class ArticleCode(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     code: Mapped[str] = mapped_column(sa.String(32), unique=True)
     cards: Mapped[List["ArticleCard"]] = relationship(back_populates="article_code")
-    prices: Mapped[List["Price"]] = relationship(back_populates="article_code")
+    prices: WriteOnlyMapped["Price"] = relationship(
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
 
 class ArticleCard(Base):
@@ -137,46 +148,6 @@ class TaggedPointOfSale(Base):
     tag_id: Mapped[int] = mapped_column(sa.ForeignKey("tags.id"))
     point_of_sale_id: Mapped[int] = mapped_column(sa.ForeignKey("points_of_sale.id"))
 
-
-# @contextmanager
-# def db_create_session(
-#     db_uri: Optional[str] = None
-# ) -> Generator[Session, None, None]:
-#     if db_uri is None:
-#         db_uri = ":memory:"
-#     db_home = "sqlite+pysqlite:///" + db_uri
-#     db = sa.create_engine(db_home, future=True)
-#     Base.metadata.create_all(db)
-#     SessionLocal = sessionmaker(bind=db)
-#     session = SessionLocal()
-#     try:
-#         yield session
-#         session.commit()
-#     except Exception as panic:
-#         print(str(panic))
-#         session.rollback()
-#     finally:
-#         session.close()
-#
-# @contextmanager
-# def db_open_session(
-#     db_uri: Optional[str] = None
-# ) -> Generator[Session, None, None]:
-#     if db_uri is None:
-#         db_uri = ":memory:"
-#     db_home = "sqlite+pysqlite:///" + db_uri
-#     db = sa.create_engine(db_home, future=True)
-#     SessionLocal = sessionmaker(bind=db)
-#     session = SessionLocal()
-#     try:
-#         yield session
-#         session.commit()
-#     except Exception as panic:
-#         print(str(panic))
-#         session.rollback()
-#     finally:
-#         session.close()
-#
 
 @contextmanager
 def db_get_session(

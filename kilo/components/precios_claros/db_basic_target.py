@@ -55,7 +55,7 @@ class DBBasicTarget:
         self._current_timestamp = value
 
     def new_point_of_sale_code_string(self, point_of_sale_code_string: str, business: str) -> str:
-        return f"[{point_of_sale_code_string:s}]--({business:s})"
+        return get_stringy([point_of_sale_code_string, business])
 
     def kilo_points_of_sale(self, event: dict[str, str]) -> None:
         state_code = event["state"]

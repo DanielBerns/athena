@@ -26,7 +26,7 @@ from components.precios_claros.db_interface import CODES_AND_STATES
 
 
 
-class DBInterfaceWithTest:
+class DBInterfaceWithQuery:
     def __init__(self, session: Session) -> None:
         self._session = session
         self._map_of_points_of_sale_code_string: dict[str, str] = dict()

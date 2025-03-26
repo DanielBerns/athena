@@ -28,7 +28,12 @@ from components.precios_claros.database import (
 
 from components.precios_claros.db_interface import DBInterface, db_get_interface, CODES_AND_STATES
 from components.precios_claros.db_interface_with_cache import DBInterfaceWithCache
-from components.precios_claros.db_interface_with_test import DBInterfaceWithTest
+from components.precios_claros.db_interface_with_query import DBInterfaceWithQuery
+
+from components.precios_claros.db_new_interface import DBNewInterface, db_get_new_interface
+from components.precios_claros.db_interface_with_cache import DBInterfaceWithCache
+from components.precios_claros.db_interface_with_query import DBInterfaceWithQuery
+
 
 from components.precios_claros.db_target import DBTarget
 

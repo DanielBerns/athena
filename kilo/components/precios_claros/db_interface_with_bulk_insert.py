@@ -1,7 +1,10 @@
-# import pdb
+# What is wrong with DBCitiesGenerator?
+
+import pdb
 
 import logging
 from contextlib import contextmanager
+from collections.abc import Callable
 from pathlib import Path
 from typing import Generator
 from sqlalchemy import select, insert
@@ -22,67 +25,14 @@ from components.precios_claros.database import (
     Price
 )
 
-CODES_AND_STATES = {
-  "ar-a": "Salta",
-  "ar-b": "Buenos Aires",
-  "ar-c": "CABA",
-  "ar-d": "San Luis",
-  "ar-e": "Entre Rios",
-  "ar-f": "La Rioja",
-  "ar-g": "Santiago del Estero",
-  "ar-h": "Chaco",
-  "ar-j": "San Juan",
-  "ar-k": "Catamarca",
-  "ar-l": "La Pampa",
-  "ar-m": "Mendoza",
-  "ar-n": "Misiones",
-  "ar-p": "Formosa",
-  "ar-q": "Neuquén",
-  "ar-r": "Río Negro",
-  "ar-s": "Santa Fé",
-  "ar-t": "Tucumán",
-  "ar-u": "Chubut",
-  "ar-v": "Tierra del Fuego",
-  "ar-w": "Corrientes",
-  "ar-x": "Córdoba",
-  "ar-y": "San Salvador de Jujuy",
-  "ar-z": "Santa Cruz",
-  "buenos aires": "Buenos Aires",
-  "catamarca": "Catamarca",
-  "chaco": "Chaco",
-  "cordoba": "Córdoba",
-  "corrientes": "Corrientes",
-  "la pampa": "La Pampa",
-  "la rioja": "La Rioja",
-  "neuquen": "Neuquén",
-  "rio negro": "Río Negro",
-  "salta": "Salta",
-  "san luis": "San Luis",
-  "santa fe": "Santa Fe",
-  "santiago del estero": "Santiago del Estero",
-  "tucuman": "Tucumán",
-  "caba": "CABA",
-  "jujuy": "Jujuy",
-  "formosa": "Formosa",
-  "misiones": "Misiones",
-  "capital federal": "CABA",
-  "mendoza": "Mendoza"
-}
 
 
 
-class DBInterfaceWithCache:
+class DBInterfaceWithBulkInsert:
     def __init__(self, session: Session) -> None:
         self._session = session
 
         self._map_of_points_of_sale_code_string: dict[str, str] = dict()
-        # self._all_the_states: dict[str, State] = self.get_all_the_states()
-        # self._all_the_timestamps: dict[str, Timestamp] = self.get_all_the_timestamps()
-        # self._all_the_cities: dict[str, City] = self.get_all_the_cities()
-        # self._all_the_places: dict[str, Place] = self.get_all_the_places()
-        # self._all_the_article_codes: dict[str, ArticleCode] = self.get_all_the_article_codes()
-        # self._all_the_article_cards: dict[str, ArticleCard] = self.get_all_the_article_cards()
-        # self._all_the_points_of_sale: dict[str, PointOfSale] = self.get_all_the_points_of_sale()
         self._all_the_states: dict[str, State] = {}
         self._all_the_timestamps: dict[str, Timestamp] = {}
         self._all_the_cities: dict[str, City] = {}
@@ -128,7 +78,12 @@ class DBInterfaceWithCache:
 
     def update_cache(self) -> None:
         logging.info(f"{classname(self)}.update_cache start")
-        self.all_the_states.update(self.get_all_the_states())
+        self.get_all_the_states()
+        self.get_all_the_cities()
+        self.get_all_the_places()
+        self.get_all_the_points_of_sale()
+        self.get_all_the_article_codes()
+        self.get_all_the_article_cards()
         logging.info(f"{classname(self)}.update_cache stop")
 
 
@@ -168,7 +123,7 @@ class DBInterfaceWithCache:
                 logging.info(f"{classname(self):s}.query_timestamp: ({str(existing_timestamp):s}) in database already")
             logging.info(f"{classname(self):s}.query_timestamp stop")
             return existing_timestamp
-       except Exception as panic:
+        except Exception as panic:
             logging.error(f"*** Error {classname(self):s}.query_timestamp")
             logging.error(f"    {year} {month} {day} {hour} {minute} {second}")
             message = f"*** Error {classname(self):s}.query_timestamp  ({len(self.all_the_timestamps)})({classname(panic):s}): {str(panic):s}"
@@ -198,7 +153,7 @@ class DBInterfaceWithCache:
             self.all_the_timestamps[sample_key] = new_timestamp
             logging.info(f"{classname(self):s}.get_timestamp ({len(self._all_the_timestamps)}) stop")
             return new_timestamp
-       except Exception as panic:
+        except Exception as panic:
             self.session.rollback()
             logging.error( "*** Error Timestamp")
             logging.error(f"    {year} {month} {day} {hour} {minute} {second}")
@@ -208,23 +163,25 @@ class DBInterfaceWithCache:
 
     def insert_states(
         self,
-        dict_of_states: dict[str, str]
+        known_states: Generator[dict[str, str], None, None]
     ) -> None:
         logging.info(f"{classname(self):s}.insert_states start")
         try:
             bulk = [
-                {"code": code,
-                 "name": name
+                {"code": record["code"],
+                 "name": record["name"]
                 }
-                for code, name in dict_of_states.items()
+                for record in known_states()
             ]
+            for rr in bulk:
+                logging.info(f"{str(rr)}")
             self.session.execute(insert(State), bulk)
             self.session.commit()
             self.get_all_the_states()
         except Exception as panic:
             self.session.rollback()
             logging.error( "*** Error State")
-            logging.error(f"    states: {str(dict_of_states):s}")
+            logging.error(f"    states: {str(known_states):s}")
             message = f"*** Error {classname(self):s}.insert_states ({classname(panic):s}): {str(panic):s}"
             raise DatabaseException(message)
         logging.info(f"{classname(self):s}.insert_states stop")
@@ -234,10 +191,13 @@ class DBInterfaceWithCache:
     def query_state(
         self,
         state_code: str
-    ) -> State:
+    ) -> State | None:
         logging.info(f"{classname(self)}.query_state start")
         try:
+            logging.info(f"    {state_code}")
             existing_state = self.all_the_states.get(state_code, None)
+            if existing_state is None:
+                logging.error(f"*** Error: no state")
             logging.info(f"{classname(self)}.query_state stop")
             return existing_state
         except Exception as panic:
@@ -270,14 +230,15 @@ class DBInterfaceWithCache:
 
     def insert_cities(
         self,
-        cities_generator: Callable[[], Generator[dict[str, str], None, None]
+        cities_generator: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
         logging.info(f"{classname(self):s}.insert_cities start")
         try:
             bulk = [
                 {"name": record["city"],
-                 "state": self.get_state(record["state"])
+                 "state": self.query_state(record["state"])
                 } for record in cities_generator()]
+            pdb.set_trace()
             self.session.execute(insert(City), bulk)
             self.session.commit()
             self.get_all_the_cities()
@@ -336,7 +297,7 @@ class DBInterfaceWithCache:
 
     def insert_places(
         self,
-        places_generator: Callable[[], Generator[dict[str, str], None, None]
+        places_generator: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
         logging.info(f"{classname(self):s}.insert_places start")
         try:
@@ -402,8 +363,8 @@ class DBInterfaceWithCache:
 
     def insert_points_of_sale(
         self,
-        points_of_sale_generator: Callable[[], Generator[dict[str, str], None, None]
-    )
+        points_of_sale_generator: Callable[[], Generator[dict[str, str], None, None]]
+    ):
         logging.info(f"{classname(self):s}.insert_points_of_sale start")
         try:
             bulk = [
@@ -473,7 +434,7 @@ class DBInterfaceWithCache:
 
     def insert_article_codes(
         self,
-        article_codes_generator: Callable[[], Generator[dict[str, str], None, None]
+        article_codes_generator: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
         try:
             bulk = [
@@ -484,6 +445,9 @@ class DBInterfaceWithCache:
             self.session.commit()
             self.get_all_the_article_codes()
         except Exception as panic:
+            self.session.rollback()
+            message = f"*** Error {classname(self):s}.insert_article_codes ({classname(panic):s}): {str(panic):s}"
+            raise DatabaseException(message)
 
     def query_article_code(
         self,
@@ -522,7 +486,7 @@ class DBInterfaceWithCache:
 
     def insert_article_cards(
         self,
-        article_card_generator:  Callable[[], Generator[dict[str, str], None, None]
+        article_card_generator:  Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
         logging.info(f"{classname(self)}.insert_article_cards start")
         try:
