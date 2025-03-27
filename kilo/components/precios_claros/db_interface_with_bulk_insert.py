@@ -523,7 +523,7 @@ class DBInterfaceWithBulkInsert:
             self.session.execute(insert(ArticleCard), bulk)
             self.session.commit()
             self.get_all_the_article_cards()
-            logging.info(f"{classname(self)}.insert_article_cards ({len(all_the_article_cards)}) stop")
+            logging.info(f"{classname(self)}.insert_article_cards ({len(self.all_the_article_cards)}) stop")
         except Exception as panic:
             self.session.rollback()
             message = f"*** Error {classname(self):s}.insert_article_cards ({classname(panic):s}): {str(panic):s}"
