@@ -1,4 +1,4 @@
-import pdb
+# import pdb
 
 from typing import Generator
 from pathlib import Path
@@ -31,6 +31,7 @@ class DBKiloPreciosClarosReader:
 
     def articles_per_point_of_sale_generator(self) -> Generator[dict[str, str], None, None]:
         for sample_home in self.reader.read_sample_home():
+            # pdb.set_trace()
             metadata = self.reader.read_metadata()
             sample_key = metadata["sample_key"]
             for kilo_json in self.reader.read_articles_per_point_of_sale():
@@ -259,8 +260,9 @@ class DBArticleCodesGenerator:
     def table(self) -> dict[str, bool]:
         return self._table
 
-    def generate_article_codes(self) -> Generator[dict[str, str], None, None]:
-        logging.info(f"{classname(self)}.generate_article_codes start")
+    def iterate(self) -> Generator[dict[str, str], None, None]:
+        # pdb.set_trace()
+        logging.info(f"{classname(self)}.iterate start")
         for record in self.reader.articles_per_point_of_sale_generator():
             article_code_string = record["article_code"]
             existing_article_code = self.table.get(article_code_string, False)
@@ -269,7 +271,7 @@ class DBArticleCodesGenerator:
             else:
                 self.table[article_code_string] = True
                 yield record
-        logging.info(f"{classname(self)}.generate_article_codes stop")
+        logging.info(f"{classname(self)}.iterate ({len(self.table)}) stop")
 
 
 class DBArticleCardsGenerator:
@@ -295,7 +297,7 @@ class DBArticleCardsGenerator:
         return self._table
 
     def generate_article_cards(self) -> Generator[dict[str, str], None, None]:
-        logging.info(f"{classname(self)}.generate_article_codes start")
+        logging.info(f"{classname(self)}.iterate start")
         for count, record in enumerate(self.reader.articles_per_point_of_sale_generator()):
             article_code_string = record["article_code"]
             if self.article_codes.get(article_code_string, False):
@@ -314,4 +316,4 @@ class DBArticleCardsGenerator:
                 for key, value in record.items():
                     logging.error(f"    {key}: {value}")
                 logging.error(f"*** Error {classname(self)}.generate_article_card")
-        logging.info(f"{classname(self)}.generate_article_codes stop")
+        logging.info(f"{classname(self)}.iterate stop")

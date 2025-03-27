@@ -74,6 +74,17 @@ def main() -> None:
         db.get_all_the_cities()
         for a_key, a_city in db.all_the_cities.items():
             logging.info(f"    {a_key} :: {a_city.name} at {a_city.state.name} - {a_city.state.code}")
+        db.get_all_the_places()
+        for a_key, a_place in db.all_the_places.items():
+            logging.info(f"    {a_key} :: {a_place.address} {a_place.city.name} at {a_place.city.state.name} - {a_place.city.state.code}")
+        db.get_all_the_points_of_sale()
+        for a_key, pos in db.all_the_points_of_sale.items():
+            logging.info(f"    {a_key} :: {pos.flag} {pos.business} at {pos.branch} - {pos.place.address} - {pos.place.city.name}")
+        db.get_all_the_article_codes()
+        for a_key, ac in db.all_the_article_codes.items():
+            logging.info(f"    {a_key} :: {ac.code}")
+
+
     logging.info(f"{identifier} stop")
 
 if __name__ == "__main__":

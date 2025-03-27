@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Generator
 from components.core.tree_store import TreeStore
-from components.helpers import read_json_lines, get_resource
+from components.helpers import read_json, read_json_lines, get_resource
 
 class KiloPreciosClarosBasicReader:
 

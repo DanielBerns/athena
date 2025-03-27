@@ -1,4 +1,4 @@
-import pdb
+# import pdb
 
 import logging
 from contextlib import contextmanager
@@ -396,7 +396,6 @@ class DBInterfaceWithBulkInsert:
             self.session.rollback()
             message = f"*** Error {classname(self):s}.insert_points_of_sale ({classname(panic):s}): {str(panic):s}"
             raise DatabaseException(message)
-        logging.info(f"{classname(self):s}.insert_points_of_sale done")
 
     def query_point_of_sale(
         self,
@@ -449,14 +448,17 @@ class DBInterfaceWithBulkInsert:
         self,
         article_codes_generator: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
+        # pdb.set_trace()
+        logging.info(f"{classname(self)}.insert_article_codes start")
         try:
             bulk = [
-                {"code": record["code"]
-                } for record in article_code_generator()
+                {"code": record["article_code"]
+                } for record in article_codes_generator()
             ]
             self.session.execute(insert(ArticleCode), bulk)
             self.session.commit()
             self.get_all_the_article_codes()
+            logging.info(f"{classname(self)}.insert_article_codes ({len(self.all_the_article_codes)}) stop")
         except Exception as panic:
             self.session.rollback()
             message = f"*** Error {classname(self):s}.insert_article_codes ({classname(panic):s}): {str(panic):s}"
@@ -507,7 +509,7 @@ class DBInterfaceWithBulkInsert:
                 { "brand": brand,
                   "description": description,
                   "package": package,
-                  "article_code": self.look_for_article_code(article_code_string)
+                  "article_code_id": self.look_for_article_code(article_code_string)
                 } for brand, description, package, article_code_string in article_card_generator()
             ]
             self.session.execute(insert(ArticleCard), bulk)
