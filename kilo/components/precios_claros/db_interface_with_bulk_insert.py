@@ -517,7 +517,7 @@ class DBInterfaceWithBulkInsert:
                 { "brand": record["brand"],
                   "description": record["description"],
                   "package": record["package"],
-                  "article_code_id": self.look_for_article_code_id(article_code_string)
+                  "article_code_id": self.look_for_article_code_id(record["article_code"])
                 } for record in article_card_generator()
             ]
             self.session.execute(insert(ArticleCard), bulk)
