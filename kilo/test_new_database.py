@@ -83,6 +83,9 @@ def main() -> None:
         db.get_all_the_article_codes()
         for a_key, ac in db.all_the_article_codes.items():
             logging.info(f"    {a_key} :: {ac.code}")
+        db.get_all_the_article_cards()
+        for a_key, ac in db.all_the_article_cards.items():
+            logging.info(f"    {a_key} :: {ac.article_code.code} [[{len(ac.article_code.cards)}]] {ac.brand}")
 
 
     logging.info(f"{identifier} stop")
