@@ -72,6 +72,9 @@ def main() -> None:
         db.insert_points_of_sale(db_points_of_sale.iterate)
         db_article_codes = DBArticleCodesGenerator(reader)
         db.insert_article_codes(db_article_codes.iterate)
+        db_article_cards = DBArticleCardsGenerator(reader, db_article_codes.table)
+        db.insert_article_cards(db_article_cards.iterate)
+
 
     logging.info(f"{identifier} stop")
 

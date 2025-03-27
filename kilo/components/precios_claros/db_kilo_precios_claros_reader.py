@@ -296,7 +296,7 @@ class DBArticleCardsGenerator:
     def table(self) -> dict[str, bool]:
         return self._table
 
-    def generate_article_cards(self) -> Generator[dict[str, str], None, None]:
+    def iterate(self) -> Generator[dict[str, str], None, None]:
         logging.info(f"{classname(self)}.iterate start")
         for count, record in enumerate(self.reader.articles_per_point_of_sale_generator()):
             article_code_string = record["article_code"]

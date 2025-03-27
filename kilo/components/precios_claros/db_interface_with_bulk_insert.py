@@ -499,6 +499,14 @@ class DBInterfaceWithBulkInsert:
             message = f"*** Error {classname(self):s}.get_article_code ({classname(panic):s}): {str(panic):s}"
             raise DatabaseException(message)
 
+    def look_for_article_code_id(self, article_code_string: str) -> int:
+        existing_article_code = self.all_the_article_codes[article_code_string]
+        if existing_article_code:
+            return existing_article_code.id
+        else:
+            message = f"*** Error {classname(self)}.look_for_article_code: {article_code}"
+            raise DatabaseException(message)
+
     def insert_article_cards(
         self,
         article_card_generator:  Callable[[], Generator[dict[str, str], None, None]]
@@ -506,11 +514,11 @@ class DBInterfaceWithBulkInsert:
         logging.info(f"{classname(self)}.insert_article_cards start")
         try:
             bulk = [
-                { "brand": brand,
-                  "description": description,
-                  "package": package,
+                { "brand": record["brand"],
+                  "description": record["description"],
+                  "package": record["package"],
                   "article_code_id": self.look_for_article_code(article_code_string)
-                } for brand, description, package, article_code_string in article_card_generator()
+                } for record in article_card_generator()
             ]
             self.session.execute(insert(ArticleCard), bulk)
             self.session.commit()
