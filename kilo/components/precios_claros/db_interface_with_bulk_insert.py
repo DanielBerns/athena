@@ -504,7 +504,7 @@ class DBInterfaceWithBulkInsert:
         if existing_article_code:
             return existing_article_code.id
         else:
-            message = f"*** Error {classname(self)}.look_for_article_code: {article_code}"
+            message = f"*** Error {classname(self)}.look_for_article_code_id: {article_code}"
             raise DatabaseException(message)
 
     def insert_article_cards(
@@ -517,7 +517,7 @@ class DBInterfaceWithBulkInsert:
                 { "brand": record["brand"],
                   "description": record["description"],
                   "package": record["package"],
-                  "article_code_id": self.look_for_article_code(article_code_string)
+                  "article_code_id": self.look_for_article_code_id(article_code_string)
                 } for record in article_card_generator()
             ]
             self.session.execute(insert(ArticleCard), bulk)

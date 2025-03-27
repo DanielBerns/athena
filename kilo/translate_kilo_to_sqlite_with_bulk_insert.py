@@ -10,7 +10,8 @@ from components.precios_claros.db_kilo_precios_claros_reader import (
     DBCitiesGenerator,
     DBPlacesGenerator,
     DBPointsOfSalesGenerator,
-    DBArticleCodesGenerator
+    DBArticleCodesGenerator,
+    DBArticleCardsGenerator
 )
 
 from components.precios_claros.db_new_interface import db_get_new_interface
