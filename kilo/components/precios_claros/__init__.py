@@ -39,7 +39,9 @@ from components.precios_claros.db_kilo_precios_claros_reader import (
     DBPlacesGenerator,
     DBPointsOfSalesGenerator,
     DBArticleCodesGenerator,
-    DBArticleCardsGenerator
+    DBArticleCardsGenerator,
+    DBTimestampsGenerator,
+    DBPricesGenerator
 )
 
 

@@ -1,3 +1,4 @@
+import pdb
 import logging
 from contextlib import contextmanager
 from collections.abc import Callable
@@ -390,7 +391,7 @@ class DBInterfaceWithBulkInsert:
                  "flag": record["flag"],
                  "business": record["business"],
                  "branch": record["branch"],
-                 "place_id": self.look_for_place_id(record.get("place_key", "error"))
+                 "place_id": self.look_for_place_id(record["place_key"])
                 } for record in points_of_sale_generator()
             ]
             self.session.execute(insert(PointOfSale), bulk)

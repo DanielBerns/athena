@@ -11,7 +11,9 @@ from components.precios_claros.db_kilo_precios_claros_reader import (
     DBPlacesGenerator,
     DBPointsOfSalesGenerator,
     DBArticleCodesGenerator,
-    DBArticleCardsGenerator
+    DBArticleCardsGenerator,
+    DBTimestampsGenerator,
+    DBPricesGenerator
 )
 
 from components.precios_claros.db_new_interface import db_get_new_interface
@@ -75,6 +77,10 @@ def main() -> None:
         db.insert_article_codes(db_article_codes.iterate)
         db_article_cards = DBArticleCardsGenerator(reader, db_article_codes.table)
         db.insert_article_cards(db_article_cards.iterate)
+        db_timestamps = DBTimestampsGenerator(reader)
+        db.insert_timestamps(db_timestamps.iterate)
+        db_prices = DBPricesGenerator(reader, db_timestamps.table, db_article_codes.table, db_points_of_sale.table)
+        # db.insert_article_cards(db_article_cards.iterate)
 
 
     logging.info(f"{identifier} stop")

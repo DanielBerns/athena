@@ -219,23 +219,17 @@ class DBPointsOfSalesGenerator:
         return self._table
 
     def iterate(self) -> Generator[dict[str, str], None, None]:
-        logging.info(f"{classname(self)}.generate_points_of_sale start")
-        for count, record in enumerate(self.reader.points_of_sale_generator()):
-            a_place_key = record["place_key"]
-            if self.known_places.get(a_place_key, False):
-                a_point_of_sale_key = record["point_of_sale_key"]
-                existing_point_of_sale = self.table.get(a_point_of_sale_key, False)
-                if existing_point_of_sale:
-                    continue
-                else:
-                    self.table[a_point_of_sale_key] = True
-                    yield record
+        logging.info(f"{classname(self)}.iterate start")
+        for record in self.reader.points_of_sale_generator():
+            point_of_sale_key = record["point_of_sale_key"]
+            existing_point_of_sale = self.table.get(point_of_sale_key, False)
+            if existing_point_of_sale:
+                continue
             else:
-                logging.error(f"*** Error {classname(self)}.generate_points_of_sale: {a_city_key} unknown at ({count}) record")
-                for key, value in record.items():
-                    logging.error(f"    {key}: {value}")
-                logging.error(f"*** Error {classname(self)}.generate_points_of_sale")
-        logging.info(f"{classname(self)}.generate_points_of_sale stop")
+                self.table[point_of_sale_key] = True
+                yield record
+        logging.info(f"{classname(self)}.iterate ({len(self.table)}) stop")
+
 
 
 class DBArticleCodesGenerator:
@@ -311,6 +305,35 @@ class DBArticleCardsGenerator:
                     logging.error(f"    {key}: {value}")
                 logging.error(f"*** Error {classname(self)}.generate_article_card")
         logging.info(f"{classname(self)}.iterate stop")
+
+
+class DBTimestampsGenerator:
+    def __init__(
+        self,
+        reader: DBKiloPreciosClarosReader
+    ) -> None:
+        self._reader = reader
+        self._table: dict[str, bool] = {}
+
+    @property
+    def reader(self) -> DBKiloPreciosClarosReader:
+        return self._reader
+
+    @property
+    def table(self) -> dict[str, bool]:
+        return self._table
+
+    def iterate(self) -> Generator[dict[str, str], None, None]:
+        logging.info(f"{classname(self)}.iterate start")
+        for count, sample_key in enumerate(self.reader.sample_keys_generator()):
+            existing_timestamp = self.table.get(sample_key, False)
+            if existing_timestamp:
+                continue
+            else:
+                self.table[sample_key] = True
+                yield sample_key
+        logging.info(f"{classname(self)}.iterate stop")
+
 
 
 class DBPricesGenerator:
