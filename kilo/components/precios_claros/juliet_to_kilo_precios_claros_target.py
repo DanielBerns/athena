@@ -30,10 +30,14 @@ class JulietToKiloPreciosClarosTarget:
         self._points_of_sale_stats: DefaultDict[str, Counter[str]] = Stats.create()
         self._selected_points_of_sale_stats: DefaultDict[str, Counter[str]] = Stats.create()
         self._articles_per_point_of_sale_stats: DefaultDict[str, Counter[str]] = Stats.create()
-
+        self._points_of_sale_table: dict[str, str] = {}
         self._treestore = TreeStore(kilo_precios_claros, "treestore")
         self._juliet_sample_home: Path | None = None
         self._kilo_io: KiloPreciosClarosIO = KiloPreciosClarosIO()
+
+    @property
+    def points_of_sale_table(self) -> dict[str, str]:
+        return self._points_of_sale_table
 
     @property
     def treestore(self) -> TreeStore:
@@ -91,18 +95,22 @@ class JulietToKiloPreciosClarosTarget:
         read_events: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
         self.dataset_stats[self.sample_key]["point_of_sale"] += 1
-        self.kilo_sample.create_events_file("points_of_sale", read_events)
+        for event in self.kilo_sample.create_events_file("points_of_sale", read_events):
+            self.points_of_sale_table[event["point_of_sale_code"]] = event["point_of_sale_key"]
 
     def juliet_selected_points_of_sale(
         self,
         read_events: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
         self.dataset_stats[self.sample_key]["selected_point_of_sale"] += 1
-        self.kilo_sample.create_events_file("selected_points_of_sale", read_events)
+        for event in self.kilo_sample.create_events_file("selected_points_of_sale", read_events):
+            pass
 
     def juliet_articles_per_point_of_sale(
         self,
         read_events: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
         self.dataset_stats[self.sample_key]["articles_per_point_of_sale"] += 1
-        self.kilo_sample.create_events_file("articles_per_point_of_sale", read_events)
+        for event in self.kilo_sample.create_events_file("articles_per_point_of_sale", read_events):
+            point_of_sale_code_string = event["point_of_sale_code"]
+            event["point_of_sale_code"] = self.points_of_sale_table[point_of_sale_code_string]

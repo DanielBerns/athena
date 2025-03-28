@@ -1,5 +1,3 @@
-# import pdb
-
 from typing import Generator
 from pathlib import Path
 import logging
@@ -144,12 +142,12 @@ class DBCitiesGenerator:
         for count, record in enumerate(self.reader.points_of_sale_generator()):
             state_code = record["state"]
             if self.known_states.get(state_code, False):
-                stringy_city = get_stringy([record["state"], record["city"]])
-                existing_city = self.table.get(stringy_city, False)
+                city_key = record["city_key"]
+                existing_city = self.table.get(city_key, False)
                 if existing_city:
                     continue
                 else:
-                    self.table[stringy_city] = True
+                    self.table[city_key] = True
                     yield record
             else:
                 logging.error(f"*** Error {classname(self)}.generate_cities; unknown state_code: {state_code} at {count} record")
@@ -180,20 +178,18 @@ class DBPlacesGenerator:
     def iterate(self) -> Generator[dict[str, str], None, None]:
         logging.info(f"{classname(self)}.iterate start")
         for count, record in enumerate(self.reader.points_of_sale_generator()):
-            a_stringy_city = get_stringy([record["state"], record["city"]])
-            if self.known_cities.get(a_stringy_city, False):
-                a_stringy_place = get_stringy([record["state"], record["city"], record["address"]])
-                existing_place = self.table.get(a_stringy_place, False)
+            a_city_key = record["city_key"]
+            if self.known_cities.get(a_city_key, False):
+                a_place_key = record["place_key"]
+                existing_place = self.table.get(a_place_key, False)
                 if existing_place:
                     continue
                 else:
-                    self.table[a_stringy_place] = True
-                    record["stringy_city"] = a_stringy_city
-                    record["stringy_place"] = a_stringy_place
+                    self.table[a_place_key] = True
                     yield record
             else:
                 logging.error(f"*** Error {classname(self)}.iterate")
-                logging.error(f"{a_stringy_place} - {a_stringy_city} unknown at ({count}) record")
+                logging.error(f"{a_place_key} - {a_city_key} unknown at ({count}) record")
                 for key, value in record.items():
                     logging.error(f"    {key}: {value}")
                 logging.error(f"*** Error {classname(self)}.iterate")
@@ -225,19 +221,17 @@ class DBPointsOfSalesGenerator:
     def iterate(self) -> Generator[dict[str, str], None, None]:
         logging.info(f"{classname(self)}.generate_points_of_sale start")
         for count, record in enumerate(self.reader.points_of_sale_generator()):
-            a_stringy_place = get_stringy([record["state"], record["city"], record["address"]])
-            if self.known_places.get(a_stringy_place, False):
-                new_point_of_sale_code_string = get_stringy([record["point_of_sale_code"], record["business"]])
-                existing_point_of_sale = self.table.get(new_point_of_sale_code_string, False)
+            a_place_key = record["place_key"]
+            if self.known_places.get(a_place_key, False):
+                a_point_of_sale_key = record["point_of_sale_key"]
+                existing_point_of_sale = self.table.get(a_point_of_sale_key, False)
                 if existing_point_of_sale:
                     continue
                 else:
-                    self.table[new_point_of_sale_code_string] = True
-                    record["stringy_place"] = a_stringy_place
-                    record["new_point_of_sale_code"] = new_point_of_sale_code_string
+                    self.table[a_point_of_sale_key] = True
                     yield record
             else:
-                logging.error(f"*** Error {classname(self)}.generate_points_of_sale: {a_stringy_city} unknown at ({count}) record")
+                logging.error(f"*** Error {classname(self)}.generate_points_of_sale: {a_city_key} unknown at ({count}) record")
                 for key, value in record.items():
                     logging.error(f"    {key}: {value}")
                 logging.error(f"*** Error {classname(self)}.generate_points_of_sale")
@@ -304,16 +298,72 @@ class DBArticleCardsGenerator:
                 brand = record["brand"]
                 description = record["description"]
                 package = record["package"]
-                stringy_article_card = get_stringy([article_code_string, brand, description, package])
-                existing_article_card = self.table.get(stringy_article_card, False)
+                article_card_key = record["article_card_key"]
+                existing_article_card = self.table.get(article_card_key, False)
                 if existing_article_card:
                     continue
                 else:
-                    self.table[stringy_article_card] = True
+                    self.table[article_card_key] = True
                     yield record
             else:
                 logging.error(f"*** Error {classname(self)}.generate_article_card: unknown article_code {article_code_string} at {count} record")
                 for key, value in record.items():
                     logging.error(f"    {key}: {value}")
                 logging.error(f"*** Error {classname(self)}.generate_article_card")
+        logging.info(f"{classname(self)}.iterate stop")
+
+
+class DBPricesGenerator:
+    def __init__(
+        self,
+        reader: DBKiloPreciosClarosReader,
+        timestamps: dict[str, bool],
+        article_codes: dict[str, bool],
+        points_of_sale: dict[str, bool]
+    ) -> None:
+        self._reader = reader
+        self._timestamps = timestamps
+        self._article_codes = article_codes
+        self._points_of_sale = points_of_sale
+        self._table: dict[str, bool] = {}
+
+    @property
+    def reader(self) -> DBKiloPreciosClarosReader:
+        return self._reader
+
+    @property
+    def timestamps(self) -> dict[str, bool]:
+        return self._timestamps
+
+    @property
+    def article_codes(self) -> dict[str, bool]:
+        return self._article_codes
+
+    @property
+    def points_of_sale(self) -> dict[str, bool]:
+        return self._points_of_sale
+
+    @property
+    def table(self) -> dict[str, bool]:
+        return self._table
+
+    def iterate(self) -> Generator[dict[str, str], None, None]:
+        logging.info(f"{classname(self)}.iterate start")
+        for count, record in enumerate(self.reader.articles_per_point_of_sale_generator()):
+            timestamp_string = record["sample_key"]
+            article_code_string = record["article_code"]
+            point_of_sale_key = record["point_of_sale_key"]
+            test = all((
+                self.timestamps.get(timestamp_string, False),
+                self.article_codes.get(article_code_string, False),
+                self.points_of_sale.get(point_of_sale_code_string, False)
+                )
+            )
+            if test:
+                yield record
+            else:
+                logging.error(f"*** Error {classname(self)}.iterate: unknown values at {count} record")
+                for key, value in record.items():
+                    logging.error(f"    {key}: {value}")
+                logging.error(f"*** Error {classname(self)}.iterate")
         logging.info(f"{classname(self)}.iterate stop")

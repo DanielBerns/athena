@@ -2,16 +2,17 @@ import logging
 from pathlib import Path
 from collections.abc import Callable
 from typing import Generator
+from components.precios_claros.kilo_keys import KiloKeys
 
-
-from components.helpers import (
+from components.helpers.helpers import (
     get_container,
     get_resource,
     write_json,
     as_jsonl,
     read_json,
     read_json_lines,
-    create_text_file
+    create_text_file,
+    classname
 )
 
 
@@ -70,10 +71,11 @@ class KiloPreciosClarosIO:
         self,
         name: str,
         get_events: Callable[[], Generator[dict[str, str] | None, None, None]]
-    ) -> None:
+    ) -> Generator[dict[str, str], None, None]:
         resource = get_resource(self.home, name, ".jsonl")
         with create_text_file(resource) as target:
             for event in get_events():
+                yield event
                 target.write(as_jsonl(event))
 
     def read_events_file(
@@ -88,14 +90,27 @@ class KiloPreciosClarosIO:
     def point_of_sale_juliet_to_kilo(
         event: dict[str, str]
     ) -> dict[str, str]:
+        point_of_sale_code = event["identifier"]
+        state = (event["provincia"]).lower()
+        city = (event["localidad"]).lower()
+        address = (event["direccion"]).lower()
+        flag = (event["bandera"]).lower()
+        business = (event["comercio"]).lower()
+        branch = (event["sucursal"]).lower()
+        city_key = KiloKeys.city_key(state, city)
+        place_key = KiloKeys.place_key(state, city, address)
+        point_of_sale_key = KiloKeys.point_of_sale_key(point_of_sale_code, business)
         point_of_sale = {
-            "point_of_sale_code": event["identifier"],
-            "state": (event["provincia"]).lower(),
-            "city": (event["localidad"]).lower(),
-            "address": (event["direccion"]).lower(),
-            "flag": (event["bandera"]).lower(),
-            "business": (event["comercio"]).lower(),
-            "branch": (event["sucursal"]).lower(),
+            "point_of_sale_code": point_of_sale_code,
+            "state": state,
+            "city": city,
+            "address": address,
+            "flag": flag,
+            "business": business,
+            "branch": branch,
+            "city_key": city_key,
+            "place_key": place_key,
+            "point_of_sale_key": point_of_sale_key
         }
         return point_of_sale
 
@@ -103,14 +118,27 @@ class KiloPreciosClarosIO:
     def point_of_sale_wrong_juliet_to_kilo(
         event: dict[str, str]
     ) -> dict[str, str]:
+        point_of_sale_code = event["id"]
+        state_code = (event["provincia"]).lower()
+        city = (event["localidad"]).lower()
+        address = (event["direccion"]).lower()
+        flag = (event["banderaDescripcion"]).lower()
+        business = (event["comercioRazonSocial"]).lower()
+        branch = (event["sucursalNombre"]).lower()
+        city_key = KiloKeys.city_key(state_code, city)
+        place_key = KiloKeys.place_key(state_code, city, address)
+        point_of_sale_key = KiloKeys.point_of_sale_key(identifier, business)
         point_of_sale = {
-          "point_of_sale_code": event["id"],
-          "state": (event["provincia"]).lower(),
-          "city": (event["localidad"]).lower(),
-          "address": (event["direccion"]).lower(),
-          "flag": (event["banderaDescripcion"]).lower(),
-          "business": (event["comercioRazonSocial"]).lower(),
-          "branch": (event["sucursalNombre"]).lower(),
+          "point_of_sale_code": point_of_sale_code,
+          "state": state_code,
+          "city": city,
+          "address": address,
+          "flag": flag,
+          "business": business,
+          "branch": branch,
+          "city_key": city_key,
+          "place_key": place_key,
+          "point_of_sale_key": point_of_sale_key
         }
         return point_of_sale
 
@@ -132,13 +160,20 @@ class KiloPreciosClarosIO:
     def article_per_point_of_sale_juliet_to_kilo(
         event
     ) -> dict[str, str]:
+        article_code = event["identifier"]
+        brand = (event["marca"]).lower()
+        description = (event["nombre"]).lower()
+        package = (event["presentacion"]).lower()
+        point_of_sale_code = event["point_of_sale"]
+        article_card_key = KiloKeys.article_card_key(article_code, brand, description, package)
         article_per_point_of_sale = {
-                "article_code": event["identifier"],
-                "brand": (event["marca"]).lower(),
-                "description": (event["nombre"]).lower(),
-                "package": (event["presentacion"]).lower(),
+                "article_code": article_code,
+                "brand": brand,
+                "description": description,
+                "package": package,
                 "price": get_price_in_cents(event["precio"]),
-                "point_of_sale_code": event["point_of_sale"],
+                "point_of_sale_code": point_of_sale_code,
+                "article_card_key": article_card_key
             }
         return article_per_point_of_sale
 

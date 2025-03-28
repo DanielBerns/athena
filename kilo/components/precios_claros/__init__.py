@@ -11,6 +11,7 @@ from components.precios_claros.juliet_to_kilo_precios_claros_target import Julie
 from components.precios_claros.kilo_precios_claros_processor import KiloPreciosClarosProcessor
 
 from components.precios_claros.kilo_precios_claros_io import (get_price_in_cents, KiloPreciosClarosIO)
+from components.precios_claros.kilo_keys import KiloKeys
 
 from components.precios_claros.database import (
     Timestamp,

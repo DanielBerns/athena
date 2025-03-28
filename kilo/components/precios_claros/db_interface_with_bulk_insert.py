@@ -1,5 +1,3 @@
-# import pdb
-
 import logging
 from contextlib import contextmanager
 from collections.abc import Callable
@@ -23,7 +21,7 @@ from components.precios_claros.database import (
     Price
 )
 
-
+from components.precios_claros.kilo_keys import KiloKeys
 
 
 class DBInterfaceWithBulkInsert:
@@ -126,6 +124,15 @@ class DBInterfaceWithBulkInsert:
             logging.error(f"    {year} {month} {day} {hour} {minute} {second}")
             message = f"*** Error {classname(self):s}.query_timestamp  ({len(self.all_the_timestamps)})({classname(panic):s}): {str(panic):s}"
             raise DatabaseException(message)
+
+    def look_for_timestamp(self, sample_key: str) -> int:
+        existing_timestamp = self.all_the_timestamps[sample_key]
+        if existing_timestamp:
+            return existing_timestamp.id
+        else:
+            message = f"*** Error {classname(self)}.look_for_timestamp: {sample_key}"
+            raise DatabaseException(message)
+
 
     def insert_one_timestamp(
         self,
@@ -254,8 +261,8 @@ class DBInterfaceWithBulkInsert:
     ) -> City:
         logging.info(f"{classname(self):s}.query_city start")
         try:
-            stringy_city = get_stringy([db_state.code, name])
-            existing_city = self.all_the_cities.get(stringy_city, None)
+            city_key = KiloKeys.city_key(db_state.code, name)
+            existing_city = self.all_the_cities.get(city_key, None)
             if existing_city:
                 logging.info(f"{classname(self):s}.query_city: {name:s} at {db_state.name:s} in database already")
                 logging.info(f"{classname(self):s}.query_city stop")
@@ -281,7 +288,8 @@ class DBInterfaceWithBulkInsert:
             )
             self.session.add(new_city)
             self.session.commit()
-            self.all_the_cities[stringy_city] = new_city
+            city_key = KiloKeys.city_key(db_state.code, name)
+            self.all_the_cities[city_key] = new_city
             logging.info(f"new_city id: {new_city.id}")
             logging.info(f"{classname(self):s}.get_city ({len(self.all_the_cities)}) stop")
             return new_city
@@ -292,12 +300,12 @@ class DBInterfaceWithBulkInsert:
             message = f"*** Error {classname(self):s}.get_city ({classname(panic):s}): {str(panic):s}"
             raise DatabaseException(message)
 
-    def look_for_city_id(self, stringy_city: str) -> int:
-        existing_city = self.all_the_cities[stringy_city]
+    def look_for_city_id(self, city_key: str) -> int:
+        existing_city = self.all_the_cities[city_key]
         if existing_city:
             return existing_city.id
         else:
-            message = f"*** Error {classname(self)}.look_for_city: {stringy_city}"
+            message = f"*** Error {classname(self)}.look_for_city: {city_key}"
             raise DatabaseException(message)
 
     def insert_places(
@@ -308,7 +316,7 @@ class DBInterfaceWithBulkInsert:
         try:
             bulk = [
                 {"address": record["address"],
-                 "city_id": self.look_for_city_id(record["stringy_city"])
+                 "city_id": self.look_for_city_id(record["city_key"])
                 } for record in places_generator()
             ]
             self.session.execute(insert(Place), bulk)
@@ -328,12 +336,8 @@ class DBInterfaceWithBulkInsert:
     ) -> Place | None:
         logging.info(f"{classname(self):s}.query_place start")
         try:
-            stringy_place = get_stringy([
-                db_city.state.code,
-                db_city.name,
-                address]
-            )
-            existing_place = self.all_the_places.get(stringy_place, None)
+            place_key = KiloKeys.place_key(db_city.state.code, db_city.name, address)
+            existing_place = self.all_the_places.get(place_key, None)
             return existing_place
         except Exception as panic:
             logging.error(f"*** Error {classname(self):s}.query_place")
@@ -355,7 +359,8 @@ class DBInterfaceWithBulkInsert:
             )
             self.session.add(new_place)
             self.session.commit()
-            self.all_the_places[stringy_place] = new_place
+            place_key = KiloKeys.place_key(city.state.code, city.name, address)
+            self.all_the_places[place_key] = new_place
             logging.info(f"{classname(self):s}.insert_one_place ({len(self.all_the_places)}) stop")
             return new_place
         except Exception as panic:
@@ -366,12 +371,12 @@ class DBInterfaceWithBulkInsert:
             message = f"*** Error {classname(self):s}.insert_one_place ({classname(panic):s}): {str(panic):s}"
             raise DatabaseException(message)
 
-    def look_for_place_id(self, stringy_place: str) -> int:
-        existing_place = self.all_the_places[stringy_place]
+    def look_for_place_id(self, place_key: str) -> int:
+        existing_place = self.all_the_places.get(place_key, None)
         if existing_place:
             return existing_place.id
         else:
-            message = f"*** Error {classname(self)}.look_for_place: {stringy_place}"
+            message = f"*** Error {classname(self)}.look_for_place: {place_key}"
             raise DatabaseException(message)
 
     def insert_points_of_sale(
@@ -381,11 +386,11 @@ class DBInterfaceWithBulkInsert:
         logging.info(f"{classname(self):s}.insert_points_of_sale start")
         try:
             bulk = [
-                {"code": record["new_point_of_sale_code"],
+                {"code": record["point_of_sale_key"],
                  "flag": record["flag"],
                  "business": record["business"],
                  "branch": record["branch"],
-                 "place_id": self.look_for_place_id(record["stringy_place"])
+                 "place_id": self.look_for_place_id(record.get("place_key", "error"))
                 } for record in points_of_sale_generator()
             ]
             self.session.execute(insert(PointOfSale), bulk)
@@ -442,6 +447,14 @@ class DBInterfaceWithBulkInsert:
             logging.error(f"    branch: {branch}")
             logging.error(f"    place: {place.address} at {place.city}")
             message = f"*** Error {classname(self):s}.get_point_of_sale ({classname(panic):s}): {str(panic):s}"
+            raise DatabaseException(message)
+
+    def look_for_point_of_sale_id(self, point_of_sale_code: str) -> int:
+        existing_point_of_sale = self.all_the_points_of_sale[point_of_sale_code]
+        if existing_point_of_sale:
+            return existing_point_of_sale.id
+        else:
+            message = f"*** Error {classname(self)}.look_for_article_code_id: {point_of_sale_code}"
             raise DatabaseException(message)
 
     def insert_article_codes(
@@ -509,7 +522,7 @@ class DBInterfaceWithBulkInsert:
 
     def insert_article_cards(
         self,
-        article_card_generator:  Callable[[], Generator[dict[str, str], None, None]]
+        article_cards_generator:  Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
         logging.info(f"{classname(self)}.insert_article_cards start")
         try:
@@ -518,7 +531,7 @@ class DBInterfaceWithBulkInsert:
                   "description": record["description"],
                   "package": record["package"],
                   "article_code_id": self.look_for_article_code_id(record["article_code"])
-                } for record in article_card_generator()
+                } for record in article_cards_generator()
             ]
             self.session.execute(insert(ArticleCard), bulk)
             self.session.commit()
@@ -538,7 +551,7 @@ class DBInterfaceWithBulkInsert:
     ) -> ArticleCard:
         logging.info(f"{classname(self)}.insert_one_article_card start")
         try:
-            stringy_card = get_stringy([db_article_code.code, brand, description, package])
+            article_card_key = KiloKeys.article_card_key(db_article_code.code, brand, description, package)
             new_article_card = ArticleCard(
                 brand=brand,
                 description=description,
@@ -547,7 +560,7 @@ class DBInterfaceWithBulkInsert:
             )
             self.session.add(new_article_card)
             self.session.commit()
-            self.all_the_article_cards[stringy_card] = new_article_card
+            self.all_the_article_cards[article_card_key] = new_article_card
             logging.info(f"{classname(self)}.insert_one_article_card ({len(self.all_the_article_cards)}) stop")
             return new_article_card
         except Exception as panic:
@@ -559,50 +572,72 @@ class DBInterfaceWithBulkInsert:
             message = f"*** Error {classname(self):s}.get_article_card ({classname(panic):s}): {str(panic):s}"
             raise DatabaseException(message)
 
-    def insert_price(
+    def insert_prices(
         self,
-        amount: int,
-        timestamp: Timestamp,
-        article_code: ArticleCode,
-        point_of_sale: PointOfSale
+        prices_generator:  Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
-        logging.info(f"{classname(self)}.insert_price start")
+        logging.info(f"{classname(self)}.insert_prices start")
         try:
-            new_price = Price(
-                amount=amount,
-                timestamp=timestamp,
-                article_code=article_code,
-                point_of_sale=point_of_sale,
-            )
-            self.session.add(new_price)
+            bulk = [
+                { "price": record["price"],
+                  "timestamp_id": self.look_for_timestamp_id(record["timestamp"]),
+                  "article_code_id": self.look_for_article_code_id(record["article_code"]),
+                  "point_of_sale_id": self.look_for_point_of_sale_id(record["point_of_sale_code"])
+                } for record in prices_generator()
+            ]
+            self.session.execute(insert(ArticleCard), bulk)
             self.session.commit()
-            logging.info(f"{classname(self)}.insert_price stop")
+            self.get_all_the_article_cards()
+            logging.info(f"{classname(self)}.insert_article_cards ({len(self.all_the_article_cards)}) stop")
         except Exception as panic:
-            message = f"*** Error {classname(self):s}.insert_price ({classname(panic):s}): {str(panic):s}"
+            self.session.rollback()
+            message = f"*** Error {classname(self):s}.insert_article_cards ({classname(panic):s}): {str(panic):s}"
             raise DatabaseException(message)
 
-    def query_price(
-        self,
-        timestamp: Timestamp,
-        article_code: ArticleCode,
-        point_of_sale: PointOfSale
-    ) -> Price | None:
-        logging.info(f"{classname(self)}.query|_price start")
-        try:
-            existing_price = self.session.execute(
-                select(Price).filter_by(
-                    timestamp=timestamp,
-                    article_code=article_code,
-                    point_of_sale=point_of_sale,
-                )
-            ).scalar_one_or_none()
-            return existing_price
-        except Exception as panic:
-            logging.error(f"*** Error {classname(self):s}.query_price")
-            logging.error()
-            message = f"*** Error {classname(self):s}.query_price ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
-
+    #def insert_price(
+    #    self,
+    #    amount: int,
+    #    timestamp: Timestamp,
+    #    article_code: ArticleCode,
+    #    point_of_sale: PointOfSale
+    #) -> None:
+    #    logging.info(f"{classname(self)}.insert_price start")
+    #    try:
+    #        new_price = Price(
+    #            amount=amount,
+    #            timestamp=timestamp,
+    #            article_code=article_code,
+    #            point_of_sale=point_of_sale,
+    #        )
+    #        self.session.add(new_price)
+    #        self.session.commit()
+    #        logging.info(f"{classname(self)}.insert_price stop")
+    #    except Exception as panic:
+    #        message = f"*** Error {classname(self):s}.insert_price ({classname(panic):s}): {str(panic):s}"
+    #        raise DatabaseException(message)
+    #
+    #def query_price(
+    #    self,
+    #    timestamp: Timestamp,
+    #    article_code: ArticleCode,
+    #    point_of_sale: PointOfSale
+    #) -> Price | None:
+    #    logging.info(f"{classname(self)}.query|_price start")
+    #    try:
+    #        existing_price = self.session.execute(
+    #            select(Price).filter_by(
+    #                timestamp=timestamp,
+    #                article_code=article_code,
+    #                point_of_sale=point_of_sale,
+    #            )
+    #        ).scalar_one_or_none()
+    #        return existing_price
+    #    except Exception as panic:
+    #        logging.error(f"*** Error {classname(self):s}.query_price")
+    #        logging.error()
+    #        message = f"*** Error {classname(self):s}.query_price ({classname(panic):s}): {str(panic):s}"
+    #        raise DatabaseException(message)
+    #
 
     def get_all_the_states(self) -> None:
         statement = select(State)
@@ -612,19 +647,20 @@ class DBInterfaceWithBulkInsert:
     def get_all_the_cities(self) -> None:
         statement = select(City)
         _all_the_cities = list(self.session.scalars(statement).all())
-        self.all_the_cities.update({get_stringy([a_city.state.code, a_city.name]): a_city
-                for a_city in _all_the_cities})
+        self.all_the_cities.update(
+            {KiloKeys.city_key(a_city.state.code, a_city.name): a_city for a_city in _all_the_cities}
+        )
 
     def get_all_the_places(self) -> None:
         statement = select(Place)
         _all_the_places = list(self.session.scalars(statement).all())
-        self.all_the_places.update({
-            get_stringy([
+        self.all_the_places.update(
+            {KiloKeys.place_key(
                 a_place.city.state.code,
                 a_place.city.name,
-                a_place.address]
-            ): a_place for a_place in _all_the_places
-        })
+                a_place.address
+             ): a_place for a_place in _all_the_places}
+        )
 
     def get_all_the_points_of_sale(self) -> None:
         statement = select(PointOfSale)
@@ -651,7 +687,7 @@ class DBInterfaceWithBulkInsert:
         statement = select(ArticleCard)
         _all_the_article_cards = list(self.session.scalars(statement).all())
         self.all_the_article_cards.update(
-            {get_stringy([ac.article_code.code, ac.brand, ac.description, ac.package]): ac
+            {KiloKeys.article_card_key(ac.article_code.code, ac.brand, ac.description, ac.package): ac
              for ac in _all_the_article_cards}
         )
 
