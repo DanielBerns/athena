@@ -20,6 +20,8 @@ from components.precios_claros.db_new_interface import db_get_new_interface
 from components.precios_claros.db_interface_with_bulk_insert import DBInterfaceWithBulkInsert
 from components.helpers.helpers import get_container, get_resource, measure_execution_time
 
+CREATE_DB = os.environ.get("CREATE_DB", "NO")
+INSERT_PRICES = os.environ.get("INSERT_PRICES", "NO") if CREATE_DB == "NO" ELSE "NO"
 FIRST_SAMPLE = os.environ.get("FIRST_SAMPLE", "-1")
 LAST_SAMPLE = os.environ.get("LAST_SAMPLE", "-1")
 
@@ -60,7 +62,8 @@ def main() -> None:
     except Exception:
         last_sample = -1
 
-    update_prices = True
+    create_db = CREATE_DB == "YES"
+    insert_prices = False if create_db else INSERT_PRICES == "YES"
 
     storage_precios_claros = get_container(kilo_paths.storage, "precios_claros")
     factory = lambda s: DBInterfaceWithBulkInsert(s)
@@ -68,37 +71,37 @@ def main() -> None:
         _reader = KiloPreciosClarosBasicReader(storage_precios_claros)
         reader = DBKiloPreciosClarosReader(_reader)
         db_states = DBStatesGenerator(reader)
-        if update_prices:
+        if insert_prices:
             db_states.load_table()
         else:
             db.insert_states(db_states.iterate)
         db_cities = DBCitiesGenerator(reader, db_states.table)
-        if update_prices:
+        if insert_prices:
             db_cities.load_table()
         else:
             db.insert_cities(db_cities.iterate)
         db_places = DBPlacesGenerator(reader, db_cities.table)
-        if update_prices:
+        if insert_prices:
             db_places.load_table()
         else:
             db.insert_places(db_places.iterate)
         db_points_of_sale = DBPointsOfSalesGenerator(reader, db_places.table)
-        if update_prices:
+        if insert_prices:
             db_points_of_sale.load_table()
         else:
             db.insert_points_of_sale(db_points_of_sale.iterate)
         db_article_codes = DBArticleCodesGenerator(reader)
-        if update_prices:
+        if insert_prices:
             db_article_codes.load_table()
         else:
             db.insert_article_codes(db_article_codes.iterate)
         db_article_cards = DBArticleCardsGenerator(reader, db_article_codes.table)
-        if update_prices:
+        if insert_prices:
             db_article_cards.load_table()
         else:
             db.insert_article_cards(db_article_cards.iterate)
         db_timestamps = DBTimestampsGenerator(reader)
-        if update_prices:
+        if insert_prices:
             db_timestamps.load_table()
         else:
             db.insert_timestamps(db_timestamps.iterate)
