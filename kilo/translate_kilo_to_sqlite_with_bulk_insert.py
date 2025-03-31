@@ -21,7 +21,7 @@ from components.precios_claros.db_interface_with_bulk_insert import DBInterfaceW
 from components.helpers.helpers import get_container, get_resource, measure_execution_time
 
 CREATE_DB = os.environ.get("CREATE_DB", "NO")
-INSERT_PRICES = os.environ.get("INSERT_PRICES", "NO") if CREATE_DB == "NO" ELSE "NO"
+INSERT_PRICES = os.environ.get("INSERT_PRICES", "NO") if CREATE_DB == "NO" else "NO"
 FIRST_SAMPLE = os.environ.get("FIRST_SAMPLE", "-1")
 LAST_SAMPLE = os.environ.get("LAST_SAMPLE", "-1")
 
