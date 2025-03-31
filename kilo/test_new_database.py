@@ -1,3 +1,5 @@
+# import pdb
+
 import logging
 import os
 from pathlib import Path
@@ -51,18 +53,20 @@ def main() -> None:
     )
 
     logging.info(f"{identifier} start")
-    try:
-        first_sample = int(FIRST_SAMPLE)
-    except Exception:
-        first_sample = -1
-    try:
-        last_sample = int(last_SAMPLE)
-    except Exception:
-        last_sample = -1
+    # try:
+    #     first_sample = int(FIRST_SAMPLE)
+    # except Exception:
+    #     first_sample = -1
+    # try:
+    #     last_sample = int(last_SAMPLE)
+    # except Exception:
+    #     last_sample = -1
+
 
     storage_precios_claros = get_container(kilo_paths.storage, "precios_claros")
     factory = lambda s: DBInterfaceWithBulkInsert(s)
     with db_get_new_interface(storage_precios_claros, factory) as db:
+        # pdb.set_trace()
         db.get_all_the_states()
         states = DBStatesGenerator(get_reader(storage_precios_claros))
         for a_state in states.iterate():
@@ -71,21 +75,56 @@ def main() -> None:
                 logging.info(f"{db_state.code} - {db_state.name}")
             else:
                 logging.info(f"None db_state for {str(a_state)}")
+
+        # pdb.set_trace()
         db.get_all_the_cities()
         for a_key, a_city in db.all_the_cities.items():
             logging.info(f"    {a_key} :: {a_city.name} at {a_city.state.name} - {a_city.state.code}")
+
+        # pdb.set_trace()
         db.get_all_the_places()
         for a_key, a_place in db.all_the_places.items():
             logging.info(f"    {a_key} :: {a_place.address} {a_place.city.name} at {a_place.city.state.name} - {a_place.city.state.code}")
-        db.get_all_the_points_of_sale()
-        for a_key, pos in db.all_the_points_of_sale.items():
-            logging.info(f"    {a_key} :: {pos.flag} {pos.business} at {pos.branch} - {pos.place.address} - {pos.place.city.name}")
+
+        # pdb.set_trace()
+        # db.get_all_the_points_of_sale()
+        # for a_key, pos in db.all_the_points_of_sale.items():
+        #     logging.info(f"    {a_key} :: {pos.flag} {pos.business} at {pos.branch} - {pos.place.address} - {pos.place.city.name}")
+
+        # pdb.set_trace()
         db.get_all_the_article_codes()
-        for a_key, ac in db.all_the_article_codes.items():
-            logging.info(f"    {a_key} :: {ac.code}")
-        db.get_all_the_article_cards()
-        for a_key, ac in db.all_the_article_cards.items():
-            logging.info(f"    {a_key} :: {ac.article_code.code} [[{len(ac.article_code.cards)}]] {ac.brand}")
+        # for a_key, ac in db.all_the_article_codes.items():
+        #     logging.info(f"    {a_key} :: {ac.code}")
+
+        # pdb.set_trace()
+        # db.get_all_the_article_cards()
+        # for a_key, ac in db.all_the_article_cards.items():
+        #     logging.info(f"    {a_key} :: {ac.article_code.code} [[{len(ac.article_code.cards)}]] {ac.brand}")
+
+
+        # pdb.set_trace()
+        count = 0
+        logging.info("# ArticleCode")
+        for key, article_code in db.all_the_article_codes.items():
+            if len(article_code.cards) == 0:
+                logging.error(f"*** Error: article_code: {article_code.code} with no card.")
+                continue
+            ac = article_code.cards[0]
+            logging.info(f"## {article_code.code:s} - {ac.brand} - {ac.description}")
+
+            article_code_prices = db.session.scalars(
+                article_code.prices.select()
+                # .limit(10)
+            ).all()
+            for a_price in article_code_prices:
+                ts = a_price.timestamp
+                pos = a_price.point_of_sale
+                logging.info(
+                    f"   {str(ts):s} - {pos.flag:s} - {pos.place.city.name} - {pos.place.address} - ${a_price.amount/100:>6.2f}"
+                )
+            count += 1
+            if count > 100:
+               break
 
 
     logging.info(f"{identifier} stop")

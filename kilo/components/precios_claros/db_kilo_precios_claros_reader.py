@@ -27,14 +27,27 @@ class DBKiloPreciosClarosReader:
             for kilo_json in self.reader.read_points_of_sale():
                 yield kilo_json
 
-    def articles_per_point_of_sale_generator(self) -> Generator[dict[str, str], None, None]:
-        for sample_home in self.reader.read_sample_home():
-            # pdb.set_trace()
+    def articles_per_point_of_sale_generator(
+        self,
+        first_sample: int = -1,
+        last_sample: int = -1
+    ) -> Generator[dict[str, str], None, None]:
+        if first_sample < 0:
+            first_sample = 0
+        for count, sample_home in enumerate(self.reader.read_sample_home()):
+            if count < first_sample:
+                logging.info(f"skipped {count} < {first_sample} - {sample_home}")
+                continue
+            if last_sample >= 0:
+                if count > last_sample:
+                    logging.info(f"skipped {count} > {last_sample} - {sample_home}")
+                    continue
             metadata = self.reader.read_metadata()
             sample_key = metadata["sample_key"]
             for kilo_json in self.reader.read_articles_per_point_of_sale():
                 kilo_json["sample_key"] = sample_key
                 yield kilo_json
+
 
 
 class DBStatesGenerator:
@@ -101,6 +114,10 @@ class DBStatesGenerator:
     def table(self) -> dict[str, dict[str, str]]:
         return self._table
 
+    def load_table(self) -> None:
+        for record in self.iterate():
+            pass
+
     def iterate(self) -> Generator[dict[str, str], None, None]:
         logging.info(f"{classname(self)}.generate_states start")
         for record in self.reader.points_of_sale_generator():
@@ -119,7 +136,7 @@ class DBCitiesGenerator:
     def __init__(
         self,
         reader: DBKiloPreciosClarosReader,
-        known_states: dict[str, bool]
+        known_states: dict[str, dict[str, str]]
     ) -> None:
         self._reader = reader
         self._know_states = known_states
@@ -136,6 +153,10 @@ class DBCitiesGenerator:
     @property
     def table(self) -> dict[str, bool]:
        return  self._table
+
+    def load_table(self) -> None:
+        for record in self.iterate():
+            pass
 
     def iterate(self) -> Generator[dict[str, str], None, None]:
         logging.info(f"{classname(self)}.generate_cities start")
@@ -175,6 +196,10 @@ class DBPlacesGenerator:
     def table(self) -> dict[str, bool]:
         return self._table
 
+    def load_table(self) -> None:
+        for record in self.iterate():
+            pass
+
     def iterate(self) -> Generator[dict[str, str], None, None]:
         logging.info(f"{classname(self)}.iterate start")
         for count, record in enumerate(self.reader.points_of_sale_generator()):
@@ -193,7 +218,7 @@ class DBPlacesGenerator:
                 for key, value in record.items():
                     logging.error(f"    {key}: {value}")
                 logging.error(f"*** Error {classname(self)}.iterate")
-        logging.info(f"{classname(self)}.iterate stop")
+        logging.info(f"{classname(self)}.iterate ({len(self.table)}) stop")
 
 
 class DBPointsOfSalesGenerator:
@@ -218,6 +243,10 @@ class DBPointsOfSalesGenerator:
     def table(self) -> dict[str, bool]:
         return self._table
 
+    def load_table(self) -> None:
+        for record in self.iterate():
+            pass
+
     def iterate(self) -> Generator[dict[str, str], None, None]:
         logging.info(f"{classname(self)}.iterate start")
         for record in self.reader.points_of_sale_generator():
@@ -229,7 +258,6 @@ class DBPointsOfSalesGenerator:
                 self.table[point_of_sale_key] = True
                 yield record
         logging.info(f"{classname(self)}.iterate ({len(self.table)}) stop")
-
 
 
 class DBArticleCodesGenerator:
@@ -247,6 +275,10 @@ class DBArticleCodesGenerator:
     @property
     def table(self) -> dict[str, bool]:
         return self._table
+
+    def load_table(self) -> None:
+        for record in self.iterate():
+            pass
 
     def iterate(self) -> Generator[dict[str, str], None, None]:
         # pdb.set_trace()
@@ -283,6 +315,10 @@ class DBArticleCardsGenerator:
     @property
     def table(self) -> dict[str, bool]:
         return self._table
+
+    def load_table(self) -> None:
+        for record in self.iterate():
+            pass
 
     def iterate(self) -> Generator[dict[str, str], None, None]:
         logging.info(f"{classname(self)}.iterate start")
@@ -323,6 +359,10 @@ class DBTimestampsGenerator:
     def table(self) -> dict[str, bool]:
         return self._table
 
+    def load_table(self) -> None:
+        for record in self.iterate():
+            pass
+
     def iterate(self) -> Generator[dict[str, str], None, None]:
         logging.info(f"{classname(self)}.iterate start")
         for count, sample_key in enumerate(self.reader.sample_keys_generator()):
@@ -335,20 +375,22 @@ class DBTimestampsGenerator:
         logging.info(f"{classname(self)}.iterate stop")
 
 
-
 class DBPricesGenerator:
     def __init__(
         self,
         reader: DBKiloPreciosClarosReader,
         timestamps: dict[str, bool],
         article_codes: dict[str, bool],
-        points_of_sale: dict[str, bool]
+        points_of_sale: dict[str, bool],
+        first_sample: int,
+        last_sample: int
     ) -> None:
         self._reader = reader
         self._timestamps = timestamps
         self._article_codes = article_codes
         self._points_of_sale = points_of_sale
-        self._table: dict[str, bool] = {}
+        self._first_sample = first_sample
+        self._last_sample = last_sample
 
     @property
     def reader(self) -> DBKiloPreciosClarosReader:
@@ -367,15 +409,24 @@ class DBPricesGenerator:
         return self._points_of_sale
 
     @property
-    def table(self) -> dict[str, bool]:
-        return self._table
+    def first_sample(self) -> int:
+        return self._first_sample
 
-    def iterate(self) -> Generator[dict[str, str], None, None]:
+    @property
+    def last_sample(self) -> int:
+        return self._last_sample
+
+    def load_table(self) -> None:
+        pass
+
+    def iterate(
+        self
+        ) -> Generator[dict[str, str], None, None]:
         logging.info(f"{classname(self)}.iterate start")
-        for count, record in enumerate(self.reader.articles_per_point_of_sale_generator()):
+        for count, record in enumerate(self.reader.articles_per_point_of_sale_generator(self.first_sample, self.last_sample)):
             timestamp_string = record["sample_key"]
             article_code_string = record["article_code"]
-            point_of_sale_key = record["point_of_sale_key"]
+            point_of_sale_code_string = record["point_of_sale_code"]
             test = all((
                 self.timestamps.get(timestamp_string, False),
                 self.article_codes.get(article_code_string, False),

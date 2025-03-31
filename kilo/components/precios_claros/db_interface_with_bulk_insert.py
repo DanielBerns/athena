@@ -1,4 +1,3 @@
-import pdb
 import logging
 from contextlib import contextmanager
 from collections.abc import Callable
@@ -73,6 +72,10 @@ class DBInterfaceWithBulkInsert:
     def all_the_article_cards(self) -> dict[str, ArticleCard]:
         return self._all_the_article_cards
 
+    @property
+    def all_the_timestamps(self) -> dict[str, Timestamp]:
+        return self._all_the_timestamps
+
     def update_cache(self) -> None:
         logging.info(f"{classname(self)}.update_cache start")
         self.get_all_the_states()
@@ -81,6 +84,7 @@ class DBInterfaceWithBulkInsert:
         self.get_all_the_points_of_sale()
         self.get_all_the_article_codes()
         self.get_all_the_article_cards()
+        self.get_all_the_timestamps()
         logging.info(f"{classname(self)}.update_cache stop")
 
 
@@ -90,14 +94,14 @@ class DBInterfaceWithBulkInsert:
     ) -> None:
         logging.info(f"{classname(self):s}.insert_timestamps start")
         try:
-            bulk = [ Timestamp(
-                year=get_int(sample_key[0:4]),
-                month=get_int(sample_key[4:6]),
-                day=get_int(sample_key[6:8]),
-                hour=get_int(sample_key[8:10]),
-                minute=get_int(sample_key[10:12]),
-                second=get_int(sample_key[10:14])
-                ) for sample_key in sample_key_generator()
+            bulk = [ {
+                "year": get_int(sample_key[0:4]),
+                "month": get_int(sample_key[4:6]),
+                "day": get_int(sample_key[6:8]),
+                "hour": get_int(sample_key[8:10]),
+                "minute": get_int(sample_key[10:12]),
+                "second": get_int(sample_key[12:14])
+                } for sample_key in sample_key_generator()
             ]
             self.session.execute(insert(Timestamp), bulk)
             self.session.commit()
@@ -126,12 +130,12 @@ class DBInterfaceWithBulkInsert:
             message = f"*** Error {classname(self):s}.query_timestamp  ({len(self.all_the_timestamps)})({classname(panic):s}): {str(panic):s}"
             raise DatabaseException(message)
 
-    def look_for_timestamp(self, sample_key: str) -> int:
-        existing_timestamp = self.all_the_timestamps[sample_key]
+    def look_for_timestamp_id(self, sample_key: str) -> int:
+        existing_timestamp = self.all_the_timestamps.get(sample_key, None)
         if existing_timestamp:
             return existing_timestamp.id
         else:
-            message = f"*** Error {classname(self)}.look_for_timestamp: {sample_key}"
+            message = f"*** Error {classname(self)}.look_for_timestamp_id: {sample_key}"
             raise DatabaseException(message)
 
 
@@ -580,65 +584,19 @@ class DBInterfaceWithBulkInsert:
         logging.info(f"{classname(self)}.insert_prices start")
         try:
             bulk = [
-                { "price": record["price"],
-                  "timestamp_id": self.look_for_timestamp_id(record["timestamp"]),
+                { "amount": record["price"],
+                  "timestamp_id": self.look_for_timestamp_id(record["sample_key"]),
                   "article_code_id": self.look_for_article_code_id(record["article_code"]),
                   "point_of_sale_id": self.look_for_point_of_sale_id(record["point_of_sale_code"])
                 } for record in prices_generator()
             ]
-            self.session.execute(insert(ArticleCard), bulk)
+            self.session.execute(insert(Price), bulk)
             self.session.commit()
-            self.get_all_the_article_cards()
-            logging.info(f"{classname(self)}.insert_article_cards ({len(self.all_the_article_cards)}) stop")
+            logging.info(f"{classname(self)}.insert_prices stop")
         except Exception as panic:
             self.session.rollback()
-            message = f"*** Error {classname(self):s}.insert_article_cards ({classname(panic):s}): {str(panic):s}"
+            message = f"*** Error {classname(self):s}.insert_prices ({classname(panic):s}): {str(panic):s}"
             raise DatabaseException(message)
-
-    #def insert_price(
-    #    self,
-    #    amount: int,
-    #    timestamp: Timestamp,
-    #    article_code: ArticleCode,
-    #    point_of_sale: PointOfSale
-    #) -> None:
-    #    logging.info(f"{classname(self)}.insert_price start")
-    #    try:
-    #        new_price = Price(
-    #            amount=amount,
-    #            timestamp=timestamp,
-    #            article_code=article_code,
-    #            point_of_sale=point_of_sale,
-    #        )
-    #        self.session.add(new_price)
-    #        self.session.commit()
-    #        logging.info(f"{classname(self)}.insert_price stop")
-    #    except Exception as panic:
-    #        message = f"*** Error {classname(self):s}.insert_price ({classname(panic):s}): {str(panic):s}"
-    #        raise DatabaseException(message)
-    #
-    #def query_price(
-    #    self,
-    #    timestamp: Timestamp,
-    #    article_code: ArticleCode,
-    #    point_of_sale: PointOfSale
-    #) -> Price | None:
-    #    logging.info(f"{classname(self)}.query|_price start")
-    #    try:
-    #        existing_price = self.session.execute(
-    #            select(Price).filter_by(
-    #                timestamp=timestamp,
-    #                article_code=article_code,
-    #                point_of_sale=point_of_sale,
-    #            )
-    #        ).scalar_one_or_none()
-    #        return existing_price
-    #    except Exception as panic:
-    #        logging.error(f"*** Error {classname(self):s}.query_price")
-    #        logging.error()
-    #        message = f"*** Error {classname(self):s}.query_price ({classname(panic):s}): {str(panic):s}"
-    #        raise DatabaseException(message)
-    #
 
     def get_all_the_states(self) -> None:
         statement = select(State)
