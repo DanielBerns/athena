@@ -20,8 +20,7 @@ from components.precios_claros.db_new_interface import db_get_new_interface
 from components.precios_claros.db_interface_with_bulk_insert import DBInterfaceWithBulkInsert
 from components.helpers.helpers import get_container, get_resource, measure_execution_time
 
-CREATE_DB = os.environ.get("CREATE_DB", "NO")
-INSERT_PRICES = os.environ.get("INSERT_PRICES", "NO") if CREATE_DB == "NO" else "NO"
+INSERT_PRICES = os.environ.get("INSERT_PRICES", "NO")
 FIRST_SAMPLE = os.environ.get("FIRST_SAMPLE", "-1")
 LAST_SAMPLE = os.environ.get("LAST_SAMPLE", "-1")
 
@@ -62,8 +61,7 @@ def main() -> None:
     except Exception:
         last_sample = -1
 
-    create_db = CREATE_DB == "YES"
-    insert_prices = False if create_db else INSERT_PRICES == "YES"
+    insert_prices = INSERT_PRICES == "YES"
 
     storage_precios_claros = get_container(kilo_paths.storage, "precios_claros")
     factory = lambda s: DBInterfaceWithBulkInsert(s)
@@ -105,15 +103,16 @@ def main() -> None:
             db_timestamps.load_table()
         else:
             db.insert_timestamps(db_timestamps.iterate)
-        db_prices = DBPricesGenerator(
-            reader,
-            db_timestamps.table,
-            db_article_codes.table,
-            db_points_of_sale.table,
-            first_sample,
-            last_sample
-        )
-        db.insert_prices(db_prices.iterate)
+        if insert_prices:
+            db_prices = DBPricesGenerator(
+                reader,
+                db_timestamps.table,
+                db_article_codes.table,
+                db_points_of_sale.table,
+                first_sample,
+                last_sample
+            )
+            db.insert_prices(db_prices.iterate)
 
 
     logging.info(f"{identifier} stop")
