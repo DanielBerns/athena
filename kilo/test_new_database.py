@@ -53,15 +53,6 @@ def main() -> None:
     )
 
     logging.info(f"{identifier} start")
-    # try:
-    #     first_sample = int(FIRST_SAMPLE)
-    # except Exception:
-    #     first_sample = -1
-    # try:
-    #     last_sample = int(last_SAMPLE)
-    # except Exception:
-    #     last_sample = -1
-
 
     storage_precios_claros = get_container(kilo_paths.storage, "precios_claros")
     factory = lambda s: DBInterfaceWithBulkInsert(s)
@@ -87,19 +78,19 @@ def main() -> None:
             logging.info(f"    {a_key} :: {a_place.address} {a_place.city.name} at {a_place.city.state.name} - {a_place.city.state.code}")
 
         # pdb.set_trace()
-        # db.get_all_the_points_of_sale()
-        # for a_key, pos in db.all_the_points_of_sale.items():
-        #     logging.info(f"    {a_key} :: {pos.flag} {pos.business} at {pos.branch} - {pos.place.address} - {pos.place.city.name}")
+        db.get_all_the_points_of_sale()
+        for a_key, pos in db.all_the_points_of_sale.items():
+            logging.info(f"    {a_key} :: {pos.flag} {pos.business} at {pos.branch} - {pos.place.address} - {pos.place.city.name}")
 
         # pdb.set_trace()
         db.get_all_the_article_codes()
-        # for a_key, ac in db.all_the_article_codes.items():
-        #     logging.info(f"    {a_key} :: {ac.code}")
+        for a_key, ac in db.all_the_article_codes.items():
+            logging.info(f"    {a_key} :: {ac.code}")
 
         # pdb.set_trace()
-        # db.get_all_the_article_cards()
-        # for a_key, ac in db.all_the_article_cards.items():
-        #     logging.info(f"    {a_key} :: {ac.article_code.code} [[{len(ac.article_code.cards)}]] {ac.brand}")
+        db.get_all_the_article_cards()
+        for a_key, ac in db.all_the_article_cards.items():
+            logging.info(f"    {a_key} :: {ac.article_code.code} [[{len(ac.article_code.cards)}]] {ac.brand}")
 
 
         # pdb.set_trace()
