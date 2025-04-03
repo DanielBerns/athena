@@ -3,7 +3,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from components.core.flatstore import FlatStore
+from components.core.flat_store import FlatStore
 from components.helpers.helpers import get_container
 
 

@@ -24,7 +24,7 @@ from components.precios_claros.database import (
 from components.precios_claros.kilo_keys import KiloKeys
 
 
-class DBInterfaceWithBulkInsert:
+class DBPreciosClarosNewInterface:
     def __init__(self, session: Session) -> None:
         self._session = session
 
@@ -650,4 +650,24 @@ class DBInterfaceWithBulkInsert:
              for ac in _all_the_article_cards}
         )
 
+    def query_ordered_article_cards(
+        self,
+        batch_size: int = 100
+    ) -> Generator[ArticleCard, None, None]:
+        """Queries article_cards ordered by brand, description, and package."""
+        query = self.session.query(ArticleCard).order_by(
+            ArticleCard.brand, ArticleCard.description, ArticleCard.package
+        )
+        for row in query.yield_per(batch_size):
+            yield row
 
+    def query_ordered_article_codes(
+        self,
+        batch_size: int = 100
+    ) -> Generator[ArticleCode, None, None]:
+        """Queries article_cards ordered by brand, description, and package."""
+        query = self.session.query(ArticleCode).order_by(
+            ArticleCode.code
+        )
+        for row in query.yield_per(batch_size):
+            yield row

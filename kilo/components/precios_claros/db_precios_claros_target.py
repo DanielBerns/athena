@@ -13,13 +13,13 @@ from components.precios_claros.database import (
     DatabaseException,
     get_int
 )
-from components.precios_claros.db_interface import DBInterface
+from components.precios_claros.db_new_interface import DBNewInterface
 from components.helpers.helpers import get_stringy, get_resource, read_json, classname
 
 
 
-class DBBasicTarget:
-    def __init__(self, db: DBInterface) -> None:
+class DBPreciosClarosTarget:
+    def __init__(self, db: DBNewInterface) -> None:
         self._db = db
         self._current_sample_home: Path | None = None
         self._current_timestamp: Timestamp | None = None

@@ -205,6 +205,17 @@ class DBNewInterface(Protocol):
     def get_all_the_article_cards(self) -> None:
         ...
 
+    def query_ordered_article_cards(
+        self,
+        batch_size: int = 100
+    ) -> Generator[ArticleCard, None, None]:
+        ...
+
+    def query_ordered_article_codes(
+        self,
+        batch_size: int = 100
+    ) -> Generator[ArticleCode, None, None]:
+        ...
 
 
 @contextmanager

@@ -1,4 +1,4 @@
-# Please write some functions for bulk insert States and Cities
+# How to query for article_cards ordered by brand and then for description and then for package?
 
 
 import logging

@@ -4,7 +4,7 @@ from components.core.flat_store import FlatStore
 from components.helpers import read_json_lines, get_container, get_resource
 
 
-class JulietPreciosClarosBasicReader:
+class JulietPreciosClarosReaderSimple:
     def __init__(self, store_home: Path) -> None:
         self._store_home = store_home
         self._current_sample_home: Path | None = None

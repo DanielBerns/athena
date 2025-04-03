@@ -13,13 +13,13 @@ from components.precios_claros.database import (
     Price,
     DatabaseException
 )
-from components.precios_claros.db_interface import DBInterface
+from components.precios_claros.db_new_interface import DBNewInterface
 
 
 class DBTarget(Protocol):
 
     @property
-    def db(self) -> DBInterface:
+    def db(self) -> DBNewInterface:
         return self._db
 
     @property

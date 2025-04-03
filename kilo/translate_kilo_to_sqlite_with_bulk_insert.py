@@ -17,7 +17,7 @@ from components.precios_claros.db_kilo_precios_claros_reader import (
 )
 
 from components.precios_claros.db_new_interface import db_get_new_interface
-from components.precios_claros.db_interface_with_bulk_insert import DBInterfaceWithBulkInsert
+from components.precios_claros.db_precios_claros_new_interface import DBPreciosClarosNewInterface
 from components.helpers.helpers import get_container, get_resource, measure_execution_time
 
 INSERT_PRICES = os.environ.get("INSERT_PRICES", "NO")
