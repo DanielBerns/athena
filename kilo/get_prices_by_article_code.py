@@ -54,7 +54,8 @@ def main() -> None:
                 card = article_code.cards[0]
                 timestamp = price.timestamp
                 pos = price.point_of_sale
-                report.write(f"{count:>6d}|{str(timestamp)}|{article_code.code}|{price.amount/100:>6.2f}|")
+                price_string = f"{price.amount/100:>8.2f}"
+                report.write(f"{count:>6d}|{str(timestamp)}|{article_code.code}|{price_string}|")
                 report.write(f"{card.brand}|{card.description}|{card.package}|{pos.flag}|{pos.place.city.name}\n")
 
     logging.info(f"{identifier} stop")
