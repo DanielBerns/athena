@@ -24,7 +24,10 @@ INSERT_PRICES = os.environ.get("INSERT_PRICES", "NO")
 FIRST_SAMPLE = os.environ.get("FIRST_SAMPLE", "-1")
 LAST_SAMPLE = os.environ.get("LAST_SAMPLE", "-1")
 
+import pdb
+
 def main() -> None:
+    pdb.set_trace()
     # script identifier,
     identifier = Path(__file__).stem
     print(f"{__file__}", " - ", identifier)
