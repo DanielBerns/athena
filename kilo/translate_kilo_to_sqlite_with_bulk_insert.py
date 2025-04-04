@@ -1,4 +1,3 @@
-import pdb
 import logging
 import os
 from pathlib import Path
@@ -27,7 +26,6 @@ LAST_SAMPLE = os.environ.get("LAST_SAMPLE", "-1")
 import pdb
 
 def main() -> None:
-    pdb.set_trace()
     # script identifier,
     identifier = Path(__file__).stem
     print(f"{__file__}", " - ", identifier)
@@ -65,6 +63,10 @@ def main() -> None:
         last_sample = -1
 
     insert_prices = INSERT_PRICES == "YES"
+
+    logging.info(f"FIRST_SAMPLE = {first_sample}")
+    logging.info(f"LAST_SAMPLE = {last_sample}")
+    logging.info(f"INSERT_PRICES = {insert_prices}")
 
     storage_precios_claros = get_container(kilo_paths.storage, "precios_claros")
     factory = lambda s: DBPreciosClarosNewInterface(s)
