@@ -93,6 +93,11 @@ def main() -> None:
             logging.info(f"    {a_key} :: {ac.article_code.code} [[{len(ac.article_code.cards)}]] {ac.brand}")
 
 
+        logging.info("## Timestamps")
+        db.get_all_the_timestamps()
+        for key, ts in db.all_the_timestamps():
+            logging.info(f"    {key}:: {str(ts)}")
+
         # pdb.set_trace()
         count = 0
         logging.info("# ArticleCode")
