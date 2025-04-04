@@ -1,4 +1,3 @@
-import pdb
 import logging
 import os
 from pathlib import Path
@@ -43,7 +42,6 @@ def main() -> None:
     reports_precios_claros = get_container(kilo_paths.reports, "precios_claros")
     articles_report = get_resource(reports_precios_claros, "prices_by_article_code", ".csv")
     factory = lambda s: DBPreciosClarosNewInterface(s)
-    pdb.set_trace()
     with db_get_new_interface(storage_precios_claros, factory) as db, \
          create_text_file(articles_report) as report:
         known_article_codes: dict[str, bool] = {}
@@ -52,7 +50,6 @@ def main() -> None:
         known_article_codes["7790272004457"] = True
         for key, value in known_article_codes.items():
             for count, price in enumerate(db.query_prices_by_article_code_ordered_by_timestamp(key)):
-                pdb.set_trace()
                 article_code = price.article_code
                 card = article_code.cards[0]
                 timestamp = price.timestamp
