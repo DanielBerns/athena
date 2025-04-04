@@ -264,3 +264,44 @@ if __name__ == "__main__":
         # Iterate through the article cards in batches
         for card in iterate_article_cards_ordered_in_batches(session, batch_size=50): #batch_size of 50
             print(f"Brand: {card.brand}, Description: {card.description}, Package: {card.package}")
+
+
+
+
+
+
+# =====================================================================
+
+def iterate_prices_by_article_code_ordered_by_timestamp(session: Session, article_code_value: str, batch_size: int = 100) -> Generator[Price, None, None]:
+    """
+    Iterates through prices for a given ArticleCode, ordered by their timestamps in batches.
+
+    Args:
+        session: The SQLAlchemy session.
+        article_code_value: The code of the ArticleCode to filter by.
+        batch_size: The number of prices to fetch in each batch.
+
+    Yields:
+        Price objects ordered by their associated timestamp.
+    """
+    query = session.query(Price).join(Price.article_code).join(Price.timestamp).filter(
+        ArticleCode.code == article_code_value
+    ).order_by(
+        Timestamp.year,
+        Timestamp.month,
+        Timestamp.day,
+        Timestamp.hour,
+        Timestamp.minute,
+        Timestamp.second
+    )
+    for batch in query.yield_per(batch_size):
+        yield batch
+
+# Example of iterating in batches
+if __name__ == "__main__":
+    with db_get_session() as session:
+        # ... (create sample data as before or more) ...
+
+        article_code_to_query = "TEST001"
+        for price in iterate_prices_by_article_code_ordered_by_timestamp(session, article_code_to_query, batch_size=50):
+            print(f"  Amount: {price.amount}, Timestamp: {price.timestamp}")

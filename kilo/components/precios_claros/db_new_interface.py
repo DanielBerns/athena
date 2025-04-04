@@ -217,6 +217,12 @@ class DBNewInterface(Protocol):
     ) -> Generator[ArticleCode, None, None]:
         ...
 
+    def query_prices_by_article_code_ordered_by_timestamp(
+        self,
+        article_code_value: str,
+        batch_size: int = 100
+    ) -> Generator[Price, None, None]:
+      ...
 
 @contextmanager
 def db_get_new_interface(

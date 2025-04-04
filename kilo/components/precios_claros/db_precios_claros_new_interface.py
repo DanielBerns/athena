@@ -671,3 +671,44 @@ class DBPreciosClarosNewInterface:
         )
         for row in query.yield_per(batch_size):
             yield row
+
+    def query_ordered_article_descriptions(
+        self,
+        batch_size: int = 100
+    ) -> Generator[ArticleCard, None, None]:
+        """Queries article_cards ordered by description, package and brand."""
+        query = self.session.query(ArticleCard).order_by(
+            ArticleCard.description, ArticleCard.package, ArticleCard.brand
+        )
+        for row in query.yield_per(batch_size):
+            yield row
+
+    def query_prices_by_article_code_ordered_by_timestamp(
+        self,
+        article_code_value: str,
+        batch_size: int = 100
+    ) -> Generator[Price, None, None]:
+        """
+        Iterates through prices for a given ArticleCode, ordered by their timestamps in batches.
+
+        Args:
+            session: The SQLAlchemy session.
+            article_code_value: The code of the ArticleCode to filter by.
+            batch_size: The number of prices to fetch in each batch.
+
+        Yields:
+            Price objects ordered by their associated timestamp.
+        """
+        query = self.session.query(Price).join(Price.article_code).join(Price.timestamp).filter(
+            ArticleCode.code == article_code_value
+        ).order_by(
+            Timestamp.year,
+            Timestamp.month,
+            Timestamp.day,
+            Timestamp.hour,
+            Timestamp.minute,
+            Timestamp.second
+        )
+        for row in query.yield_per(batch_size):
+            yield row
+
