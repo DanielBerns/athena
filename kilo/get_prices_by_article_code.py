@@ -49,6 +49,7 @@ def main() -> None:
         known_article_codes["7790070506924"] = True
         known_article_codes["7790272004457"] = True
         for key, value in known_article_codes.items():
+            pdb.set_trace()
             for count, price in enumerate(db.query_prices_by_article_code_ordered_by_timestamp(key)):
                 article_code = price.article_code
                 card = article_code.cards[0]
