@@ -104,15 +104,16 @@ def main() -> None:
         else:
             db.insert_timestamps(db_timestamps.iterate)
         if insert_prices:
-            db_prices = DBPricesGenerator(
-                reader,
-                db_timestamps.table,
-                db_article_codes.table,
-                db_points_of_sale.table,
-                first_sample,
-                last_sample
-            )
-            db.insert_prices(db_prices.iterate)
+            for index in range(first_sample, last_sample):
+                db_prices = DBPricesGenerator(
+                    reader,
+                    db_timestamps.table,
+                    db_article_codes.table,
+                    db_points_of_sale.table,
+                    index,
+                    index + 1
+                )
+                db.insert_prices(db_prices.iterate)
 
 
     logging.info(f"{identifier} stop")
