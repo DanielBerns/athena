@@ -95,7 +95,7 @@ def main() -> None:
 
         logging.info("## Timestamps")
         db.get_all_the_timestamps()
-        for key, ts in db.all_the_timestamps():
+        for key, ts in db.all_the_timestamps.items():
             logging.info(f"    {key}:: {str(ts)}")
 
         # pdb.set_trace()
