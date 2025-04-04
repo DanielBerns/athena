@@ -60,7 +60,7 @@ def main() -> None:
     except Exception:
         first_sample = -1
     try:
-        last_sample = int(last_SAMPLE)
+        last_sample = int(LAST_SAMPLE)
     except Exception:
         last_sample = -1
 
