@@ -67,7 +67,7 @@ def main() -> None:
     insert_prices = INSERT_PRICES == "YES"
 
     storage_precios_claros = get_container(kilo_paths.storage, "precios_claros")
-    factory = lambda s: DBInterfaceWithBulkInsert(s)
+    factory = lambda s: DBPreciosClarosNewInterface(s)
     with db_get_new_interface(storage_precios_claros, factory) as db:
         _reader = KiloPreciosClarosBasicReader(storage_precios_claros)
         reader = DBKiloPreciosClarosReader(_reader)
