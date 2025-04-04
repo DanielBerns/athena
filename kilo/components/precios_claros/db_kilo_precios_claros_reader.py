@@ -35,6 +35,7 @@ class DBKiloPreciosClarosReader:
         if first_sample < 0:
             first_sample = 0
         for count, sample_home in enumerate(self.reader.read_sample_home()):
+            logging.info(f"{first_sample} - {count} - {last_sample}: {first_sample <= count <= last_sample}")
             if count < first_sample:
                 logging.info(f"skipped {count} < {first_sample} - {sample_home}")
                 continue
