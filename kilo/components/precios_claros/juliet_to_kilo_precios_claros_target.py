@@ -49,7 +49,7 @@ class JulietToKiloPreciosClarosTarget:
         return self.juliet_sample_home.stem
 
     @property
-    def kilo_sample(self) -> KiloPreciosClarosIO:
+    def kilo_io(self) -> KiloPreciosClarosIO:
         return self._kilo_io
 
     @property
@@ -74,21 +74,21 @@ class JulietToKiloPreciosClarosTarget:
 
     @property
     def current_sample_home(self) -> Path:
-        return self.kilo_sample.home
+        return self.kilo_io.home
 
     @current_sample_home.setter
     def current_sample_home(self, value: Path) -> None:
         self.juliet_sample_home = value
-        self.kilo_sample.home = self.treestore.create_sample_home()
-        self.kilo_sample.create_metadata(self.sample_key)
-        logging.info(f"{str(self.juliet_sample_home):s} -> {str(self.kilo_sample.home):s}")
+        self.kilo_io.home = self.treestore.create_sample_home()
+        self.kilo_io.create_metadata(self.sample_key)
+        logging.info(f"{str(self.juliet_sample_home):s} -> {str(self.kilo_io.home):s}")
 
     def juliet_points_of_sale(
         self,
         read_events: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
         self.dataset_stats[self.sample_key]["point_of_sale"] += 1
-        for event in self.kilo_sample.create_events_file("points_of_sale", read_events):
+        for event in self.kilo_io.create_events_file("points_of_sale", read_events):
             self.points_of_sale_table[event["point_of_sale_code"]] = event["point_of_sale_key"]
 
     def juliet_selected_points_of_sale(
@@ -96,7 +96,7 @@ class JulietToKiloPreciosClarosTarget:
         read_events: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
         self.dataset_stats[self.sample_key]["selected_point_of_sale"] += 1
-        for event in self.kilo_sample.create_events_file("selected_points_of_sale", read_events):
+        for event in self.kilo_io.create_events_file("selected_points_of_sale", read_events):
             pass
 
     def juliet_articles_per_point_of_sale(
@@ -104,6 +104,6 @@ class JulietToKiloPreciosClarosTarget:
         read_events: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
         self.dataset_stats[self.sample_key]["articles_per_point_of_sale"] += 1
-        for event in self.kilo_sample.create_events_file("articles_per_point_of_sale", read_events):
+        for event in self.kilo_io.create_events_file("articles_per_point_of_sale", read_events):
             point_of_sale_code_string = event["point_of_sale_code"]
             event["point_of_sale_code"] = self.points_of_sale_table[point_of_sale_code_string]

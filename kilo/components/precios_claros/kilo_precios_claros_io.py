@@ -88,8 +88,8 @@ class KiloPreciosClarosIO:
         for event in read_json_lines(resource):
             yield event
 
-    @staticmethod
     def point_of_sale_juliet_to_kilo(
+        self,
         event: dict[str, str]
     ) -> dict[str, str]:
         point_of_sale_code = event["identifier"]
@@ -117,8 +117,8 @@ class KiloPreciosClarosIO:
         }
         return point_of_sale
 
-    @staticmethod
     def point_of_sale_wrong_juliet_to_kilo(
+        self,
         event: dict[str, str]
     ) -> dict[str, str]:
         point_of_sale_code = event["id"]
@@ -146,22 +146,22 @@ class KiloPreciosClarosIO:
         }
         return point_of_sale
 
-    @staticmethod
     def get_point_of_sale_juliet_to_kilo(
+        self,
         event: dict[str, str]
     ) -> dict[str, str] | None:
         try:
-            return KiloPreciosClarosIO.point_of_sale_juliet_to_kilo(event)
+            return self.point_of_sale_juliet_to_kilo(event)
         except Exception:
            try:
-               return KiloPreciosClarosIO.point_of_sale_wrong_juliet_to_kilo(event)
+               return self.point_of_sale_wrong_juliet_to_kilo(event)
            except Exception as message:
                logging.error(f"{classname(self)}.get_point_of_sale {message}\n")
                logging.error(f"  {as_jsonl(event):s}\n")
                return None
 
-    @staticmethod
     def article_per_point_of_sale_juliet_to_kilo(
+        self,
         event
     ) -> dict[str, str]:
         article_code = event["identifier"]
@@ -183,12 +183,12 @@ class KiloPreciosClarosIO:
             }
         return article_per_point_of_sale
 
-    @staticmethod
     def get_article_per_point_of_sale_juliet_to_kilo(
+        self,
         event: dict[str, str]
     ) -> dict[str, str] | None:
         try:
-            return KiloPreciosClarosIO.article_per_point_of_sale_juliet_to_kilo(event)
+            return self.article_per_point_of_sale_juliet_to_kilo(event)
         except Exception as message:
             logging.error(f"{classname(self)}.get_article_per_point_of_sale {message}\n")
             logging.error(f"  {as_jsonl(event):s}\n")
