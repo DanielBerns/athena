@@ -72,7 +72,7 @@ class KiloPreciosClarosIO:
     def get_events_resource(
         self,
         name: str
-    ) -> Path
+    ) -> Path:
         return get_resource(self.home, name, ".jsonl")
 
     def read_events_file(
