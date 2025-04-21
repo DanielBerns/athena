@@ -1,7 +1,7 @@
 import logging
 
 from components.juliet import JulietPaths
-from components.precios_claros.juliet_precios_claros_basic_reader import JulietPreciosClarosBasicReader
+from components.precios_claros.juliet_precios_claros_reader_simple import JulietPreciosClarosReaderSimple
 from components.precios_claros.kilo_juliet_precios_claros_reader import KiloJulietPreciosClarosReader
 
 from components.precios_claros.juliet_precios_claros_processor import JulietPreciosClarosProcessor

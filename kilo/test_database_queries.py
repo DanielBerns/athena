@@ -134,7 +134,7 @@ def main() -> None:
                     if variation > max_variation:
                         max_variation = variation
                     logging.info(f"    {current_reference[:8]} -> {current_measure[:8]} variation: {variation*100:>12.2f}")
-            logging.info(f"max_variation: {max_variation*100:>12.2f}")
+            logging.info(f"                                                 max_variation: {max_variation*100:>12.2f}")
     logging.info(f"{identifier} stop")
 
 if __name__ == "__main__":
