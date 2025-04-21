@@ -1,3 +1,4 @@
+import pdb
 import logging
 
 from components.juliet import JulietPaths
@@ -42,7 +43,7 @@ def main() -> None:
     )
 
     logging.info("start")
-
+    pdb.set_trace()
     processor = JulietPreciosClarosProcessor(juliet_paths)
     juliet_store_home = processor.juliet_store_home
     juliet_reader = JulietPreciosClarosReaderSimple(juliet_store_home)
