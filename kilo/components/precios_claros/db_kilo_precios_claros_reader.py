@@ -53,7 +53,7 @@ class DBKiloPreciosClarosReader:
     def points_of_sale_generator(
         self
     ) -> Generator[dict[str, str], None, None]:
-        logging.info(f"{classname(self)}.points_of_sale_generator: {self.reader.current_sample_home} - {self.sample_key}")
+        logging.info(f"{classname(self)}.points_of_sale_generator: {self.reader.current_sample_home} - {self.reader.current_sample_key}")
         for kilo_json in self.reader.read_points_of_sale():
             yield kilo_json
 
