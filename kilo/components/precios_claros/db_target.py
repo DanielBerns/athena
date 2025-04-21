@@ -11,16 +11,10 @@ from components.precios_claros.database import (
     ArticleCode,
     ArticleCard,
     Price,
-    DatabaseException
 )
-from components.precios_claros.db_new_interface import DBNewInterface
 
 
 class DBTarget(Protocol):
-
-    @property
-    def db(self) -> DBNewInterface:
-        return self._db
 
     @property
     def current_sample_home(self) -> Path:

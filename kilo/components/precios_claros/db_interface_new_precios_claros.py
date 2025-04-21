@@ -1,3 +1,4 @@
+import pdb
 import logging
 from contextlib import contextmanager
 from collections.abc import Callable
@@ -5,11 +6,10 @@ from pathlib import Path
 from typing import Generator
 from sqlalchemy import select, insert
 from sqlalchemy.orm import Session
-
+from components.core.logged_exception import LoggedException
 from components.helpers.helpers import classname, get_container, get_stringy
 
 from components.precios_claros.database import (
-    DatabaseException,
     get_int,
     ArticleCode,
     ArticleCard,
@@ -24,7 +24,7 @@ from components.precios_claros.database import (
 from components.precios_claros.kilo_keys import KiloKeys
 
 
-class DBPreciosClarosNewInterface:
+class DBInterfaceNewPreciosClaros:
     def __init__(self, session: Session) -> None:
         self._session = session
 
@@ -90,27 +90,31 @@ class DBPreciosClarosNewInterface:
 
     def insert_timestamps(
         self,
-        sample_key_generator: Callable[[], Generator[str, None, None]]
+        samples_generator: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
         logging.info(f"{classname(self):s}.insert_timestamps start")
         try:
-            bulk = [ {
+            function = lambda sample_key: {
                 "year": get_int(sample_key[0:4]),
                 "month": get_int(sample_key[4:6]),
                 "day": get_int(sample_key[6:8]),
                 "hour": get_int(sample_key[8:10]),
                 "minute": get_int(sample_key[10:12]),
                 "second": get_int(sample_key[12:14])
-                } for sample_key in sample_key_generator()
+                }
+            bulk = [
+                function(record.get("sample_key", "00000000000000"))
+                for record in samples_generator() if len(record)
             ]
-            self.session.execute(insert(Timestamp), bulk)
-            self.session.commit()
-            self.get_all_the_timestamps()
-            logging.info(f"{classname(self):s}.insert_timestamps ({len(self.all_the_timestamps)}) stop")
+            if len(bulk):
+                self.session.execute(insert(Timestamp), bulk)
+                self.session.commit()
+                self.get_all_the_timestamps()
+                logging.info(f"{classname(self):s}.insert_timestamps ({len(self.all_the_timestamps)}) stop")
         except Exception as panic:
             self.session.rollback()
             message = f"*** Error {classname(self):s}.insert_timestamps ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
         logging.info(f"{classname(self):s}.insert_timestamps done")
 
     def query_timestamp(
@@ -128,7 +132,7 @@ class DBPreciosClarosNewInterface:
             logging.error(f"*** Error {classname(self):s}.query_timestamp")
             logging.error(f"    {year} {month} {day} {hour} {minute} {second}")
             message = f"*** Error {classname(self):s}.query_timestamp  ({len(self.all_the_timestamps)})({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
 
     def look_for_timestamp_id(self, sample_key: str) -> int:
         existing_timestamp = self.all_the_timestamps.get(sample_key, None)
@@ -136,40 +140,7 @@ class DBPreciosClarosNewInterface:
             return existing_timestamp.id
         else:
             message = f"*** Error {classname(self)}.look_for_timestamp_id: {sample_key}"
-            raise DatabaseException(message)
-
-
-    def insert_one_timestamp(
-        self,
-        sample_key: str
-    ) -> Timestamp | None:
-        try:
-            year = get_int(sample_key[0:4])
-            month = get_int(sample_key[4:6])
-            day = get_int(sample_key[6:8])
-            hour = get_int(sample_key[8:10])
-            minute = get_int(sample_key[10:12])
-            second = get_int(sample_key[10:14])
-            new_timestamp = Timestamp(
-                year=year,
-                month=month,
-                day=day,
-                hour=hour,
-                minute=minute,
-                second=second
-            )
-            self.session.add(new_timestamp)
-            self.session.commit()
-            self.all_the_timestamps[sample_key] = new_timestamp
-            logging.info(f"{classname(self):s}.get_timestamp ({len(self._all_the_timestamps)}) stop")
-            return new_timestamp
-        except Exception as panic:
-            self.session.rollback()
-            logging.error( "*** Error Timestamp")
-            logging.error(f"    {year} {month} {day} {hour} {minute} {second}")
-            message = f"*** Error {classname(self):s}.get_timestamp  ({len(self.all_the_timestamps)})({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
-
+            raise LoggedException(message)
 
     def insert_states(
         self,
@@ -183,8 +154,6 @@ class DBPreciosClarosNewInterface:
                 }
                 for record in known_states()
             ]
-            for rr in bulk:
-                logging.info(f"{str(rr)}")
             self.session.execute(insert(State), bulk)
             self.session.commit()
             self.get_all_the_states()
@@ -193,7 +162,7 @@ class DBPreciosClarosNewInterface:
             logging.error( "*** Error State")
             logging.error(f"    states: {str(known_states):s}")
             message = f"*** Error {classname(self):s}.insert_states ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
         logging.info(f"{classname(self):s}.insert_states stop")
 
     # TODO: State with name="Error", all the bad states codes belongs to the Error State
@@ -216,27 +185,8 @@ class DBPreciosClarosNewInterface:
             for key, state in self.all_the_states.items():
                 logging.error(f"    key: {key} - state {state.name}")
             message = f"*** Error {classname(self)}.query_state: {classname(panic)}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
 
-    def insert_one_state(
-        self,
-        state_code: str,
-        state_name: str
-    ) -> None:
-        try:
-            new_state = State(code=state_code, name=state_name)
-            self.session.insert(new_state)
-            self.session.commit()
-            self.all_the_states[new_state.code] = new_state
-        except Exception as panic:
-            self.session.rollback()
-            logging.error(f"*** Error {classname(self)}.insert_one_state")
-            logging.error(f"    state_code: {state_code:s}")
-            logging.error(f"    state_name: {state_name:s}")
-            for key, state in self.all_the_states.items():
-                logging.error(f"    key: {key} - state {state.name}")
-            message = f"*** Error {classname(self)}.query_state: {classname(panic)}"
-            raise DatabaseException(message)
 
     def insert_cities(
         self,
@@ -255,7 +205,7 @@ class DBPreciosClarosNewInterface:
         except Exception as panic:
             self.session.rollback()
             message = f"*** Error {classname(self):s}.insert_cities ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
         logging.info(f"{classname(self):s}.insert_cities done")
 
 
@@ -278,32 +228,8 @@ class DBPreciosClarosNewInterface:
             logging.error(f"   city name: {name:s}")
             logging.error(f"       state: {db_state.code} - {db_state.name}")
             message = f"*** Error {classname(self):s}.get_city ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
 
-    def insert_one_city(
-        self,
-        name: str,
-        db_state: State
-    ) -> City:
-        logging.info(f"{classname(self):s}.insert_one_city start")
-        try:
-            new_city = City(
-                name=name,
-                state=db_state
-            )
-            self.session.add(new_city)
-            self.session.commit()
-            city_key = KiloKeys.city_key(db_state.code, name)
-            self.all_the_cities[city_key] = new_city
-            logging.info(f"new_city id: {new_city.id}")
-            logging.info(f"{classname(self):s}.get_city ({len(self.all_the_cities)}) stop")
-            return new_city
-        except Exception as panic:
-            self.session.rollback()
-            logging.error( "*** Error City")
-            logging.error(f"   city name: {name:s}")
-            message = f"*** Error {classname(self):s}.get_city ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
 
     def look_for_city_id(self, city_key: str) -> int:
         existing_city = self.all_the_cities[city_key]
@@ -311,7 +237,7 @@ class DBPreciosClarosNewInterface:
             return existing_city.id
         else:
             message = f"*** Error {classname(self)}.look_for_city: {city_key}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
 
     def insert_places(
         self,
@@ -331,7 +257,7 @@ class DBPreciosClarosNewInterface:
         except Exception as panic:
             self.session.rollback()
             message = f"*** Error {classname(self):s}.insert_places ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
         logging.info(f"{classname(self):s}.insert_places done")
 
     def query_place(
@@ -349,32 +275,8 @@ class DBPreciosClarosNewInterface:
             logging.error(f"    place address: {str(address)}")
             logging.error(f"             city: {str(db_city)}")
             message = f"*** Error {classname(self):s}.query_place ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
 
-    def insert_one_place(
-        self,
-        address: str,
-        db_city: City
-    ) -> Place:
-        logging.info(f"{classname(self):s}.insert_one_place start")
-        try:
-            new_place = Place(
-                address=address,
-                city=db_city
-            )
-            self.session.add(new_place)
-            self.session.commit()
-            place_key = KiloKeys.place_key(city.state.code, city.name, address)
-            self.all_the_places[place_key] = new_place
-            logging.info(f"{classname(self):s}.insert_one_place ({len(self.all_the_places)}) stop")
-            return new_place
-        except Exception as panic:
-            self.session.rollback()
-            logging.error( "*** Error Place")
-            logging.error(f"    place address: {str(address)}")
-            logging.error(f"             city: {str(db_city)}")
-            message = f"*** Error {classname(self):s}.insert_one_place ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
 
     def look_for_place_id(self, place_key: str) -> int:
         existing_place = self.all_the_places.get(place_key, None)
@@ -382,7 +284,7 @@ class DBPreciosClarosNewInterface:
             return existing_place.id
         else:
             message = f"*** Error {classname(self)}.look_for_place: {place_key}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
 
     def insert_points_of_sale(
         self,
@@ -405,7 +307,7 @@ class DBPreciosClarosNewInterface:
         except Exception as panic:
             self.session.rollback()
             message = f"*** Error {classname(self):s}.insert_points_of_sale ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
 
     def query_point_of_sale(
         self,
@@ -419,40 +321,8 @@ class DBPreciosClarosNewInterface:
             logging.error(f"*** Error {classname(self):s}.query_point_of_sale")
             logging.error(f"    code: {code}")
             message = f"*** Error {classname(self):s}.query_point_of_sale ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
 
-    def get_point_of_sale(
-        self,
-        code: str,
-        flag: str,
-        business: str,
-        branch: str,
-        db_place: Place
-    ) -> PointOfSale:
-        logging.info(f"{classname(self)}.get_point_of_sale start")
-        try:
-            new_point_of_sale = PointOfSale(
-                code=code,
-                flag=flag,
-                business=business,
-                branch=branch,
-                place=db_place,
-            )
-            self.session.add(new_point_of_sale)
-            self.session.commit()
-            self.all_the_points_of_sale[code] = new_point_of_sale
-            logging.info(f"{classname(self)}.get_point_of_sale ({len(self.all_the_points_of_sale)}) stop")
-            return new_point_of_sale
-        except Exception as panic:
-            self.session.rollback()
-            logging.error(f"*** Error {classname(self)}.get_point_of_sale")
-            logging.error(f"    code: {code}")
-            logging.error(f"    flag: {flag}")
-            logging.error(f"    business: {business}")
-            logging.error(f"    branch: {branch}")
-            logging.error(f"    place: {place.address} at {place.city}")
-            message = f"*** Error {classname(self):s}.get_point_of_sale ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
 
     def look_for_point_of_sale_id(self, point_of_sale_code: str) -> int:
         existing_point_of_sale = self.all_the_points_of_sale[point_of_sale_code]
@@ -460,7 +330,7 @@ class DBPreciosClarosNewInterface:
             return existing_point_of_sale.id
         else:
             message = f"*** Error {classname(self)}.look_for_article_code_id: {point_of_sale_code}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
 
     def insert_article_codes(
         self,
@@ -470,7 +340,7 @@ class DBPreciosClarosNewInterface:
         logging.info(f"{classname(self)}.insert_article_codes start")
         try:
             bulk = [
-                {"code": record["article_code"]
+                {"code": record.get("article_code", "XXXXXXXXXX")
                 } for record in article_codes_generator()
             ]
             self.session.execute(insert(ArticleCode), bulk)
@@ -480,7 +350,7 @@ class DBPreciosClarosNewInterface:
         except Exception as panic:
             self.session.rollback()
             message = f"*** Error {classname(self):s}.insert_article_codes ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
 
     def query_article_code(
         self,
@@ -494,28 +364,7 @@ class DBPreciosClarosNewInterface:
             logging.error(f"*** Error {classname(self):s}.query_article_code")
             logging.error(f"    code: {code}")
             message = f"*** Error {classname(self):s}.query_article_code ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
-
-    def insert_one_article_code(
-        self,
-        code: str
-    ) -> ArticleCode:
-        logging.info(f"{classname(self)}.insert_one_article_code start")
-        try:
-            new_article_code = ArticleCode(
-                code=code
-            )
-            self.session.add(new_article_code)
-            self.session.commit()
-            self.all_the_article_codes[code] = new_article_code
-            logging.info(f"{classname(self)}.get_article_code ({len(self.all_the_article_codes)}) stop")
-            return new_article_code
-        except Exception as panic:
-            self.session.rollback()
-            logging.error(f"*** Error {classname(self):s}.get_article_code")
-            logging.error(f"    code: {code}")
-            message = f"*** Error {classname(self):s}.get_article_code ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
 
     def look_for_article_code_id(self, article_code_string: str) -> int:
         existing_article_code = self.all_the_article_codes[article_code_string]
@@ -523,7 +372,7 @@ class DBPreciosClarosNewInterface:
             return existing_article_code.id
         else:
             message = f"*** Error {classname(self)}.look_for_article_code_id: {article_code}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
 
     def insert_article_cards(
         self,
@@ -545,37 +394,8 @@ class DBPreciosClarosNewInterface:
         except Exception as panic:
             self.session.rollback()
             message = f"*** Error {classname(self):s}.insert_article_cards ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
 
-    def insert_one_article_card(
-        self,
-        brand: str,
-        description: str,
-        package: str,
-        db_article_code: ArticleCode
-    ) -> ArticleCard:
-        logging.info(f"{classname(self)}.insert_one_article_card start")
-        try:
-            article_card_key = KiloKeys.article_card_key(db_article_code.code, brand, description, package)
-            new_article_card = ArticleCard(
-                brand=brand,
-                description=description,
-                package=package,
-                article_code=db_article_code,
-            )
-            self.session.add(new_article_card)
-            self.session.commit()
-            self.all_the_article_cards[article_card_key] = new_article_card
-            logging.info(f"{classname(self)}.insert_one_article_card ({len(self.all_the_article_cards)}) stop")
-            return new_article_card
-        except Exception as panic:
-            self.session.rollback()
-            logging.error(f"*** Error {classname(self):s}.get_article_card")
-            logging.error(f"          brand: {brand:s}")
-            logging.error(f"    description: {description:s}")
-            logging.error(f"        package: {package:s}")
-            message = f"*** Error {classname(self):s}.get_article_card ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
 
     def insert_prices(
         self,
@@ -584,19 +404,22 @@ class DBPreciosClarosNewInterface:
         logging.info(f"{classname(self)}.insert_prices start")
         try:
             bulk = [
-                { "amount": record["price"],
+                { "amount": int(record.get("price", 0)),
                   "timestamp_id": self.look_for_timestamp_id(record["sample_key"]),
                   "article_code_id": self.look_for_article_code_id(record["article_code"]),
                   "point_of_sale_id": self.look_for_point_of_sale_id(record["point_of_sale_code"])
                 } for record in prices_generator()
             ]
-            self.session.execute(insert(Price), bulk)
-            self.session.commit()
-            logging.info(f"{classname(self)}.insert_prices stop")
+            if bulk:
+                self.session.execute(insert(Price), bulk)
+                self.session.commit()
+                logging.info(f"{classname(self)}.insert_prices stop")
+            else:
+                logging.info(f"{classname(self)}.insert_prices: empty bulk")
         except Exception as panic:
             self.session.rollback()
             message = f"*** Error {classname(self):s}.insert_prices ({classname(panic):s}): {str(panic):s}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
 
     def get_all_the_states(self) -> None:
         statement = select(State)
@@ -683,7 +506,7 @@ class DBPreciosClarosNewInterface:
         for row in query.yield_per(batch_size):
             yield row
 
-    def query_prices_by_article_code_ordered_by_timestamp(
+    def query_prices_by_article_code(
         self,
         article_code_value: str,
         batch_size: int = 100
@@ -708,6 +531,93 @@ class DBPreciosClarosNewInterface:
             Timestamp.hour,
             Timestamp.minute,
             Timestamp.second
+        )
+        for row in query.yield_per(batch_size):
+            yield row
+
+
+    def query_prices_by_article_code_and_city(
+        self,
+        article_code_value: str,
+        city_name: str,
+        batch_size: int = 100
+    ) -> Generator[Price, None, None]:
+        """
+        Queries for prices associated with a given ArticleCode and city,
+        ordered by timestamp and then by point of sale code.
+
+        Args:
+            article_code_value: The code of the ArticleCode to filter by.
+            city_name: The name of the City to filter by.
+            batch_size: retrieve all the data in batches
+        Returns:
+            A list of Price objects ordered first by timestamp and then by point of sale code.
+        """
+        query = self.session.query(Price).join(
+            Price.article_code).join(
+            Price.timestamp).join(
+            Price.point_of_sale).join(
+            PointOfSale.place).join(
+            Place.city).filter(
+                ArticleCode.code == article_code_value,
+                City.name == city_name
+        ).order_by(
+            Timestamp.year,
+            Timestamp.month,
+            Timestamp.day,
+            Timestamp.hour,
+            Timestamp.minute,
+            Timestamp.second,
+            PointOfSale.code  # Order by point of sale code
+        )
+        for row in query.yield_per(batch_size):
+            yield row
+
+
+    def query_prices_by_article_code_city_and_timestamp(
+        self,
+        article_code_value: str,
+        city_name: str,
+        target_timestamp: str,
+        batch_size: int = 100
+    ) -> Generator[Price, None, None]:
+        """
+        Queries for prices associated with a given ArticleCode, city, and timestamp,
+        ordered by timestamp and then by point of sale code.
+
+        Args:
+            article_code_value: The code of the ArticleCode to filter by.
+            city_name: The name of the City to filter by.
+            target_timestamp: The specific datetime to filter by.
+            batch_size: retrieve all the data in batches
+
+        Returns:
+            A list of Price objects ordered first by timestamp and then by point of sale code.
+        """
+        target_ts = Timestamp.from_string(target_timestamp)
+        query = self.session.query(Price).join(
+            Price.article_code).join(
+            Price.timestamp).join(
+            Price.point_of_sale).join(
+            PointOfSale.place).join(
+            Place.city).filter(
+            ArticleCode.code == article_code_value,
+            City.name == city_name,
+            Timestamp.year == target_ts.year,
+            Timestamp.month == target_ts.month,
+            Timestamp.day == target_ts.day,
+            Timestamp.hour == target_ts.hour,
+            Timestamp.minute == target_ts.minute,
+            Timestamp.second == target_ts.second,
+        ).order_by(
+            Timestamp.year,
+            Timestamp.month,
+            Timestamp.day,
+            Timestamp.hour,
+            Timestamp.minute,
+            Timestamp.second,
+            City.name,
+            PointOfSale.code
         )
         for row in query.yield_per(batch_size):
             yield row

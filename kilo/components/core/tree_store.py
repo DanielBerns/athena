@@ -4,26 +4,9 @@ from shutil import rmtree
 import logging
 from typing import Tuple, Generator
 
+from components.core.logged_exception import LoggedException
 from components.helpers import get_container, get_directory, get_resource, classname
 
-
-class TreeStoreError(Exception):
-    """
-    Custom exception for errors related to the TreeStore class.
-
-    This exception is raised when operations within the TreeStore encounter
-    issues such as out-of-range indices or invalid operations.  It logs
-    the error message before raising the exception.
-    """
-    def __init__(self, explanation: str) -> None:
-        """
-        Initializes a TreeStoreError with an explanation message.
-
-        Args:
-            explanation: A string describing the error.
-        """
-        logging.error(explanation)
-        super().__init__(explanation)
 
 
 def base_256(number: int) -> Tuple[int, int, int]:
@@ -63,9 +46,9 @@ def base_10(first_digit: int, second_digit: int, third_digit: int) -> int:
     return (((first_digit << 8) + second_digit) << 8) + third_digit
 
 
-def get_sample_identifier(number: int) -> Tuple[str, str, str]:
+def get_sample_tuple(number: int) -> Tuple[str, str, str]:
     """
-    Generates a zero-padded, 9-digit string identifier from an integer.
+    Generates a tuple of 3 zero-padded, 3-digit strings from an integer.
 
     Args:
         number: The integer to convert (must be between 0 and 16777215 inclusive).
@@ -166,11 +149,21 @@ class TreeStore:
         <identifier>/  (e.g., my_data)
             index.json
             samples/
-                000000000/
-                000000001/
-                ...
-                <sample_id>/
-                    ... (sample data) ...
+                000/
+                    000/
+                       000/
+                           ... (sample data) ...
+                       001/
+                           ... (sample data) ...
+                       ...
+                       255/
+                    001/
+                       000/
+                           ... (sample data) ...
+                       001/
+                           ... (sample data) ...
+                       ...
+                       255/
     ```
     """
     def __init__(self, base: Path, identifier: str) -> None:
@@ -223,7 +216,7 @@ class TreeStore:
         Returns:
             Path: The path to the newly created sample directory.
         """
-        (alpha, bravo, charlie) = get_sample_identifier(self.index.value)
+        (alpha, bravo, charlie) = get_sample_tuple(self.index.value)
         new_sample_home = get_directory(Path(self.samples, alpha, bravo, charlie))
         self.index.value += 1
         return new_sample_home
@@ -236,43 +229,70 @@ class TreeStore:
         """Logs a message indicating the stop of the TreeStore."""
         logging.info(f"treestore.stop() with index {self.index.value:d}")
 
-    def iterate(self, top: int = -1) -> Generator[Path, None, None]:
+    # def iterate(self, first: int top: int = -1) -> Generator[Path, None, None]:
+    #     """
+    #     Iterates over the sample directories.
+    #
+    #     Args:
+    #         top: The maximum number of sample directories to iterate over.
+    #              If -1 (default), iterates over all existing sample directories.
+    #
+    #     Yields:
+    #         Path: The path to each sample directory.
+    #
+    #     Raises:
+    #         LoggedException: If `top` is greater than the current index value.
+    #     """
+    #     if top == -1:
+    #         top = self.index.value
+    #     elif 0 <= top <= self.index.value:
+    #         pass  # Valid top value
+    #     else:
+    #         explanation = (
+    #             f"{classname(self):s}.samples:"
+    #             f"top {top:d} out of range (-1, {self.index.value:d})"
+    #         )
+    #         raise LoggedException(explanation)
+    #     for k in range(top):
+    #         (alpha, bravo, charlie) = get_sample_tuple(k)
+    #         yield get_directory(Path(self.samples, alpha, bravo, charlie))
+
+    def sample_home_by_index(self, sample_index: int) -> Path:
+        (alpha, bravo, charlie) = get_sample_tuple(sample_index)
+        return get_directory(Path(self.samples, alpha, bravo, charlie))
+
+    def iterate(self, first: int = 0, top: int = -1) -> Generator[int, None, None]:
         """
-        Iterates over the sample directories.
+        get a sequence of sample_index where first <= sample_index < top
 
         Args:
-            top: The maximum number of sample directories to iterate over.
-                 If -1 (default), iterates over all existing sample directories.
+            first: Determine the first sample directory of the selection,
+            top: Determine the last sample directories to select over.
+                 If -1 (default), includes the last sample directory
 
         Yields:
-            Path: The path to each sample directory.
+            int: The index of each sample directory.
 
         Raises:
-            TreeStoreError: If `top` is greater than the current index value.
+            LoggedException: If `first < 0` or `top < first` or  `top >= index.value`
         """
+        if first < 0:
+            explanation = (
+                f"{classname(self):s}.samples:"
+                f"first {first:d} must be non negative"
+            )
+            raise LoggedException(explanation)
         if top == -1:
             top = self.index.value
-        elif 0 <= top <= self.index.value:
+        elif first <= top <= self.index.value:
             pass  # Valid top value
         else:
             explanation = (
-                f"{classname(self):s}.samples:"
-                f"top {top:d} out of range (-1, {self.index.value:d})"
+                f"{classname(self):s}.samples: "
+                f"bad range [first: {first:d} - top: {top:d} - index: {self.index.value:d})]"
             )
-            raise TreeStoreError(explanation)
-
-        for k in range(top):
-            (alpha, bravo, charlie) = get_sample_identifier(k)
-            yield get_directory(Path(self.samples, alpha, bravo, charlie))
-
-    def get_sample_home(self, k: int) -> Path:
-        """
-        Retrieves the path to a specific sample directory by its index.
-
-        Args:
-            k: The index of the sample directory.
-
-        Returns:
-           Path: The path to the requested sample directory.
-        """
-        return get_container(self.samples, get_sample_identifier(k))
+            raise LoggedException(explanation)
+        for sample_index in range(first, top):
+            yield sample_index
+            # (alpha, bravo, charlie) = get_sample_tuple(k)
+            # yield get_directory(Path(self.samples, alpha, bravo, charlie))

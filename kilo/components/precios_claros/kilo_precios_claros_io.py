@@ -2,6 +2,8 @@ import logging
 from pathlib import Path
 from collections.abc import Callable
 from typing import Generator
+
+from components.core.logged_exception import LoggedException
 from components.precios_claros.kilo_keys import KiloKeys
 
 from components.helpers.helpers import (
@@ -20,15 +22,15 @@ def get_price_in_cents(price: str) -> str:
     return str(int(float(price) * 100))
 
 
-class KiloPreciosClarosException(Exception):
-    def __init__(self, message: str) -> None:
-        super().__init__(message)
-        logging.error(message)
-
 
 class KiloPreciosClarosIO:
     def __init__(self) -> None:
         self._home: Path | None = None
+        self._map_of_point_of_sale_codes: dict[str, str] = dict()
+
+    @property
+    def map_of_point_of_sale_codes(self) -> dict[str, str]:
+        return self._map_of_point_of_sale_codes
 
     @property
     def home(self) -> Path | None:
@@ -58,7 +60,7 @@ class KiloPreciosClarosIO:
         else:
             message = f"KiloSample.update_metadata: null sample_key\n" \
                       f"  at {str(self.home):s}"
-            raise KiloPreciosClarosException(message)
+            raise LoggedException(message)
 
     def create_metadata(self, sample_key: str) -> None:
         self.key = sample_key
@@ -99,7 +101,8 @@ class KiloPreciosClarosIO:
         branch = (event["sucursal"]).lower()
         city_key = KiloKeys.city_key(state, city)
         place_key = KiloKeys.place_key(state, city, address)
-        point_of_sale_key = KiloKeys.point_of_sale_key(point_of_sale_code, business)
+        point_of_sale_key = KiloKeys.point_of_sale_key(point_of_sale_code, flag)
+        self.map_of_point_of_sale_codes[point_of_sale_code] = point_of_sale_key
         point_of_sale = {
             "point_of_sale_code": point_of_sale_code,
             "state": state,
@@ -127,7 +130,8 @@ class KiloPreciosClarosIO:
         branch = (event["sucursalNombre"]).lower()
         city_key = KiloKeys.city_key(state_code, city)
         place_key = KiloKeys.place_key(state_code, city, address)
-        point_of_sale_key = KiloKeys.point_of_sale_key(identifier, business)
+        point_of_sale_key = KiloKeys.point_of_sale_key(identifier, flag)
+        self.map_of_point_of_sale_codes[point_of_sale_code] = point_of_sale_key
         point_of_sale = {
           "point_of_sale_code": point_of_sale_code,
           "state": state_code,
@@ -165,6 +169,7 @@ class KiloPreciosClarosIO:
         description = (event["nombre"]).lower()
         package = (event["presentacion"]).lower()
         point_of_sale_code = event["point_of_sale"]
+        point_of_sale_key = self.map_of_point_of_sale_codes[point_of_sale_code]
         article_card_key = KiloKeys.article_card_key(article_code, brand, description, package)
         article_per_point_of_sale = {
                 "article_code": article_code,
@@ -173,6 +178,7 @@ class KiloPreciosClarosIO:
                 "package": package,
                 "price": get_price_in_cents(event["precio"]),
                 "point_of_sale_code": point_of_sale_code,
+                "point_of_sale_key": point_of_sale_key,
                 "article_card_key": article_card_key
             }
         return article_per_point_of_sale

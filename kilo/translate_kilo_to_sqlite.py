@@ -1,3 +1,4 @@
+# import pdb
 import logging
 import os
 from pathlib import Path
@@ -15,15 +16,15 @@ from components.precios_claros.db_kilo_precios_claros_reader import (
     DBPricesGenerator
 )
 
-from components.precios_claros.db_new_interface import db_get_new_interface
-from components.precios_claros.db_precios_claros_new_interface import DBPreciosClarosNewInterface
+from components.precios_claros.database import db_get_session
+from components.precios_claros.db_interface_new_precios_claros import DBInterfaceNewPreciosClaros
 from components.helpers.helpers import get_container, get_resource, measure_execution_time
 
 INSERT_PRICES = os.environ.get("INSERT_PRICES", "NO")
-FIRST_SAMPLE = os.environ.get("FIRST_SAMPLE", "-1")
-LAST_SAMPLE = os.environ.get("LAST_SAMPLE", "-1")
+FIRST_SAMPLE = os.environ.get("FIRST_SAMPLE", "0")
+TOP_SAMPLE = os.environ.get("TOP_SAMPLE", "-1")
+DB_NAME = os.environ.get("DB_NAME", "mecon_dev")
 
-import pdb
 
 def main() -> None:
     # script identifier,
@@ -56,70 +57,61 @@ def main() -> None:
     try:
         first_sample = int(FIRST_SAMPLE)
     except Exception:
-        first_sample = -1
+        first_sample = 0
     try:
-        last_sample = int(LAST_SAMPLE)
+        top_sample = int(TOP_SAMPLE)
     except Exception:
-        last_sample = -1
+        top_sample = -1
 
     insert_prices = INSERT_PRICES == "YES"
 
-    logging.info(f"FIRST_SAMPLE = {first_sample}")
-    logging.info(f"LAST_SAMPLE = {last_sample}")
-    logging.info(f"INSERT_PRICES = {insert_prices}")
+    logging.info(f"first sample = {FIRST_SAMPLE} > {first_sample}")
+    logging.info(f"top sample = {TOP_SAMPLE} > {top_sample}")
+    logging.info(f"insert prices = {INSERT_PRICES } > {insert_prices}")
 
     storage_precios_claros = get_container(kilo_paths.storage, "precios_claros")
-    factory = lambda s: DBPreciosClarosNewInterface(s)
-    with db_get_new_interface(storage_precios_claros, factory) as db:
+    storage_precios_claros_sqlite = get_container(storage_precios_claros, "sqlite")
+    db_uri = str(get_resource(storage_precios_claros_sqlite, "mecon_dev", ".db"))
+    with db_get_session(db_uri) as session:
+        db = DBInterfaceNewPreciosClaros(session)
         _reader = KiloPreciosClarosBasicReader(storage_precios_claros)
         reader = DBKiloPreciosClarosReader(_reader)
-        db_states = DBStatesGenerator(reader)
         if insert_prices:
-            db_states.load_table()
-        else:
-            db.insert_states(db_states.iterate)
-        db_cities = DBCitiesGenerator(reader, db_states.table)
-        if insert_prices:
-            db_cities.load_table()
-        else:
-            db.insert_cities(db_cities.iterate)
-        db_places = DBPlacesGenerator(reader, db_cities.table)
-        if insert_prices:
-            db_places.load_table()
-        else:
-            db.insert_places(db_places.iterate)
-        db_points_of_sale = DBPointsOfSalesGenerator(reader, db_places.table)
-        if insert_prices:
-            db_points_of_sale.load_table()
-        else:
-            db.insert_points_of_sale(db_points_of_sale.iterate)
-        db_article_codes = DBArticleCodesGenerator(reader)
-        if insert_prices:
-            db_article_codes.load_table()
-        else:
-            db.insert_article_codes(db_article_codes.iterate)
-        db_article_cards = DBArticleCardsGenerator(reader, db_article_codes.table)
-        if insert_prices:
-            db_article_cards.load_table()
-        else:
-            db.insert_article_cards(db_article_cards.iterate)
-        db_timestamps = DBTimestampsGenerator(reader)
-        if insert_prices:
-            db_timestamps.load_table()
-        else:
-            db.insert_timestamps(db_timestamps.iterate)
-        if insert_prices:
-            for index in range(first_sample, last_sample):
-                db_prices = DBPricesGenerator(
-                    reader,
-                    db_timestamps.table,
-                    db_article_codes.table,
-                    db_points_of_sale.table,
-                    index,
-                    index + 1
-                )
+            # pdb.set_trace()
+            # db.get_all_states()
+            # db.get_all_the_cities()
+            # db.get_all_the_places()
+            db.get_all_the_points_of_sale()
+            db.get_all_the_article_codes()
+            # db.get_all_the_article_cards()
+            db.get_all_the_timestamps()
+            db_prices = DBPricesGenerator(
+                reader,
+                db.all_the_timestamps,
+                db.all_the_article_codes,
+                db.all_the_points_of_sale,
+            )
+            reader.first_sample = first_sample
+            reader.top_sample = top_sample
+            for sample_home, sample_key in reader.samples_generator():
                 db.insert_prices(db_prices.iterate)
+        else:
+            db_timestamps = DBTimestampsGenerator(reader)
+            db.insert_timestamps(db_timestamps.iterate)
 
+            db_states = DBStatesGenerator(reader)
+            db_cities = DBCitiesGenerator(reader, db_states.table)
+            db_places = DBPlacesGenerator(reader, db_cities.table)
+            db_points_of_sale = DBPointsOfSalesGenerator(reader, db_places.table)
+            db_article_codes = DBArticleCodesGenerator(reader)
+            db_article_cards = DBArticleCardsGenerator(reader, db_article_codes.table)
+
+            db.insert_states(db_states.iterate)
+            db.insert_cities(db_cities.iterate)
+            db.insert_places(db_places.iterate)
+            db.insert_points_of_sale(db_points_of_sale.iterate)
+            db.insert_article_codes(db_article_codes.iterate)
+            db.insert_article_cards(db_article_cards.iterate)
 
     logging.info(f"{identifier} stop")
     return 0

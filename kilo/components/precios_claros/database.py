@@ -1,10 +1,10 @@
-# How to query for article_cards ordered by brand and then for description and then for package?
-
-
 import logging
 from typing import List, Optional, Generator
 from contextlib import contextmanager
 from pathlib import Path
+from datetime import datetime
+
+from components.core.logged_exception import LoggedException
 
 import sqlalchemy as sa
 from sqlalchemy.orm import (
@@ -18,11 +18,6 @@ from sqlalchemy.orm import (
 )
 
 
-class DatabaseException(Exception):
-    def __init__(self, message: str) -> None:
-        super().__init__(message)
-        logging.error(message)
-
 def get_int(string: str) -> int:
     try:
         return int(string)
@@ -30,7 +25,8 @@ def get_int(string: str) -> int:
         logging.error(f"*** Error database.get_int")
         logging.error(f"    string: {str(panic)}")
         message = f"*** Error database.get_int ({classname(panic)}): {str(panic)}"
-        raise DatabaseException(message)
+        raise LoggedException(message)
+
 
 class Base(DeclarativeBase):
       pass
@@ -52,6 +48,27 @@ class Timestamp(Base):
 
     def __repr__(self) -> str:
         return f"{self.year:4d}{self.month:>02d}{self.day:>02d}{self.hour:>02d}{self.minute:>02d}{self.second:>02d}"
+
+    def to_datetime(self) -> datetime:
+        return datetime(self.year, self.month, self.day, self.hour, self.minute, self.second)
+
+    @classmethod
+    def from_datetime(cls, dt: datetime) -> "Timestamp":
+        return cls(
+            year=dt.year, month=dt.month, day=dt.day, hour=dt.hour, minute=dt.minute, second=dt.second
+        )
+
+    @classmethod
+    def from_string(cls, string: str) -> "Timestamp":
+        _year = get_int(string[0:4])
+        _month = get_int(string[4:6])
+        _day = get_int(string[6:8])
+        _hour = get_int(string[8:10])
+        _minute = get_int(string[10:12])
+        _second = get_int(string[12:14])
+        return cls(
+            year=_year, month=_month, day=_day, hour=_hour, minute=_minute, second=_second
+        )
 
 
 class Tag(Base):

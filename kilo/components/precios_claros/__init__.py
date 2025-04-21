@@ -21,11 +21,14 @@ from components.precios_claros.database import (
     ArticleCode,
     ArticleCard,
     Price,
-    DatabaseException,
     db_get_session
 )
 
-from components.precios_claros.db_new_interface import DBNewInterface, db_get_new_interface
+from components.precios_claros.db_interface_insertion import DBInterfaceInsertion
+from components.precios_claros.db_interface_basic_queries import DBInterfaceBasicQueries
+# from components.precios_claros.db_timeserie_query_interface import DBTimeserieQueryInterface
+
+# from components.precios_claros.db_new_interface import DBNewInterface, db_get_new_interface
 
 from components.precios_claros.db_kilo_precios_claros_reader import (
     DBKiloPreciosClarosReader,

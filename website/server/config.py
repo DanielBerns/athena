@@ -8,8 +8,6 @@ app_identifier = 'athena'
 app_data_path = Path('~', 'data', app_identifier, 'website').expanduser()
 load_dotenv(Path(app_data_path, 'env'))
 
-class ConfigException(Exception):
-    pass
 
 class Config(object):
     IDENTIFIER = app_identifier

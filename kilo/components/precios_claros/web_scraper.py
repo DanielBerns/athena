@@ -2,6 +2,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import dict, Any, Generator, List
 
+from components.core.logged_exception import LoggedException
 from components.helpers.helpers import classname
 from components.core.web_client import WebClient
 
@@ -25,8 +26,6 @@ class QueryLimits:
         return page * self.full_page_queries
 
 
-class WebScraperError(Exception):
-    pass
 
 
 class Endpoints:
@@ -155,7 +154,7 @@ class WebScraper:
         if query_limits.total_items == 0:
             explanation = f"{classname(self):s}.itera_points_of_sale 2: zero query_limits"
             logging.error(explanation)
-            raise WebScraperError(explanation)
+            raise LoggedException(explanation)
         for page in range(0, query_limits.full_pages):
             for a_point_of_sale in self.request_points_of_sale(
                 query_limits.offset(page), query_limits.full_page_queries
@@ -222,7 +221,7 @@ class WebScraper:
                 f"{point_of_sale_key:s}: zero query_limits"
             )
             logging.error(explanation)
-            raise WebScraperError(explanation)
+            raise LoggedException(explanation)
         for page in range(0, query_limits.full_pages):
             for article in self.get_articles_per_point_of_sale(
                 articles_url,

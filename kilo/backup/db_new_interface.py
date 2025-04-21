@@ -4,9 +4,9 @@ from typing import Protocol, Callable, Generator, Optional
 from contextlib import contextmanager
 from sqlalchemy.orm import Session
 
+from components.core.logged_exception import LoggedException
 from components.helpers.helpers import get_container, classname
 from components.precios_claros.database import (
-    DatabaseException,
     ArticleCode,
     ArticleCard,
     State,
@@ -24,7 +24,7 @@ class DBNewInterface(Protocol):
     def new_point_of_sale_code_string(
         self,
         point_of_sale_code_string: str,
-        business: str
+        flag: str
     ) -> str:
         ...
 
@@ -47,12 +47,6 @@ class DBNewInterface(Protocol):
     ) -> Optional[Timestamp]:
         ...
 
-    def insert_one_timestamp(
-        self,
-        sample_key: str
-    ) -> Optional[Timestamp]:
-        ...
-
     def insert_states(
         self,
         known_states: dict[str, str]
@@ -65,13 +59,6 @@ class DBNewInterface(Protocol):
     ) -> Optional[State]:
         ...
 
-    def insert_one_state(
-        self,
-        state_code: str,
-        state_name: str
-    ) -> None:
-        ...
-
     def insert_cities(
         self,
         cities_generator: Callable[[], Generator[dict[str, str], None, None]]
@@ -79,13 +66,6 @@ class DBNewInterface(Protocol):
         ...
 
     def query_city(
-        self,
-        name: str,
-        db_state: State
-    ) -> Optional[City]:
-        ...
-
-    def insert_one_city(
         self,
         name: str,
         db_state: State
@@ -105,26 +85,19 @@ class DBNewInterface(Protocol):
     ) -> Optional[Place]:
         ...
 
-    def insert_one_place(
-        self,
-        address: str,
-        db_city: City
-    ) -> Optional[Place]:
-        ...
-
     def insert_points_of_sale(
         self,
         points_of_sale_generator: Callable[[], Generator[tuple[str, str, str, str, str], None, None]]
     ) -> None:
         ...
 
-    def query_point_of_sale(
+    def query_point_of_sale_by_code(
         self,
         code: str
     ) -> Optional[PointOfSale]:
         ...
 
-    def get_point_of_sale(
+    def query_point_of_sale(
         self,
         code: str,
         flag: str,
@@ -146,25 +119,10 @@ class DBNewInterface(Protocol):
     ) -> Optional[ArticleCode]:
         ...
 
-    def insert_one_article_code(
-        self,
-        code: str
-    ) -> Optional[ArticleCode]:
-        ...
-
     def insert_article_cards(
         self,
         article_card_generator: Callable[[], Generator[tuple[str, str, str, str], None, None]]
     ) -> None:
-        ...
-
-    def insert_one_article_card(
-        self,
-        brand: str,
-        description: str,
-        package: str,
-        db_article_code: ArticleCode
-    ) -> Optional[ArticleCard]:
         ...
 
     def insert_price(
@@ -217,12 +175,30 @@ class DBNewInterface(Protocol):
     ) -> Generator[ArticleCode, None, None]:
         ...
 
-    def query_prices_by_article_code_ordered_by_timestamp(
+    def query_prices_by_article_code(
         self,
         article_code_value: str,
         batch_size: int = 100
     ) -> Generator[Price, None, None]:
       ...
+
+    def query_prices_by_article_code_and_city(
+        self,
+        article_code_value: str,
+        city_name: str,
+        batch_size: int = 100
+    ) -> Generator[Price, None, None]:
+      ...
+
+    def query_prices_by_article_code_city_and_timestamp(
+        self,
+        article_code_value: str,
+        city_name: str,
+        target_timestamp: str,
+        batch_size: int = 100
+    ) -> Generator[Price, None, None]:
+        ...
+
 
 @contextmanager
 def db_get_new_interface(
@@ -238,5 +214,5 @@ def db_get_new_interface(
             yield db_interface
         except Exception as panic:
             message = f"*** Error db_interface.db_get_interface ({classname(panic)}) {str(panic):s}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
 

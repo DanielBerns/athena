@@ -14,13 +14,6 @@ from components.core.tree_store import TreeStore
 from components.helpers import get_container
 
 
-class JulietToKiloPreciosClarosException(Exception):
-    def __init__(self, message: str) -> None:
-        super().__init__(message)
-        logging.error(message)
-
-
-
 class JulietToKiloPreciosClarosTarget:
     def __init__(self, kilo_paths: KiloPaths) -> None:
         self._kilo_paths = kilo_paths

@@ -4,6 +4,7 @@ from collections.abc import Callable
 from collections import Counter
 from typing import TextIO, Generator, DefaultDict
 
+from components.core.logged_exception import LoggedException
 
 from components.kilo.kilo_paths import KiloPaths
 from components.precios_claros.db_target import DBTarget
@@ -18,11 +19,6 @@ from components.helpers import (
     classname,
     read_json)
 
-
-class KiloToSqlitePreciosClarosException(Exception):
-    def __init__(self, message: str) -> None:
-        super().__init__(message)
-        logging.error(message)
 
 
 class KiloToSqlitePreciosClarosTarget:
@@ -59,7 +55,7 @@ class KiloToSqlitePreciosClarosTarget:
             for key, value in event.items():
                 logging.error(f"    key: {key} - value: {value}")
             message = f"*** Error {classname(self):s}.kilo_points_of_sale ({classname(panic)}): {str(panic):s}"
-            raise KiloToSqlitePreciosClarosException(message)
+            raise LoggedException(message)
         logging.info(f"{classname(self):s}.kilo_points_of_sale done")
 
     def kilo_selected_point_of_sale(
@@ -73,7 +69,7 @@ class KiloToSqlitePreciosClarosTarget:
             logging.info("done")
         except Exception as panic:
             message = f"{classname(self):s}.kilo_selected_point_of_sale ({classname(panic):s}): {str(panic):s}"
-            raise KiloToSqlitePreciosClarosException(message)
+            raise LoggedException(message)
         logging.info(f"{classname(self):s}.kilo_selected_points_of_sale done")
 
 
@@ -92,6 +88,6 @@ class KiloToSqlitePreciosClarosTarget:
             for key, value in event.items():
                 logging.error(f"    key: {key} - value: {value}")
             message = f"{classname(self):s}.kilo_articles_per_point_of_sale ({classname(panic):s}): {str(panic):s}"
-            raise KiloToSqlitePreciosClarosException(message)
+            raise LoggedException(message)
         logging.info(f"{classname(self):s}.kilo_articles_per_point_of_sale done")
 

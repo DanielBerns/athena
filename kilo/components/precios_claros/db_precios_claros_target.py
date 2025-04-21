@@ -1,5 +1,7 @@
 import logging
 from pathlib import Path
+
+from components.core.logged_exception import LoggedException
 from components.precios_claros.database import (
     Timestamp,
     Tag,
@@ -10,23 +12,22 @@ from components.precios_claros.database import (
     ArticleCode,
     ArticleCard,
     Price,
-    DatabaseException,
     get_int
 )
-from components.precios_claros.db_new_interface import DBNewInterface
+from components.precios_claros.db_interface_insertion import DBInterfaceInsertion
 from components.helpers.helpers import get_stringy, get_resource, read_json, classname
 
 
 
 class DBPreciosClarosTarget:
-    def __init__(self, db: DBNewInterface) -> None:
+    def __init__(self, db: DBInterfaceInsertion) -> None:
         self._db = db
         self._current_sample_home: Path | None = None
         self._current_timestamp: Timestamp | None = None
         self._map_of_points_of_sale: dict[str, str] = dict()
 
     @property
-    def db(self) -> DBInterface:
+    def db(self) -> DBInterfaceInsertion:
         return self._db
 
     @property
@@ -44,7 +45,7 @@ class DBPreciosClarosTarget:
         except Exception as panic:
             self.current_timestamp = None
             message = f"*** Error -{classname(self):s}.current_sample_home: {str(panic):s}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
 
     @property
     def current_timestamp(self) -> Timestamp | None:
@@ -99,4 +100,4 @@ class DBPreciosClarosTarget:
             for key, value in event.items():
                 logging.error(f"    {key}: {value}")
             message = f"*** Error ({classname(self):s}).kilo_articles_per_point_of_sale: {classname(panic)} - {panic}"
-            raise DatabaseException(message)
+            raise LoggedException(message)
