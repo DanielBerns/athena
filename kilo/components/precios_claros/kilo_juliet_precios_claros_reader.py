@@ -26,14 +26,20 @@ class KiloJulietPreciosClarosReader:
         sample_key = self.current_sample_home.stem
         return {"sample_key": sample_key}
 
-    def read_points_of_sale(self) -> Generator[dict[str, str], None, None]:
+    def read_points_of_sale(
+        self,
+    ) -> Generator[dict[str, str], None, None]:
         for juliet_json in self.reader.read_points_of_sale():
-            yield KiloPreciosClarosIO.get_point_of_sale_juliet_to_kilo(juliet_json)
+            yield juliet_json
 
-    def read_selected_points_of_sale(self) -> Generator[dict[str, str], None, None]:
+    def read_selected_points_of_sale(
+        self,
+    ) -> Generator[dict[str, str], None, None]:
         for juliet_json in self.reader.read_selected_points_of_sale():
-            yield KiloPreciosClarosIO.get_point_of_sale_juliet_to_kilo(juliet_json)
+            yield juliet_json
 
-    def read_articles_per_point_of_sale(self) -> Generator[dict[str, str], None, None]:
+    def read_articles_per_point_of_sale(
+        self,
+    ) -> Generator[dict[str, str], None, None]:
         for juliet_json in self.reader.read_articles_per_point_of_sale():
-            yield KiloPreciosClarosIO.get_article_per_point_of_sale_juliet_to_kilo(juliet_json)
+            yield juliet_json

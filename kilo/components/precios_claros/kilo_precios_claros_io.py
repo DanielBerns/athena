@@ -69,16 +69,11 @@ class KiloPreciosClarosIO:
     def read_metadata(self) -> dict[str, str] | None:
         return read_json(self.metadata_resource())
 
-    def create_events_file(
+    def get_events_resource(
         self,
-        name: str,
-        get_events: Callable[[], Generator[dict[str, str] | None, None, None]]
-    ) -> Generator[dict[str, str], None, None]:
-        resource = get_resource(self.home, name, ".jsonl")
-        with create_text_file(resource) as target:
-            for event in get_events():
-                yield event
-                target.write(as_jsonl(event))
+        name: str
+    ) -> Path
+        return get_resource(self.home, name, ".jsonl")
 
     def read_events_file(
         self,
