@@ -11,7 +11,8 @@ from components.precios_claros.kilo_juliet_precios_claros_reader import KiloJuli
 
 from components.core.stats import Stats
 from components.core.tree_store import TreeStore
-from components.helpers import get_container, create_text_file
+from components.helpers import get_container, create_text_file, as_jsonl
+
 
 
 
