@@ -122,7 +122,7 @@ class JulietToKiloPreciosClarosTarget:
         read_events: Callable[[], Generator[dict[str, str], None, None]]
     ) -> None:
         self.dataset_stats[self.sample_key]["articles_per_point_of_sale"] += 1
-        resource = self.kilo_io.get_events_resource("selected_points_of_sale")
+        resource = self.kilo_io.get_events_resource("articles_per_point_of_sale")
         fun = lambda x : self.kilo_io.get_article_per_point_of_sale_juliet_to_kilo(x)
         for event in self.create_events_file(resource, fun, read_events):
             point_of_sale_code_string = event["point_of_sale_code"]
