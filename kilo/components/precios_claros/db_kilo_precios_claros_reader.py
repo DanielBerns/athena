@@ -99,10 +99,10 @@ class DBRecordGeneratorWithTable(DBRecordGenerator):
         reader: DBKiloPreciosClarosReader
     ) -> None:
         super().__init__(reader)
-        self._table: dict[str, dict[str, str]] = {}
+        self._table: dict[str, bool] = {}
 
     @property
-    def table(self) -> dict[str, dict[str, str]]:
+    def table(self) -> dict[str, bool]:
         return self._table
 
     def load_table(self) -> None:
@@ -343,23 +343,34 @@ class DBArticleCardsGenerator(DBRecordGeneratorWithTable):
         logging.info(f"{classname(self)}.generate_record: close {self.reader.current_sample_key}")
 
 
-class DBTimestampsGenerator(DBRecordGeneratorWithTable):
+class DBTimestampsGenerator:
     def __init__(
         self,
         reader: DBKiloPreciosClarosReader
     ) -> None:
-        super().__init__(reader)
+        self._reader = reader
+        self._table: dict[str, bool] = {}
 
-    def generate_record(self) -> Generator[dict[str, str], None, None]:
-        sample_key = self.reader.current_sample_key
-        existing_timestamp = self.table.get(sample_key, False)
-        if existing_timestamp:
-            yield from ()
-        else:
-            self.table[sample_key] = True
-            yield from ({"sample_key": sample_key})
+    @property
+    def table(self) -> dict[str, bool]:
+        return self._table
 
+    def load_table(self) -> None:
+        for record in self.iterate():
+            pass
 
+    @property
+    def reader(self) -> DBKiloPreciosClarosReader:
+        return self._reader
+
+    def iterate(self) -> Generator[dict[str, str], None, None]:
+        for sample_home, sample_key in self.reader.samples_generator():
+            existing_timestamp = self.table.get(sample_key, False)
+            if existing_timestamp:
+                continue
+            else:
+                self.table[sample_key] = True
+                yield {"sample_key": sample_key}
 
 class DBPricesGenerator:
     def __init__(
