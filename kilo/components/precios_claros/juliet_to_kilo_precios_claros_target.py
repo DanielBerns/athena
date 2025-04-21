@@ -102,7 +102,7 @@ class JulietToKiloPreciosClarosTarget:
         self.dataset_stats[self.sample_key]["point_of_sale"] += 1
         resource = self.kilo_io.get_events_resource("points_of_sale")
         fun = lambda x : self.kilo_io.get_point_of_sale_juliet_to_kilo(x)
-        for event in self.create_events_file(resource, fun, read_events)
+        for event in self.create_events_file(resource, fun, read_events):
             self.points_of_sale_table[event["point_of_sale_code"]] = event["point_of_sale_key"]
 
     def juliet_selected_points_of_sale(
