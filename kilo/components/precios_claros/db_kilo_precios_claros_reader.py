@@ -1,3 +1,4 @@
+import pdb
 from typing import Generator, Any, Tuple
 from pathlib import Path
 import logging
@@ -166,6 +167,7 @@ class DBStatesGenerator(DBRecordGeneratorWithTable):
         super().__init__(reader)
 
     def generate_record(self) -> Generator[dict[str, str], None, None]:
+        pdb.set_trace()
         logging.info(f"{classname(self)}.generate_record: open {self.reader.current_sample_key}")
         for count, record in enumerate(self.reader.points_of_sale_generator()):
             state_code = record.get("state", None)
