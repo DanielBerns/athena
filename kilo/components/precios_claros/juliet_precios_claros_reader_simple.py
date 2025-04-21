@@ -35,31 +35,31 @@ class JulietPreciosClarosReaderSimple:
 
     def read_points_of_sale(self) -> Generator[dict[str, str], None, None]:
         for juliet_json in self.read_juliet_json(self.current_sample_home, "points_of_sale"):
-            (key, point_of_sale_key) = self.new_point_of_sale_code(juliet_json)
-            self.map_of_point_of_sale_codes[key] = point_of_sale_key
-            juliet_json["point_of_sale_key"] = point_of_sale_key
+            # (key, point_of_sale_key) = self.new_point_of_sale_code(juliet_json)
+            # self.map_of_point_of_sale_codes[key] = point_of_sale_key
+            # juliet_json["point_of_sale_key"] = point_of_sale_key
             yield juliet_json
 
     def read_selected_points_of_sale(self) -> Generator[dict[str, str], None, None]:
         for juliet_json in self.read_juliet_json(self.current_sample_home, "selected_points_of_sale"):
-            (key, point_of_sale_key) = self.new_point_of_sale_code(juliet_json)
-            self.map_of_point_of_sale_codes[key] = point_of_sale_key
-            juliet_json["point_of_sale_key"] = point_of_sale_key
+            # (key, point_of_sale_key) = self.new_point_of_sale_code(juliet_json)
+            # self.map_of_point_of_sale_codes[key] = point_of_sale_key
+            # juliet_json["point_of_sale_key"] = point_of_sale_key
             yield juliet_json
 
     def read_articles_per_point_of_sale(self) -> Generator[dict[str, str], None, None]:
         logging.info(f"{classname(self)}.read_articles_per_point_of_sale start")
         for juliet_json in self.read_juliet_json(self.current_sample_home, "articles_per_point_of_sale"):
-            key = juliet_json["point_of_sale_code"]
-            point_of_sale_key = self.map_of_point_of_sale_codes.get(key, None)
-            if point_of_sale_key is None:
-                logging.error(f"*** Error {classname(self):s}.read_articles_per_point_of_sale: unkown point_of_sale_code")
-                for kk, vv in event.items():
-                    logging.error(f"    {kk}: {vv}")
-                message = f"*** Error {classname(self):s}.read_articles_per_point_of_sale stop: unkown point_of_sale_code"
-                raise LoggedException(message)
-            else:
-                juliet_json["point_of_sale_key"] = point_of_sale_key
+            # key = juliet_json["point_of_sale_code"]
+            # point_of_sale_key = self.map_of_point_of_sale_codes.get(key, None)
+            # if point_of_sale_key is None:
+            #     logging.error(f"*** Error {classname(self):s}.read_articles_per_point_of_sale: unkown point_of_sale_code")
+            #     for kk, vv in event.items():
+            #         logging.error(f"    {kk}: {vv}")
+            #     message = f"*** Error {classname(self):s}.read_articles_per_point_of_sale stop: unkown point_of_sale_code"
+            #     raise LoggedException(message)
+            # else:
+            #     juliet_json["point_of_sale_key"] = point_of_sale_key
             yield juliet_json
         logging.info(f"{classname(self)}.read_articles_per_point_of_sale end")
 
