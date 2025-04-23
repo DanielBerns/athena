@@ -485,7 +485,7 @@ class DBInterfaceBasicQueries:
             ArticleCode.code,
             sa.func.min(Price.amount).label("min_price"),
             sa.func.max(Price.amount).label("max_price"),
-            aggregation_function(Price.amount).label("geomean_price"),
+            aggregation_function(Price.amount).label("aggregated_price"),
         )\
         .join(Price, Price.article_code_id == ArticleCode.id)\
         .join(PointOfSale, Price.point_of_sale_id == PointOfSale.id)\
@@ -503,3 +503,58 @@ class DBInterfaceBasicQueries:
 
         for row in query.yield_per(batch_size):
             yield row
+
+
+def get_price_summary(
+    session: Session,
+    article_code_value: str,
+    city_name: str,
+    timestamp_value: str,
+    aggregation_function: Callable[[sa.Column], sa.Function] = sa.func.avg,
+    batch_size: int = 100,
+) -> Generator[Tuple[str, Optional[int], Optional[int], Optional[int]], None, None]:
+    """
+    Retrieves the minimum price, maximum price, and a custom aggregation of the price
+    for a given article_code, city, and timestamp.
+
+    Args:
+        session: The database session.
+        article_code_value: The article code to filter by.
+        city_name: The city name to filter by.
+        timestamp_value: The timestamp string to filter by (format: YYYYMMDDHHMMSS).
+        custom_aggregation_func: An optional SQLAlchemy function to use for custom aggregation.
+                                 If None, no custom aggregation is performed.
+
+    Returns:
+        A list of tuples. Each tuple contains:
+        - The article code (str).
+        - The minimum price (int or None).
+        - The maximum price (int or None).
+        - The aggregated price, calculated using aggregation_func (int or None).
+    """
+
+    # Convert the datetime object into a Timestamp object using the from_datetime method.
+    timestamp_obj = Timestamp.from_string(timestamp_str)
+
+    query = session.query(
+        func.min(Price.amount).label("min_price"),
+        func.max(Price.amount).label("max_price"),
+        aggregation_function(Price.amount).label("aggregated_price"))
+    )
+
+    query = query.join(Price.article_code) \
+                 .join(Price.point_of_sale) \
+                 .join(PointOfSale.place) \
+                 .join(Place.city) \
+                 .join(Price.timestamp) \
+                 .filter(ArticleCode.code == article_code_value) \
+                 .filter(City.name == city_name) \
+                 .filter(Timestamp.year == timestamp_obj.year,
+                         Timestamp.month == timestamp_obj.month,
+                         Timestamp.day == timestamp_obj.day,
+                         Timestamp.hour == timestamp_obj.hour,
+                         Timestamp.minute == timestamp_obj.minute,
+                         Timestamp.second == timestamp_obj.second)
+
+    for row in query.yield_per(batch_size):
+        yield row
