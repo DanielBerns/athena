@@ -331,14 +331,14 @@ class DBInterfaceBasicQueries:
 
     def query_prices_by_article_code(
         self,
-        article_code_value: str,
+        article_code_string: str,
         batch_size: int = 100
     ) -> Generator[Price, None, None]:
         """
         Iterates through prices for a given ArticleCode, ordered by their timestamps in batches.
 
         Args:
-            article_code_value: The code of the ArticleCode to filter by.
+            article_code_string: The code of the ArticleCode to filter by.
             batch_size: The number of prices to fetch in each batch.
 
         Yields:
@@ -348,7 +348,7 @@ class DBInterfaceBasicQueries:
             self.session.query(Price)
             .join(Price.article_code)
             .join(Price.timestamp)
-            .filter(ArticleCode.code == article_code_value)
+            .filter(ArticleCode.code == article_code_string)
             .order_by(
                 Timestamp.year,
                 Timestamp.month,
@@ -363,8 +363,8 @@ class DBInterfaceBasicQueries:
 
     def query_prices_by_article_code_and_city(
         self,
-        article_code_value: str,
-        city_name: str,
+        article_code_string: str,
+        city_string: str,
         batch_size: int = 100
     ) -> Generator[Price, None, None]:
         """
@@ -372,8 +372,8 @@ class DBInterfaceBasicQueries:
         ordered by timestamp and then by point of sale code.
 
         Args:
-            article_code_value: The code of the ArticleCode to filter by.
-            city_name: The name of the City to filter by.
+            article_code_string: The code of the ArticleCode to filter by.
+            city_string: The name of the City to filter by.
             batch_size: retrieve all the data in batches
         Returns:
             A list of Price objects ordered first by timestamp and then by point of sale code.
@@ -385,7 +385,7 @@ class DBInterfaceBasicQueries:
             .join(Price.point_of_sale)
             .join(PointOfSale.place)
             .join(Place.city)
-            .filter(ArticleCode.code == article_code_value, City.name == city_name)
+            .filter(ArticleCode.code == article_code_string, City.name == city_string)
             .order_by(
                 Timestamp.year,
                 Timestamp.month,
@@ -401,8 +401,8 @@ class DBInterfaceBasicQueries:
 
     def query_prices_by_article_code_city_and_timestamp(
         self,
-        article_code_value: str,
-        city_name: str,
+        article_code_string: str,
+        city_string: str,
         target_timestamp: str,
         batch_size: int = 100,
     ) -> Generator[Price, None, None]:
@@ -411,8 +411,8 @@ class DBInterfaceBasicQueries:
         ordered by timestamp and then by point of sale code.
 
         Args:
-            article_code_value: The code of the ArticleCode to filter by.
-            city_name: The name of the City to filter by.
+            article_code_string: The code of the ArticleCode to filter by.
+            city_string: The name of the City to filter by.
             target_timestamp: The specific datetime to filter by.
             batch_size: retrieve all the data in batches
 
@@ -428,8 +428,8 @@ class DBInterfaceBasicQueries:
             .join(PointOfSale.place)
             .join(Place.city)
             .filter(
-                ArticleCode.code == article_code_value,
-                City.name == city_name,
+                ArticleCode.code == article_code_string,
+                City.name == city_string,
                 Timestamp.year == target_ts.year,
                 Timestamp.month == target_ts.month,
                 Timestamp.day == target_ts.day,
@@ -454,7 +454,7 @@ class DBInterfaceBasicQueries:
 
     def get_prices_by_article_code_city_and_timestamp(
         self,
-        city_name: str,
+        city_string: str,
         timestamp_str: str,
         aggregation_function: Callable[[sa.Column], sa.Function] = sa.func.avg,
         batch_size: int = 100,
@@ -464,7 +464,7 @@ class DBInterfaceBasicQueries:
         within a specified city and at a given timestamp.
 
         Args:
-            city_name: The name of the city to filter by.
+            city_string: The name of the city to filter by.
             timestamp_str: timestamp to filter by, str format.
             aggregation_func: The SQLAlchemy function to use for aggregation
                 (e.g., sa.func.avg, sa.func.min, sa.func.max, or a custom function).
@@ -492,7 +492,7 @@ class DBInterfaceBasicQueries:
         .join(Place, PointOfSale.place_id == Place.id)\
         .join(City, Place.city_id == City.id)\
         .join(Timestamp, Price.timestamp_id == Timestamp.id)\
-        .filter(City.name == city_name)\
+        .filter(City.name == city_string)\
         .filter(Timestamp.year == timestamp_obj.year,
                 Timestamp.month == timestamp_obj.month,
                 Timestamp.day == timestamp_obj.day,
@@ -504,57 +504,55 @@ class DBInterfaceBasicQueries:
         for row in query.yield_per(batch_size):
             yield row
 
+    def get_price_summary(
+        self,
+        article_code_string: str,
+        city_string: str,
+        timestamp_string: str,
+        aggregation_function: Callable[[sa.Column], sa.Function] = sa.func.avg,
+        batch_size: int = 100,
+    ) -> Generator[Tuple[str, Optional[int], Optional[int], Optional[int]], None, None]:
+        """
+        Retrieves the minimum price, maximum price, and a custom aggregation of the price
+        for a given article_code, city, and timestamp.
 
-def get_price_summary(
-    session: Session,
-    article_code_value: str,
-    city_name: str,
-    timestamp_value: str,
-    aggregation_function: Callable[[sa.Column], sa.Function] = sa.func.avg,
-    batch_size: int = 100,
-) -> Generator[Tuple[str, Optional[int], Optional[int], Optional[int]], None, None]:
-    """
-    Retrieves the minimum price, maximum price, and a custom aggregation of the price
-    for a given article_code, city, and timestamp.
+        Args:
+            session: The database session.
+            article_code_string: The article code to filter by.
+            city_string: The city name to filter by.
+            timestamp_string: The timestamp string to filter by (format: YYYYMMDDHHMMSS).
+            aggregation_function: SQLAlchemy function to use for custom aggregation.
 
-    Args:
-        session: The database session.
-        article_code_value: The article code to filter by.
-        city_name: The city name to filter by.
-        timestamp_value: The timestamp string to filter by (format: YYYYMMDDHHMMSS).
-        custom_aggregation_func: An optional SQLAlchemy function to use for custom aggregation.
-                                 If None, no custom aggregation is performed.
+        Returns:
+            A list of tuples. Each tuple contains:
+            - The article code (str).
+            - The minimum price (int or None).
+            - The maximum price (int or None).
+            - The aggregated price, calculated using aggregation_function (int or None).
+        """
 
-    Returns:
-        A list of tuples. Each tuple contains:
-        - The article code (str).
-        - The minimum price (int or None).
-        - The maximum price (int or None).
-        - The aggregated price, calculated using aggregation_func (int or None).
-    """
+        # Convert the datetime object into a Timestamp object using the from_datetime method.
+        timestamp_obj = Timestamp.from_string(timestamp_string)
 
-    # Convert the datetime object into a Timestamp object using the from_datetime method.
-    timestamp_obj = Timestamp.from_string(timestamp_str)
+        query = self.session.query(
+            sa.func.min(Price.amount).label("min_price"),
+            sa.func.max(Price.amount).label("max_price"),
+            aggregation_function(Price.amount).label("aggregated_price")
+        )
 
-    query = session.query(
-        func.min(Price.amount).label("min_price"),
-        func.max(Price.amount).label("max_price"),
-        aggregation_function(Price.amount).label("aggregated_price"))
-    )
+        query = query.join(Price.article_code) \
+                     .join(Price.point_of_sale) \
+                     .join(PointOfSale.place) \
+                     .join(Place.city) \
+                     .join(Price.timestamp) \
+                     .filter(ArticleCode.code == article_code_string) \
+                     .filter(City.name == city_string) \
+                     .filter(Timestamp.year == timestamp_obj.year,
+                             Timestamp.month == timestamp_obj.month,
+                             Timestamp.day == timestamp_obj.day,
+                             Timestamp.hour == timestamp_obj.hour,
+                             Timestamp.minute == timestamp_obj.minute,
+                             Timestamp.second == timestamp_obj.second)
 
-    query = query.join(Price.article_code) \
-                 .join(Price.point_of_sale) \
-                 .join(PointOfSale.place) \
-                 .join(Place.city) \
-                 .join(Price.timestamp) \
-                 .filter(ArticleCode.code == article_code_value) \
-                 .filter(City.name == city_name) \
-                 .filter(Timestamp.year == timestamp_obj.year,
-                         Timestamp.month == timestamp_obj.month,
-                         Timestamp.day == timestamp_obj.day,
-                         Timestamp.hour == timestamp_obj.hour,
-                         Timestamp.minute == timestamp_obj.minute,
-                         Timestamp.second == timestamp_obj.second)
-
-    for row in query.yield_per(batch_size):
-        yield row
+        for row in query.yield_per(batch_size):
+            yield row
