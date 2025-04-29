@@ -1,3 +1,4 @@
+import pdb
 import logging
 from pathlib import Path
 from collections.abc import Callable
@@ -87,7 +88,7 @@ class KiloPreciosClarosIO:
         self,
         event: dict[str, str]
     ) -> dict[str, str]:
-        logging.info("point_of_sale_juliet_to_kilo start")
+        # logging.info("point_of_sale_juliet_to_kilo start")
         point_of_sale_code = event["identifier"]
         state = (event["provincia"]).lower()
         city = (event["localidad"]).lower()
@@ -111,7 +112,7 @@ class KiloPreciosClarosIO:
             "place_key": place_key,
             "point_of_sale_key": point_of_sale_key
         }
-        logging.info("point_of_sale_juliet_to_kilo stop")
+        # logging.info("point_of_sale_juliet_to_kilo stop")
         return point_of_sale
 
     def point_of_sale_wrong_juliet_to_kilo(
