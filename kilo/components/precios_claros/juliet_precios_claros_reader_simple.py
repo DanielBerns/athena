@@ -25,7 +25,7 @@ class JulietPreciosClarosReaderSimple:
 
     @property
     def first_sample(self) -> str:
-        return first_sample
+        return self._first_sample
 
     @property
     def sample_keys(self) -> List[str]:
