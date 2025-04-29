@@ -1,4 +1,4 @@
-import pdb
+# import pdb
 import logging
 import os
 from pathlib import Path
@@ -77,7 +77,7 @@ def main() -> None:
         _reader = KiloPreciosClarosBasicReader(storage_precios_claros)
         reader = DBKiloPreciosClarosReader(_reader)
         if insert_prices:
-            pdb.set_trace()
+            # pdb.set_trace()
             # db.get_all_states()
             # db.get_all_the_cities()
             # db.get_all_the_places()
