@@ -1,4 +1,4 @@
-import pdb
+# import pdb
 import logging
 from pathlib import Path
 from collections.abc import Callable
@@ -129,7 +129,7 @@ class KiloPreciosClarosIO:
         branch = (event["sucursalNombre"]).lower()
         city_key = KiloKeys.city_key(state_code, city)
         place_key = KiloKeys.place_key(state_code, city, address)
-        point_of_sale_key = KiloKeys.point_of_sale_key(identifier, flag)
+        point_of_sale_key = KiloKeys.point_of_sale_key(point_of_sale_code, flag)
         self.map_of_point_of_sale_codes[point_of_sale_code] = point_of_sale_key
         point_of_sale = {
           "point_of_sale_code": point_of_sale_code,
@@ -154,10 +154,10 @@ class KiloPreciosClarosIO:
             return self.point_of_sale_juliet_to_kilo(event)
         except Exception:
            try:
-               pdb.set_trace()
+               # pdb.set_trace()
                return self.point_of_sale_wrong_juliet_to_kilo(event)
            except Exception as message:
-               pdb.set_trace()
+               # pdb.set_trace()
                logging.error(f"{classname(self)}.get_point_of_sale_juliet_to_kilo {message}\n")
                logging.error(f"  {as_jsonl(event):s}\n")
                return None
