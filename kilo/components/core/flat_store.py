@@ -94,7 +94,7 @@ class FlatStore:
         """
         return get_container(self.home, key)
 
-    def iterate(self) -> Generator[Path, None, None]:
+    def iterate(self, first: str == "") -> Generator[Path, None, None]:
         """
         Iterates over the samples directory within the FlatStore's home directory.
 
@@ -108,5 +108,11 @@ class FlatStore:
                 print(sample_path)  # Prints the Path to each sample directory.
             ```
         """
-        for dd in self.sorted_sample_keys():
-            yield self.sample_home(dd)
+        if len(first):
+            for dd in self.sorted_sample_keys():
+                if dd < first:
+                    continue
+                yield self.sample_home(dd)
+        else:
+            yield from ()
+

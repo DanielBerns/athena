@@ -44,7 +44,8 @@ def main() -> None:
     logging.info("start")
     processor = JulietPreciosClarosProcessor(juliet_paths)
     juliet_store_home = processor.juliet_store_home
-    juliet_reader = JulietPreciosClarosReaderSimple(juliet_store_home)
+    first_sample = os.environ.get("FIRST_SAMPLE", "")
+    juliet_reader = JulietPreciosClarosReaderSimple(juliet_store_home, first_sample)
     kilo_juliet_reader = KiloJulietPreciosClarosReader(juliet_reader)
     target = JulietToKiloPreciosClarosTarget(kilo_paths)
     processor.execute(kilo_juliet_reader, target)
