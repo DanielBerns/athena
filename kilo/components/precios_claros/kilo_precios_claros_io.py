@@ -154,6 +154,7 @@ class KiloPreciosClarosIO:
             return self.point_of_sale_juliet_to_kilo(event)
         except Exception:
            try:
+               pdb.set_trace()
                return self.point_of_sale_wrong_juliet_to_kilo(event)
            except Exception as message:
                pdb.set_trace()
