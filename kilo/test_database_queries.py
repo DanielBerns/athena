@@ -16,11 +16,9 @@ from components.precios_claros.db_interface_basic_queries import (
 )
 from components.helpers.helpers import get_container, get_resource, measure_execution_time
 
-FIRST_SAMPLE = os.environ.get("FIRST_SAMPLE", "-1")
-LAST_SAMPLE = os.environ.get("LAST_SAMPLE", "-1")
+
 DB_NAME = os.environ.get("DB_NAME", "mecon_dev")
 
-import pdb
 
 def get_reader(storage_precios_claros: Path) -> DBKiloPreciosClarosReader:
     _reader = KiloPreciosClarosBasicReader(storage_precios_claros)
@@ -31,43 +29,43 @@ def show_prices_by_article_code_city_and_timestamp(
     city_name: str, # city_name = "comodoro rivadavia"
     some_timestamp_strs: List[str] # some_timestamp_strs = ["20241023183002", "20241120183001", "20241218183003", "20250122183002", "20250220224436"]
 ) -> None:
-        logging.info(f"## Prices at {city_name}")
-        aggregation = defaultdict(lambda: defaultdict(lambda: (0,0,0)))
+    logging.info(f"## Prices at {city_name}")
+    aggregation = defaultdict(lambda: defaultdict(lambda: (0,0,0)))
 
-        for timestamp_str in some_timestamp_strs:
-            for (article_code_str, min_price, max_price, geomean_price) in db.get_prices_by_article_code_city_and_timestamp(
-               city_name,
-               timestamp_str,
-               aggregation_function=geometric_mean_times_100
-            ):
-                aggregation[article_code_str][timestamp_str] = \
-                    (min_price, min_price, max_price) if min_price == max_price else (min_price, geomean_price, max_price)
+    for timestamp_str in some_timestamp_strs:
+        for (article_code_str, min_price, max_price, geomean_price) in db.get_prices_by_article_code_city_and_timestamp(
+           city_name,
+           timestamp_str,
+           aggregation_function=geometric_mean_times_100
+        ):
+            aggregation[article_code_str][timestamp_str] = \
+                (min_price, min_price, max_price) if min_price == max_price else (min_price, geomean_price, max_price)
 
-        for article_code_str, samples in aggregation.items():
-            card = db.all_the_article_codes[article_code_str].cards[0]
-            logging.info(f"{article_code_str}: {card.brand} _ {card.description} _ {card.package}")
+    for article_code_str, samples in aggregation.items():
+        card = db.all_the_article_codes[article_code_str].cards[0]
+        logging.info(f"{article_code_str}: {card.brand} _ {card.description} _ {card.package}")
 
-            table = [(ts, minp, geop, maxp) for ts, (minp, geop, maxp) in samples.items()]
-            if len(table) == 0:
-                continue
-            for (ts, minp, geop, maxp) in table:
-                logging.info(f"    {ts[:8]:>15s}: {minp/100:>12.2f} {geop/100:>12.2f} {maxp/100:>12.2f}")
-            else:
-                max_variation = 0
-                for reference, measure in zip(table[:-1], table[1:]):
-                    (reference_ts, reference_minp, reference_geop, reference_maxp) = reference
-                    (measure_ts, measure_minp, measure_geop, measure_maxp) = measure
-                    variation = (measure_geop - reference_geop) / measure_geop
-                    if abs(variation) > abs(max_variation):
-                        max_variation = variation
-                    logging.info(f"  {reference_ts[:8]} -> {measure_ts[:8]} variation: {variation*100:>12.2f}")
-                logging.info(f"                   max variation: {max_variation*100:>12.2f}")
-                if len(table) > 2:
-                    reference, measure = table[0], table[-1]
-                    (reference_ts, reference_minp, reference_geop, reference_maxp) = reference
-                    (measure_ts, measure_minp, measure_geop, measure_maxp) = measure
-                    variation = (measure_geop - reference_geop) / measure_geop
-                    logging.info(f"  {reference_ts[:8]} -> {measure_ts[:8]} variation: {variation*100:>12.2f}")
+        table = [(ts, minp, geop, maxp) for ts, (minp, geop, maxp) in samples.items()]
+        if len(table) == 0:
+            continue
+        for (ts, minp, geop, maxp) in table:
+            logging.info(f"    {ts[:8]:>15s}: {minp/100:>12.2f} {geop/100:>12.2f} {maxp/100:>12.2f}")
+        else:
+            max_variation = 0
+            for reference, measure in zip(table[:-1], table[1:]):
+                (reference_ts, reference_minp, reference_geop, reference_maxp) = reference
+                (measure_ts, measure_minp, measure_geop, measure_maxp) = measure
+                variation = (measure_geop - reference_geop) / measure_geop
+                if abs(variation) > abs(max_variation):
+                    max_variation = variation
+                logging.info(f"  {reference_ts[:8]} -> {measure_ts[:8]} variation: {variation*100:>12.2f}")
+            logging.info(f"                   max variation: {max_variation*100:>12.2f}")
+            if len(table) > 2:
+                reference, measure = table[0], table[-1]
+                (reference_ts, reference_minp, reference_geop, reference_maxp) = reference
+                (measure_ts, measure_minp, measure_geop, measure_maxp) = measure
+                variation = (measure_geop - reference_geop) / measure_geop
+                logging.info(f"  {reference_ts[:8]} -> {measure_ts[:8]} variation: {variation*100:>12.2f}")
     logging.info(f"{identifier} stop")
 
 
@@ -143,10 +141,8 @@ def main() -> None:
         #     logging.info(f"    {a_key} :: {ac.article_code.code} [[{len(ac.article_code.cards)}]] {ac.brand}")
         #
         db.get_all_the_timestamps()
-        # for key, ts in db.all_the_timestamps.items():
-        #     logging.info(f"    {key}:: {str(ts)}")
         city_name = "comodoro rivadavia"
-        some_timestamp_strs = ["20241023183002", "20241120183001", "20241218183003", "20250122183002", "20250220224436"]
+        some_timestamp_strs = ["20250327201501", "20250403201500", "20250410175605", "20250417201501", "20250424201500", "20250501201501"]
         show_prices_by_article_code_city_and_timestamp(city_name, some_timestamp_strs))
 
 if __name__ == "__main__":
