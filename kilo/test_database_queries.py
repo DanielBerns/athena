@@ -101,6 +101,7 @@ def main() -> None:
 
     logging.info(f"{identifier} start")
     logging.info(f"DB_NAME: {DB_NAME}")
+    logging.info("--------------------")
     storage_precios_claros = get_container(kilo_paths.storage, "precios_claros")
     storage_precios_claros_sqlite = get_container(storage_precios_claros, "sqlite")
     db_uri = str(get_resource(storage_precios_claros_sqlite, DB_NAME, ".db"))
@@ -113,9 +114,6 @@ def main() -> None:
         db.get_all_the_article_codes()
         db.get_all_the_article_cards()
         db.get_all_the_timestamps()
-        for a_key, a_timestamp in db.all_the_timestamps.items():
-            logging.info(f"    {a_key} :: {a_timestamp}")
-
 
         city_name = "comodoro rivadavia"
         some_timestamp_strs = ["20250327201501", "20250403201500", "20250410175605", "20250417201501", "20250424201500", "20250501201501"]

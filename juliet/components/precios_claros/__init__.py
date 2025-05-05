@@ -17,3 +17,5 @@ from components.precios_claros.record_editor_rules import FieldRule, ChangeField
 from components.precios_claros.record_editor import RecordEditor 
 from components.precios_claros.editor import Editor 
 from components.precios_claros.precios_claros import PreciosClaros
+
+from components.precios_claros.cookie_demo import cookie_demo
