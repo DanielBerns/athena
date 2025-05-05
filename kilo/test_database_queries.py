@@ -143,7 +143,7 @@ def main() -> None:
         db.get_all_the_timestamps()
         city_name = "comodoro rivadavia"
         some_timestamp_strs = ["20250327201501", "20250403201500", "20250410175605", "20250417201501", "20250424201500", "20250501201501"]
-        show_prices_by_article_code_city_and_timestamp(city_name, some_timestamp_strs))
+        show_prices_by_article_code_city_and_timestamp(city_name, some_timestamp_strs)
 
 if __name__ == "__main__":
     main()
