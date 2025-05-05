@@ -68,7 +68,6 @@ def show_prices_by_article_code_city_and_timestamp(
                 (measure_ts, measure_minp, measure_geop, measure_maxp) = measure
                 variation = (measure_geop - reference_geop) / measure_geop
                 logging.info(f"  {reference_ts[:8]} -> {measure_ts[:8]} variation: {variation*100:>12.2f}")
-    logging.info(f"{identifier} stop")
 
 
 def main() -> None:
@@ -108,42 +107,20 @@ def main() -> None:
     with db_get_session(db_uri) as session:
         db = DBInterfaceBasicQueries(session)
         db.get_all_the_states()
-        # states = DBStatesGenerator(get_reader(storage_precios_claros))
-        # for a_state in states.iterate():
-        #     db_state = db.query_state(a_state["code"])
-        #     if db_state:
-        #         logging.info(f"{db_state.code} - {db_state.name}")
-        #     else:
-        #         logging.info(f"None db_state for {str(a_state)}")
-        #
         db.get_all_the_cities()
-        # for a_key, a_city in db.all_the_cities.items():
-        #     logging.info(f"    {a_key} :: {a_city.name} at {a_city.state.name} - {a_city.state.code}")
-        #
         db.get_all_the_places()
-        # for a_key, a_place in db.all_the_places.items():
-        #     logging.info(
-        #         f"    {a_key} :: {a_place.address} {a_place.city.name} at {a_place.city.state.name} - {a_place.city.state.code}"
-        #     )
-        #
         db.get_all_the_points_of_sale()
-        # for a_key, pos in db.all_the_points_of_sale.items():
-        #     logging.info(
-        #         f"    {a_key} :: {pos.flag} {pos.business} at {pos.branch} - {pos.place.address} - {pos.place.city.name}"
-        #     )
-        #
         db.get_all_the_article_codes()
-        # for a_key, ac in db.all_the_article_codes.items():
-        #     logging.info(f"    {a_key} :: {ac.code}")
-        #
         db.get_all_the_article_cards()
-        # for a_key, ac in db.all_the_article_cards.items():
-        #     logging.info(f"    {a_key} :: {ac.article_code.code} [[{len(ac.article_code.cards)}]] {ac.brand}")
-        #
         db.get_all_the_timestamps()
+        for a_key, a_timestamp in db.all_the_timestamps.items():
+            logging.info(f"    {a_key} :: {a_timestamp}")
+
+
         city_name = "comodoro rivadavia"
         some_timestamp_strs = ["20250327201501", "20250403201500", "20250410175605", "20250417201501", "20250424201500", "20250501201501"]
         show_prices_by_article_code_city_and_timestamp(db, city_name, some_timestamp_strs)
+    logging.info(f"{identifier} stop")
 
 if __name__ == "__main__":
     main()
