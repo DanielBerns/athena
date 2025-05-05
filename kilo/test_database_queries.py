@@ -99,9 +99,6 @@ def main() -> None:
     )
 
     logging.info(f"{identifier} start")
-
-    logging.info(f"FIRST_SAMPLE: {FIRST_SAMPLE}")
-    logging.info(f"LAST_SAMPLE: {LAST_SAMPLE}")
     logging.info(f"DB_NAME: {DB_NAME}")
     storage_precios_claros = get_container(kilo_paths.storage, "precios_claros")
     storage_precios_claros_sqlite = get_container(storage_precios_claros, "sqlite")
