@@ -27,6 +27,7 @@ def get_reader(storage_precios_claros: Path) -> DBKiloPreciosClarosReader:
 
 
 def show_prices_by_article_code_city_and_timestamp(
+    db: DBInterfaceBasicQueries,
     city_name: str, # city_name = "comodoro rivadavia"
     some_timestamp_strs: List[str] # some_timestamp_strs = ["20241023183002", "20241120183001", "20241218183003", "20250122183002", "20250220224436"]
 ) -> None:
@@ -97,6 +98,7 @@ def main() -> None:
         level=log_level,
         format="%(levelname)s > %(message)s",
     )
+
 
     logging.info(f"{identifier} start")
     logging.info(f"DB_NAME: {DB_NAME}")
