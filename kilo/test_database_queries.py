@@ -28,9 +28,11 @@ def get_reader(storage_precios_claros: Path) -> DBKiloPreciosClarosReader:
 
 def show_prices_by_article_code_city_and_timestamp(
     db: DBInterfaceBasicQueries,
-    city_name: str, # city_name = "comodoro rivadavia"
-    some_timestamp_strs: List[str] # some_timestamp_strs = ["20241023183002", "20241120183001", "20241218183003", "20250122183002", "20250220224436"]
+    city_name: str,
+    some_timestamp_strs: List[str]
 ) -> None:
+    # city_name = "comodoro rivadavia"
+    # some_timestamp_strs = ["20241023183002", "20241120183001", "20241218183003", "20250122183002", "20250220224436"]
     logging.info(f"## Prices at {city_name}")
     aggregation = defaultdict(lambda: defaultdict(lambda: (0,0,0)))
 
