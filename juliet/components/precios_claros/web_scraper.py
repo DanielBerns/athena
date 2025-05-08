@@ -167,7 +167,7 @@ class WebScraper:
             for number, an_article in enumerate(articles_list):
                 an_article["point_of_sale"] = identifier
                 logging.info(
-                    f"{classname(self):s}.articles_per_point_of_sale 3: "
+                    f"{classname(self):s}._articles_per_point_of_sale 3: "
                     f"{identifier:s}: {number:d}"
                 )
                 yield an_article
@@ -177,6 +177,7 @@ class WebScraper:
                 f"{identifier:s} - empty articles_list"
             )
             logging.warning(explanation)
+            raise GeneratorExit()
 
     def articles_per_point_of_sale(
         self, point_of_sale: Dict[str, str]

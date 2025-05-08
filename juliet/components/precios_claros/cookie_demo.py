@@ -1,3 +1,4 @@
+import pdb
 from pathlib import Path
 from collections import defaultdict
 import json
@@ -116,9 +117,16 @@ def cookie_demo() -> None:
     nea_states = ["ar-h", "ar-w", "ar-p", "ar-n"]
     points_of_sale_by_region("NEA", table, nea_states, nea_file)
 
-    # Jujuy, Salta, Tucuman, La Rioja, Santiago del Estero
+    pdb.set_trace()
+    # Jujuy, Salta, Tucuman, La Rioja, Santiago del Estero, Catamarca
     noa_file = Path(target_directory, "noa").with_suffix(".md")
-    noa_states = ["ar-y", "jujuy", "ar-a", "salta", "ar-t", "tucuman", "ar-f", "la rioja", "ar-g", "santiago del estero"]
+    noa_states = ["ar-y", "jujuy",
+                  "ar-a", "salta",
+                  "ar-t", "tucuman",
+                  "ar-f", "la rioja",
+                  "ar-g", "santiago del estero"
+                  "ar-k", "catamarca"
+    ]
     points_of_sale_by_region("NOA", table, noa_states, noa_file)
 
     cordoba_file = Path(target_directory, "cordoba").with_suffix(".md")
