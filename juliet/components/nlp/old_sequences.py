@@ -27,8 +27,8 @@ def get_tokens(
         name_tokens = tokenizer.read(line)
         for a_token in name_tokens:
             frequencies[a_token] += 1
-        sorted_tokens = [key for key in sorted(frequencies.keys())]
-        indexed_tokens = {token: index for index, token in enumerate(sorted_tokens)}
+    sorted_tokens = [key for key in sorted(frequencies.keys())]
+    indexed_tokens = {token: index for index, token in enumerate(sorted_tokens)}
     return sorted_tokens, indexed_tokens
 
 
