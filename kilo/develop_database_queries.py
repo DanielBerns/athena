@@ -97,7 +97,7 @@ def main() -> None:
     pdb.set_trace()
     some_article_codes_resource = get_resource(parameters_container, "article_codes", ".txt")
     some_article_codes: dict[str, bool] = {}
-    if some_article_codes.exists():
+    if some_article_codes_resource.exists():
         for line in read_text_lines(some_article_codes_resource):
             this_article_code = line.strip()
             some_article_codes[this_article_code] = True
