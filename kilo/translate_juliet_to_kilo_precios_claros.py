@@ -1,3 +1,4 @@
+import pdb
 import os
 import logging
 
@@ -45,7 +46,8 @@ def main() -> None:
     logging.info("start")
     processor = JulietPreciosClarosProcessor(juliet_paths)
     juliet_store_home = processor.juliet_store_home
-    first_sample = os.environ.get("FIRST_SAMPLE", "")
+    pdb.set_trace()
+    first_sample = os.environ.get("FIRST_SAMPLE", "0")
     juliet_reader = JulietPreciosClarosReaderSimple(juliet_store_home, first_sample)
     kilo_juliet_reader = KiloJulietPreciosClarosReader(juliet_reader)
     target = JulietToKiloPreciosClarosTarget(kilo_paths)
