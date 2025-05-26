@@ -8,7 +8,7 @@ from components.precios_claros.kilo_precios_claros_basic_reader import KiloPreci
 from components.precios_claros.db_kilo_precios_claros_reader import (
     DBKiloPreciosClarosReader,
     DBStatesGenerator,
-    DBsome_citiesGenerator
+    DBCitiesGenerator
 )
 from components.precios_claros.database import db_get_session
 from components.precios_claros.db_interface_basic_queries import (
