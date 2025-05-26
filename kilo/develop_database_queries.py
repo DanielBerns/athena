@@ -57,7 +57,7 @@ def get_prices_by_article_code_city_and_timestamp(
             table_spaces = {}
             for ts in some_timestamp_strs:
                 triple = table.get(ts, False)
-                triple_fields =
+                triple_fields = \
                     [f"{ts[:8]:>15s}", f"{minp/100:>12.2f}", f"{geop/100:>12.2f}", f"{maxp/100:>12.2f}"] if sample else \
                     [f"{ts[:8]:>15s}", " "*12, " "*12, " "*12]
                 body = CSV.join(triple_fields)
@@ -111,8 +111,8 @@ def main() -> None:
     some_timestamp_strs = []
     if some_timestamp_strs_resource.exists()
         for line in read_text_lines(some_timestamp_strs_resource):
-            this_sample_key = line.strip()
-            some_timestamp_strs.append(this_sample_key)
+            this_timestamp_str = line.strip()
+            some_timestamp_strs.append(this_timestamp_str)
     separator = "="*150
 
     db_uri = str(get_resource(storage_precios_claros_sqlite, DB_NAME, ".db"))
