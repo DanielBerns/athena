@@ -109,7 +109,7 @@ def main() -> None:
             some_cities[this_city] = True
     some_timestamp_strs_resource = get_resource(parameters, "some_timestamp_strs", ".txt")
     some_timestamp_strs = []
-    if some_timestamp_strs_resource.exists()
+    if some_timestamp_strs_resource.exists():
         for line in read_text_lines(some_timestamp_strs_resource):
             this_timestamp_str = line.strip()
             some_timestamp_strs.append(this_timestamp_str)
