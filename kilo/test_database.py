@@ -1,4 +1,4 @@
-# import pdb
+import pdb
 
 import logging
 import os
@@ -56,16 +56,17 @@ def main() -> None:
 
     storage_precios_claros = get_container(kilo_paths.storage, "precios_claros")
     factory = lambda s: DBPreciosClarosNewInterface(s)
+    pdb.set_trace()
     with db_get_new_interface(storage_precios_claros, factory) as db:
         # pdb.set_trace()
         db.get_all_the_states()
-        states = DBStatesGenerator(get_reader(storage_precios_claros))
-        for a_state in states.iterate():
-            db_state = db.query_state(a_state["code"])
-            if db_state:
-                logging.info(f"{db_state.code} - {db_state.name}")
-            else:
-                logging.info(f"None db_state for {str(a_state)}")
+        # states = DBStatesGenerator(get_reader(storage_precios_claros))
+        # for a_state in states.iterate():
+        #     db_state = db.query_state(a_state["code"])
+        #     if db_state:
+        #         logging.info(f"{db_state.code} - {db_state.name}")
+        #     else:
+        #         logging.info(f"None db_state for {str(a_state)}")
 
         # pdb.set_trace()
         db.get_all_the_cities()
