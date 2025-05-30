@@ -23,9 +23,10 @@ def get_int(string: str) -> int:
     try:
         return int(string)
     except Exception as panic:
+        pdb.set_trace()
         logging.error(f"*** Error database.get_int")
-        logging.error(f"    string: {str(panic)}")
-        message = f"*** Error database.get_int ({classname(panic)}): {str(panic)}"
+        logging.error(f"    string: {string}")
+        message = f"*** Error database.get_int {str(panic)}"
         raise LoggedException(message)
 
 

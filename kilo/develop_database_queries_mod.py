@@ -111,6 +111,7 @@ def get_prices_by_article_code_city_and_timestamp(
     pdb.set_trace()
     for article_code_str in all_article_code_strs:
         observed_values = aggregation.get(article_code_str, False)
+        pdb.set_trace()
         if observed_values:
             card = db.all_the_article_codes[article_code_str].cards[0]
             prefix = CSV.join([f"[{article_code_str}]", card.brand, card.description])
