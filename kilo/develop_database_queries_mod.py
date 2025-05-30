@@ -1,3 +1,4 @@
+import pdb
 from typing import List, Generator, Tuple
 from collections import defaultdict
 import logging
@@ -94,6 +95,7 @@ def get_prices_by_article_code_city_and_timestamp(
         "Total Var % Max"
     ])
 
+    pdb.set_trace()
     aggregation = defaultdict(lambda: defaultdict(lambda: (0, 0, 0)))
 
     for timestamp_str in some_timestamp_strs:
@@ -106,6 +108,7 @@ def get_prices_by_article_code_city_and_timestamp(
                 (min_price, min_price, max_price) if min_price == max_price else (min_price, geomean_price, max_price)
 
     all_article_code_strs = [acs for acs in aggregation.keys()]
+    pdb.set_trace()
     for article_code_str in all_article_code_strs:
         observed_values = aggregation.get(article_code_str, False)
         if observed_values:
