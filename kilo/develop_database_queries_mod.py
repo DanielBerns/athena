@@ -1,4 +1,3 @@
-import pdb
 from typing import List, Generator, Tuple
 from collections import defaultdict
 import logging
@@ -95,7 +94,6 @@ def get_prices_by_article_code_city_and_timestamp(
         "Total Var % Max"
     ])
 
-    pdb.set_trace()
     aggregation = defaultdict(lambda: defaultdict(lambda: (0, 0, 0)))
 
     for timestamp_str in some_timestamp_strs:
@@ -108,10 +106,9 @@ def get_prices_by_article_code_city_and_timestamp(
                 (min_price, min_price, max_price) if min_price == max_price else (min_price, geomean_price, max_price)
 
     all_article_code_strs = [acs for acs in aggregation.keys()]
-    pdb.set_trace()
+
     for article_code_str in all_article_code_strs:
         observed_values = aggregation.get(article_code_str, False)
-        pdb.set_trace()
         if observed_values:
             card = db.all_the_article_codes[article_code_str].cards[0]
             prefix = CSV.join([f"[{article_code_str}]", card.brand, card.description])
@@ -202,19 +199,22 @@ def main() -> None:
     if some_article_codes_resource.exists():
         for line in read_text_lines(some_article_codes_resource):
             this_article_code = line.strip()
-            some_article_codes[this_article_code] = True
+            if this_article_code:
+                some_article_codes[this_article_code] = True
     some_cities_resource = get_resource(parameters_container, "some_cities", ".txt")
     some_cities: dict[str, bool] = {}
     if some_cities_resource.exists():
         for line in read_text_lines(some_cities_resource):
             this_city = line.strip()
-            some_cities[this_city] = True
+            if this_city:
+                some_cities[this_city] = True
     some_timestamp_strs_resource = get_resource(parameters_container, "some_timestamp_strs", ".txt")
     some_timestamp_strs = []
     if some_timestamp_strs_resource.exists():
         for line in read_text_lines(some_timestamp_strs_resource):
             this_timestamp_str = line.strip()
-            some_timestamp_strs.append(this_timestamp_str)
+            if this_timestamp_str:
+                some_timestamp_strs.append(this_timestamp_str)
     separator = "="*150
 
     db_uri = str(get_resource(storage_precios_claros_sqlite, DB_NAME, ".db"))
