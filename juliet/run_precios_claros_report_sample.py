@@ -1,3 +1,4 @@
+import pdb
 from typing import Dict, Tuple, Generator
 from pathlib import Path
 import time
@@ -53,6 +54,7 @@ def main() -> None:
     application_name: str = "run_precios_claros_report_sample"
     arguments = get_arguments()
 
+    pdb.set_trace()
     with create_application(application_name, arguments) as application:
         show(f"{application_name:s} 1")
         reports_list = Path(arguments["reports_list"]).expanduser()
