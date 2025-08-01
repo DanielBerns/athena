@@ -4,9 +4,6 @@ from contextlib import contextmanager
 from pathlib import Path
 from datetime import datetime
 
-from components.core.logged_exception import LoggedException
-from components.helpers.helpers import classname
-
 import sqlalchemy as sa
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -19,14 +16,22 @@ from sqlalchemy.orm import (
 )
 
 
+logger = logging.getLogger(__name__)
+
+class DatabaseException(Exception):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+        logger.error(message)
+
+
 def get_int(string: str) -> int:
     try:
         return int(string)
     except Exception as panic:
-        logging.error(f"*** Error database.get_int")
-        logging.error(f"    string: {string}")
+        logger.error(f"*** Error database.get_int")
+        logger.error(f"    string: {string}")
         message = f"*** Error database.get_int {str(panic)}"
-        raise LoggedException(message)
+        raise DatabaseException(message) from panic
 
 
 class Base(DeclarativeBase):
@@ -186,8 +191,7 @@ def db_get_session(
         yield session
         session.commit()
     except Exception as panic:
-        logging.error(str(panic))
+        logger.error(str(panic))
         session.rollback()
     finally:
         session.close()
-

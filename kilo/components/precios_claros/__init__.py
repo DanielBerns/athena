@@ -26,6 +26,9 @@ from components.precios_claros.database import (
 
 from components.precios_claros.db_interface_insertion import DBInterfaceInsertion
 from components.precios_claros.db_interface_basic_queries import DBInterfaceBasicQueries
+
+from components.precios_claros.report_by_brand import Report, ReportBuilder, Target
+
 # from components.precios_claros.db_timeserie_query_interface import DBTimeserieQueryInterface
 
 # from components.precios_claros.db_new_interface import DBNewInterface, db_get_new_interface
